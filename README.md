@@ -2,7 +2,7 @@
 
 **IBM Build Challenge — Track 3: Fan-Centric Sports & Entertainment**  
 **Author:** Shawn Blackman, B.S. Environmental Science, Lehman College (CUNY)  
-**Contact:** mr.shawn.blackman@gmail.com
+
 
 ---
 
