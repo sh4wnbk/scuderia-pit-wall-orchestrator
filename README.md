@@ -22,8 +22,6 @@ This is the **Synthesis Gap**.
 
 ## The Solution
 
-![Dual-State Interface Mockup](assets/ui_mockup.png) 
-
 The Scuderia Pit-Wall Fan Orchestrator is a multi-agent AI companion powered by **IBM watsonx** that:
 
 - Ingests 1.1M live telemetry data points per second via **FastF1**
@@ -33,13 +31,15 @@ The Scuderia Pit-Wall Fan Orchestrator is a multi-agent AI companion powered by 
 - Allows fans to query the system in natural language without looking away from the TV broadcast
 - Enforces proactive governance via **IBM watsonx.governance** to guarantee no confident-wrong output ever reaches the fan
 
+![The Trust Output Matrix — why confident-wrong is an existential threat](assets/trust_output_matrix.png)
+
 > *"Leclerc is harvesting battery on this straight. Ferrari is building toward a push lap. Expect a pit call within two laps."*
 
 ---
 
 ## Architecture
 
-![Agentic Pipeline Architecture](assets/architecture_flow.png)
+![Agentic Pipeline Architecture — corrected with governance layer](assets/architecture_diagram.png)
 
 The system is built across six layers, each mapping to a named component:
 
@@ -53,6 +53,9 @@ The system is built across six layers, each mapping to a named component:
 ```
 
 ### The Governance Layer — Why It Exists
+
+![The Proactive Governance Loop — three trustworthy outcomes guaranteed](assets/governance_loop.png)
+
 
 A confident-wrong answer is categorically more damaging than acknowledged uncertainty.
 
