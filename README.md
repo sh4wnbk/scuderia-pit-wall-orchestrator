@@ -1,12 +1,14 @@
 # Scuderia Pit-Wall Fan Orchestrator
 
-**IBM Build Challenge — Track 3: Fan-Centric Sports & Entertainment**  
-**Author:** Shawn Blackman, B.S. Environmental Science, Lehman College (CUNY)  
+![](assets/Pit-Wall_Fan_Orchestrator.png)
 
+**IBM Build Challenge — Track 3: Fan-Centric Sports & Entertainment**  
 
 ---
 
 ## The Problem
+
+![The Synthesis Gap Visualization](assets/synthesis_gap.png)
 
 Formula 1's 2026 regulations introduce the most technically complex power unit and aerodynamic rules in the sport's history. F1 cars generate **1.1 million telemetry data points per second**. Pit-wall radio is high-noise, jargon-heavy, and opaque to anyone without an engineering background.
 
@@ -19,6 +21,8 @@ This is the **Synthesis Gap**.
 ---
 
 ## The Solution
+
+![Dual-State Interface Mockup](assets/ui_mockup.png) 
 
 The Scuderia Pit-Wall Fan Orchestrator is a multi-agent AI companion powered by **IBM watsonx** that:
 
@@ -34,6 +38,8 @@ The Scuderia Pit-Wall Fan Orchestrator is a multi-agent AI companion powered by 
 ---
 
 ## Architecture
+
+![Agentic Pipeline Architecture](assets/architecture_flow.png)
 
 The system is built across six layers, each mapping to a named component:
 
