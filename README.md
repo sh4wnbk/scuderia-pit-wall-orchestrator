@@ -1,6 +1,6 @@
 # Scuderia Pit-Wall Fan Orchestrator
 
-![](assets/Pit-Wall_Fan_Orchestrator.png)
+![Scuderia Pit-Wall Fan Orchestrator — Tifosi asking about battery state](assets/Pit-Wall_Fan_Orchestrator.png)
 
 **IBM Build Challenge — Track 3: Fan-Centric Sports & Entertainment**  
 
