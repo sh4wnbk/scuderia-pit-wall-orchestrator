@@ -1,1 +1,3 @@
 .ibm_scuderia/
+.env
+.venv/
