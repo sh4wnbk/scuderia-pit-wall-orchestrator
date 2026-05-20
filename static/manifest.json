@@ -1,0 +1,52 @@
+{
+  "name": "Scuderia Pit-Wall",
+  "short_name": "Pit-Wall",
+  "description": "AI-powered F1 race intelligence system. Voice in, voice out. Powered by IBM watsonx.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0a09",
+  "theme_color": "#dc0000",
+  "orientation": "landscape-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["sports", "utilities"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Pit-Wall Strategy Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ask the Wall",
+      "short_name": "Ask",
+      "description": "Open voice command interface",
+      "url": "/?mode=voice",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Strategy View",
+      "short_name": "Strategy",
+      "description": "Open strategy analysis panel",
+      "url": "/?view=strategy",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Scuderia Pit-Wall | Race Ops Terminal</title>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#dc0000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pit-Wall">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --red: #dc0000;
+  --red-dim: #930100;
+  --red-glow: rgba(220,0,0,0.4);
+  --red-subtle: rgba(220,0,0,0.08);
+  --yellow: #fecb00;
+  --yellow-glow: rgba(254,203,0,0.35);
+  --green: #00e676;
+  --green-glow: rgba(0,230,118,0.3);
+  --blue: #4589ff;
+  --blue-glow: rgba(69,137,255,0.3);
+  --orange: #ff6b00;
+  --bg: #0e0a09;
+  --bg-warm: #120c0a;
+  --s1: #1a1210;
+  --s2: #221714;
+  --s3: #2a1f1c;
+  --border: #2d1f1c;
+  --border-bright: #3d2a26;
+  --text: #f5ede8;
+  --text-dim: #8a6f68;
+  --text-muted: #4a3330;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+.condensed { font-family: 'Barlow Condensed', sans-serif; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 1; vertical-align: middle; }
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(45,31,28,0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45,31,28,0.35) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ═══ HEADER ═══ */
+header {
+  height: 48px;
+  background: var(--bg-warm);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+  position: relative; z-index: 10;
+  flex-shrink: 0;
+}
+
+.wordmark {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px; font-weight: 900;
+  letter-spacing: 0.06em;
+  color: var(--red);
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+}
+.wordmark-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 400;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  border-left: 1px solid var(--border-bright);
+  padding-left: 12px;
+  text-transform: uppercase;
+}
+
+.header-nav { display: flex; gap: 4px; margin-left: auto; }
+.hnav-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.hnav-item:hover { color: var(--text); }
+.hnav-item.active { color: var(--red); border-bottom-color: var(--red); }
+
+.ibm-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 12px;
+  background: rgba(69,137,255,0.1);
+  border: 1px solid rgba(69,137,255,0.4);
+  color: var(--blue);
+  display: flex; align-items: center; gap: 6px;
+  letter-spacing: 0.05em;
+}
+.ibm-dot { width: 6px; height: 6px; background: var(--blue); border-radius: 50%; }
+
+.header-icons { display: flex; gap: 8px; margin-left: 12px; }
+.header-icons span { color: var(--text-dim); font-size: 20px; cursor: pointer; }
+.header-icons span:hover { color: var(--text); }
+
+/* ═══ LAYOUT ═══ */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative; z-index: 1;
+}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--bg-warm);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.race-session-block {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.race-icon {
+  width: 36px; height: 36px;
+  background: var(--red);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.race-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.race-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.ctx-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.ctx-cell { background: var(--s1); padding: 10px 14px; }
+.ctx-cell-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 3px;
+}
+.ctx-cell-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 700;
+  color: var(--text);
+}
+.ctx-cell-val.red { color: var(--red); }
+
+.nav-items { padding: 8px 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.12s;
+}
+.nav-item:hover { color: var(--text); background: var(--s1); }
+.nav-item.active { color: var(--text); background: var(--red-subtle); border-left-color: var(--red); }
+.nav-item .material-symbols-outlined { font-size: 18px; }
+
+.pit-btn {
+  margin: 12px 16px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: calc(100% - 32px);
+  text-align: center;
+}
+.pit-btn:hover {
+  background: var(--red);
+  color: white;
+  box-shadow: 0 0 16px var(--red-glow);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.status-row {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-dim);
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.dot-green { width:5px; height:5px; border-radius:50%; background:var(--green); animation: pulse 1.5s ease-in-out infinite; }
+.dot-blue  { width:5px; height:5px; border-radius:50%; background:var(--blue);  animation: pulse 1.5s ease-in-out infinite 0.4s; }
+.dot-yellow{ width:5px; height:5px; border-radius:50%; background:var(--yellow);animation: pulse 1.5s ease-in-out infinite 0.8s; }
+
+/* ═══ MAIN ═══ */
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* ═══ VOICE PANEL ═══ */
+.voice-panel {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.voice-idle {
+  background: var(--s1);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.voice-idle-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 42px; font-weight: 900;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: rgba(245,237,232,0.15);
+  text-align: center; line-height: 1;
+}
+.voice-idle-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-dim);
+  letter-spacing: 0.15em; text-transform: uppercase;
+}
+
+.voice-active {
+  display: none;
+  background: var(--s1);
+  padding: 24px 28px 20px;
+  flex-direction: column;
+  gap: 16px;
+}
+.voice-active-label {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--red);
+}
+.listening-dot { width:7px; height:7px; border-radius:50%; background:var(--red); animation: pulse 0.8s ease-in-out infinite; }
+.voice-active-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 32px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.waveform {
+  display: flex; align-items: center; gap: 3px;
+  height: 64px; width: 100%;
+}
+@keyframes wave {
+  0%,100% { transform: scaleY(0.15); }
+  50%      { transform: scaleY(1); }
+}
+.wbar {
+  flex: 1; background: var(--red);
+  transform-origin: center;
+  border-radius: 1px;
+  max-width: 6px;
+}
+.wbar.active   { animation: wave 0.6s ease-in-out infinite; }
+.wbar.inactive { transform: scaleY(0.1); background: var(--border-bright); }
+
+.transcript-panel {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+}
+.transcript-ago {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 5px;
+}
+.transcript-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; color: var(--text);
+  font-style: italic;
+}
+.transcript-cursor {
+  display: inline-block; width: 7px; height: 13px;
+  background: var(--red); vertical-align: middle;
+  margin-left: 3px;
+  animation: pulse 0.8s steps(1) infinite;
+}
+
+.stt-readouts { display: flex; gap: 12px; }
+.stt-box {
+  background: var(--s2);
+  border: 1px solid var(--border-bright);
+  padding: 10px 20px;
+  text-align: center;
+}
+.stt-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 5px;
+}
+.stt-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px; font-weight: 700;
+  color: var(--text); letter-spacing: 0.05em;
+}
+
+.status-bar {
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: var(--bg-warm);
+  flex-shrink: 0;
+}
+.status-cell {
+  flex: 1;
+  padding: 10px 16px;
+  border-right: 1px solid var(--border);
+}
+.status-cell:last-child { border-right: none; }
+.status-cell-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 3px;
+}
+.status-cell-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.status-cell-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-dim);
+}
+
+/* ═══ BOTTOM SPLIT ═══ */
+.bottom-split { flex: 1; display: flex; overflow: hidden; }
+
+/* ═══ RESPONSE AREA ═══ */
+.response-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+
+.response-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--s1);
+  flex-shrink: 0;
+}
+.query-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.response-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.badge-confirmed {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 14px;
+  background: rgba(254,203,0,0.1);
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 0 10px var(--yellow-glow);
+}
+.badge-retry {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 14px;
+  background: rgba(220,0,0,0.1);
+  border: 1px solid var(--red);
+  color: var(--red);
+  display: flex; align-items: center; gap: 6px;
+}
+.badge-uncertainty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 14px;
+  background: rgba(138,111,104,0.1);
+  border: 1px solid var(--text-dim);
+  color: var(--text-dim);
+  display: flex; align-items: center; gap: 6px;
+}
+.badge-processing {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 14px;
+  background: rgba(138,111,104,0.1);
+  border: 1px solid var(--text-dim);
+  color: var(--text-dim);
+  animation: pulse 1s ease-in-out infinite;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.response-body {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.narrative-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  border-left: 2px solid var(--border-bright);
+  padding-left: 8px;
+  margin-bottom: 10px;
+}
+.narrative-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px; line-height: 1.7;
+  color: var(--text);
+}
+.narrative-text::first-letter {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 52px; font-weight: 900;
+  color: var(--red);
+  float: left;
+  line-height: 0.85;
+  margin-right: 6px;
+  margin-top: 4px;
+}
+
+.audio-player {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.play-btn {
+  width: 38px; height: 38px;
+  background: var(--red);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.play-btn:hover { background: #ff0000; box-shadow: 0 0 12px var(--red-glow); }
+.play-btn .material-symbols-outlined { color: white; font-size: 20px; }
+.audio-wave {
+  flex: 1;
+  display: flex; align-items: center; gap: 2px; height: 28px;
+}
+.audio-bar { width: 3px; border-radius: 1px; }
+.audio-bar.played   { background: var(--red); }
+.audio-bar.unplayed { background: var(--border-bright); }
+.tts-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  background: var(--s3); border: 1px solid var(--border);
+  padding: 3px 8px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.source-row {
+  display: flex; align-items: center; gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.source-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-dim);
+  letter-spacing: 0.04em;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 2px 8px;
+  border: 1px solid var(--border-bright);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.input-row {
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex; gap: 10px; align-items: center;
+  background: var(--bg-warm);
+  flex-shrink: 0;
+}
+.input-prompt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: var(--red);
+  animation: pulse 1s steps(1) infinite;
+  flex-shrink: 0;
+}
+.cmd-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-bright);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 6px 0;
+  outline: none;
+}
+.cmd-input::placeholder { color: var(--text-muted); }
+.cmd-input:focus { border-bottom-color: var(--red); }
+.exec-btn {
+  background: var(--red);
+  border: none;
+  color: white;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.exec-btn:hover { background: #ff0000; box-shadow: 0 0 12px var(--red-glow); }
+.lang-toggle { display: flex; }
+.lang-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 6px 10px;
+  background: var(--s2);
+  border: 1px solid var(--border-bright);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.lang-btn.active { background: var(--red); border-color: var(--red); color: white; }
+.lang-btn:first-child { border-right: none; }
+
+/* ═══ GOVERNANCE PANEL ═══ */
+.gov-panel {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--s1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.gov-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  background: var(--s2);
+}
+.gov-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text);
+}
+
+.gov-section { border-bottom: 1px solid var(--border); padding: 14px 16px; }
+.gov-section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+.source-row-gov {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 10px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.source-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.check-icon      { font-size: 16px; color: var(--green); }
+.check-icon.warn { color: var(--yellow); font-size: 15px; }
+.check-icon.fail { color: var(--red); font-size: 15px; }
+
+.hook-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.hook-row:last-child { border-bottom: none; }
+.hook-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-dim);
+  text-transform: uppercase;
+}
+.hook-pass {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  text-transform: uppercase;
+}
+.hook-warn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  background: rgba(254,203,0,0.1);
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  text-transform: uppercase;
+}
+.hook-fail {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  background: rgba(220,0,0,0.15);
+  border: 1px solid var(--red);
+  color: var(--red);
+  text-transform: uppercase;
+}
+
+.conf-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.conf-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 8px;
+}
+.conf-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.conf-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px; font-weight: 700;
+  color: var(--yellow);
+}
+.conf-bar { height: 4px; background: var(--border); }
+.conf-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--yellow), var(--red));
+  transition: width 1.2s ease;
+}
+
+.audit-section { padding: 14px 16px; }
+.audit-count-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+.audit-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px; font-weight: 700;
+  color: var(--text);
+  border: 1px solid var(--border-bright);
+  padding: 2px 10px;
+}
+.audit-log { display: flex; flex-direction: column; gap: 3px; }
+.audit-entry {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-dim);
+  display: flex; gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.audit-entry:last-child { border-bottom: none; }
+.audit-time  { color: var(--text-muted); flex-shrink: 0; }
+.audit-event { color: var(--text-dim); }
+
+.ai-stack { padding: 14px 16px; border-top: 1px solid var(--border); }
+.ai-stack-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.ai-active-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  background: rgba(69,137,255,0.15);
+  border: 1px solid rgba(69,137,255,0.5);
+  color: var(--blue);
+  text-transform: uppercase;
+}
+.ai-model-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; font-weight: 600;
+  color: var(--text); margin-bottom: 4px;
+}
+.ai-engine-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 2px; margin-top: 8px;
+}
+.ai-engine-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--text);
+  display: flex; justify-content: space-between;
+}
+.ai-latency { color: var(--green); }
+
+/* Floating mic */
+.mic-float {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  z-index: 100;
+}
+.mic-btn {
+  width: 56px; height: 56px;
+  background: var(--red);
+  border: none; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.mic-btn:hover { box-shadow: 0 0 0 6px var(--red-glow), 0 4px 20px rgba(0,0,0,0.5); }
+.mic-btn.active { animation: mic-ring 1s ease-in-out infinite; }
+@keyframes mic-ring {
+  0%,100% { box-shadow: 0 0 0 4px var(--red-glow), 0 4px 20px rgba(0,0,0,0.5); }
+  50%      { box-shadow: 0 0 0 12px rgba(220,0,0,0.1), 0 4px 20px rgba(0,0,0,0.5); }
+}
+.mic-btn .material-symbols-outlined { color: white; font-size: 26px; }
+.mic-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--red); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.fu  { animation: fadeUp 0.35s ease forwards; }
+.fu1 { animation: fadeUp 0.35s ease 0.1s forwards; opacity:0; }
+.fu2 { animation: fadeUp 0.35s ease 0.2s forwards; opacity:0; }
+.fu3 { animation: fadeUp 0.35s ease 0.3s forwards; opacity:0; }
+
+.error-text { color: var(--red); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="fu">
+  <div class="wordmark">
+    <div style="width:5px; height:26px; background:var(--red);"></div>
+    SCUDERIA PIT-WALL
+    <span class="wordmark-sub">Race Ops Terminal</span>
+  </div>
+  <nav class="header-nav">
+    <div class="hnav-item" onclick="setHNav(this)">Overview</div>
+    <div class="hnav-item active" onclick="setHNav(this)">Strategy</div>
+    <div class="hnav-item" onclick="setHNav(this)">Telemetry</div>
+  </nav>
+  <div class="ibm-badge" style="margin-left:auto;">
+    <div class="ibm-dot"></div>
+    Powered by IBM watsonx
+  </div>
+  <div class="header-icons">
+    <span class="material-symbols-outlined">settings</span>
+    <span class="material-symbols-outlined">account_circle</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar fu1">
+    <div class="race-session-block">
+      <div class="race-icon">
+        <span class="material-symbols-outlined" style="color:white; font-size:20px;">sports_score</span>
+      </div>
+      <div>
+        <div class="race-label">Race Session</div>
+        <div class="race-name">Monza GP — Live</div>
+      </div>
+    </div>
+
+    <div class="ctx-grid">
+      <div class="ctx-cell">
+        <div class="ctx-cell-label">Year</div>
+        <div class="ctx-cell-val">2026</div>
+      </div>
+      <div class="ctx-cell">
+        <div class="ctx-cell-label">Driver</div>
+        <div class="ctx-cell-val red">Leclerc</div>
+      </div>
+    </div>
+
+    <div class="nav-items">
+      <div class="nav-item" onclick="setNav(this)"><span class="material-symbols-outlined">analytics</span> Telemetry</div>
+      <div class="nav-item active" onclick="setNav(this)"><span class="material-symbols-outlined">map</span> Strategy</div>
+      <div class="nav-item" onclick="setNav(this)"><span class="material-symbols-outlined">settings_input_antenna</span> Radio</div>
+      <div class="nav-item" onclick="setNav(this)"><span class="material-symbols-outlined">tire_repair</span> Tyre Data</div>
+      <div class="nav-item" onclick="setNav(this)"><span class="material-symbols-outlined">cloud</span> Weather</div>
+    </div>
+
+    <div style="padding: 12px 16px; border-top: 1px solid var(--border);">
+      <button class="pit-btn">Initiate Pit Stop</button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="status-row"><div class="dot-green"></div><span style="color:var(--green);">Watson STT/TTS Active</span></div>
+      <div class="status-row"><div class="dot-blue"></div><span style="color:var(--blue);">Granite 4-h Online</span></div>
+      <div class="status-row"><div class="dot-yellow"></div><span style="color:var(--yellow);">ChromaDB Ready</span></div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- VOICE PANEL -->
+    <div class="voice-panel fu2">
+      <!-- IDLE -->
+      <div class="voice-idle" id="voiceIdle">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+          <div class="waveform" style="height:32px; justify-content:center; max-width:360px;">
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+            <div class="wbar inactive" style="height:32px;"></div>
+          </div>
+          <div class="voice-idle-title">Awaiting Command</div>
+          <div class="voice-idle-sub">"Voice analysis standby..."</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div class="stt-readouts">
+            <div class="stt-box">
+              <div class="stt-label">STT Confidence</div>
+              <div class="stt-value" style="color:var(--text-dim);">[ — ]</div>
+            </div>
+          </div>
+          <div>
+            <div class="gov-section-label" style="margin-bottom:4px;">Language</div>
+            <div class="lang-toggle">
+              <button class="lang-btn active" onclick="setLang(this,'en')">EN</button>
+              <button class="lang-btn" onclick="setLang(this,'it')">IT</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE -->
+      <div class="voice-active" id="voiceActive">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="voice-active-label"><div class="listening-dot"></div> Listening...</div>
+            <div class="voice-active-title">Voice Override Active</div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+            <div class="lang-toggle">
+              <button class="lang-btn active" onclick="setLang(this,'en')">EN</button>
+              <button class="lang-btn" onclick="setLang(this,'it')">IT</button>
+            </div>
+          </div>
+        </div>
+        <div class="waveform" style="max-width:500px;">
+          <div class="wbar active" style="height:64px; animation-delay:0.00s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.08s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.16s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.04s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.20s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.12s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.24s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.06s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.18s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.10s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.22s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.14s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.02s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.19s;"></div>
+          <div class="wbar active" style="height:64px; animation-delay:0.09s;"></div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div style="flex:1;">
+            <div class="transcript-panel" style="border-top:2px solid var(--red);">
+              <div class="transcript-ago" style="color:var(--red);">Recording — tap mic to submit</div>
+              <div class="transcript-text" id="liveTranscript">Speak your query...<span class="transcript-cursor"></span></div>
+            </div>
+          </div>
+          <div class="stt-box">
+            <div class="stt-label">Active Locale</div>
+            <div class="stt-value" id="localeBadge">EN-US</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar fu3">
+      <div class="status-cell">
+        <div class="status-cell-label">Driver 16 — Leclerc</div>
+        <div class="status-cell-val">P1 <span style="font-size:14px; color:var(--red);">GAP: +1.432s</span></div>
+      </div>
+      <div class="status-cell">
+        <div class="status-cell-label">Pit Window</div>
+        <div class="status-cell-val">Open <span style="font-size:13px; color:var(--yellow);">Lap 24–28</span></div>
+      </div>
+      <div class="status-cell">
+        <div class="status-cell-label">Weather Status</div>
+        <div class="status-cell-val">Dry <span style="font-size:13px; color:var(--text-dim);">0% Precip</span></div>
+      </div>
+      <div class="status-cell" style="flex:0.5;">
+        <div class="status-cell-label">Tyre</div>
+        <div class="status-cell-val" style="color:var(--yellow);">Hard</div>
+        <div class="status-cell-sub">Lap 36</div>
+      </div>
+    </div>
+
+    <!-- BOTTOM SPLIT -->
+    <div class="bottom-split">
+
+      <!-- RESPONSE AREA -->
+      <div class="response-area fu3">
+        <div class="response-header">
+          <div>
+            <div class="query-id" id="queryIdDisplay">Engineering Query_ID: ——</div>
+            <div class="response-title" id="responseTitleDisplay">Awaiting Query</div>
+          </div>
+          <div id="statusBadge" class="badge-uncertainty">
+            <span class="material-symbols-outlined" style="font-size:14px;">radio_button_unchecked</span>
+            Standby
+          </div>
+        </div>
+
+        <div class="response-body">
+          <div>
+            <div class="narrative-label">Narrative_Log</div>
+            <div class="narrative-text" id="narrativeText" style="color:var(--text-dim); font-family:'JetBrains Mono',monospace; font-size:12px;">
+              Submit a query via text input or voice command to receive a grounded pit-wall analysis.
+            </div>
+          </div>
+
+          <!-- Audio player — hidden until response arrives -->
+          <div class="audio-player" id="audioPlayer" style="display:none;">
+            <button class="play-btn" onclick="togglePlay()">
+              <span class="material-symbols-outlined" id="playIcon">play_arrow</span>
+            </button>
+            <div class="audio-wave">
+              <div class="audio-bar played"   style="height:10px;"></div>
+              <div class="audio-bar played"   style="height:18px;"></div>
+              <div class="audio-bar played"   style="height:26px;"></div>
+              <div class="audio-bar played"   style="height:20px;"></div>
+              <div class="audio-bar played"   style="height:12px;"></div>
+              <div class="audio-bar played"   style="height:8px;"></div>
+              <div class="audio-bar unplayed" style="height:16px;"></div>
+              <div class="audio-bar unplayed" style="height:22px;"></div>
+              <div class="audio-bar unplayed" style="height:14px;"></div>
+              <div class="audio-bar unplayed" style="height:10px;"></div>
+              <div class="audio-bar unplayed" style="height:20px;"></div>
+              <div class="audio-bar unplayed" style="height:26px;"></div>
+              <div class="audio-bar unplayed" style="height:18px;"></div>
+              <div class="audio-bar unplayed" style="height:8px;"></div>
+              <div class="audio-bar unplayed" style="height:14px;"></div>
+            </div>
+            <div class="tts-label" id="ttsLabel">TTS: EN-US ALLISONV3</div>
+          </div>
+
+          <div class="source-row" id="sourceRow" style="display:none;">
+            <span class="material-symbols-outlined" style="font-size:14px; color:var(--text-muted);">link</span>
+            <span class="source-text" id="sourceDisplay">—</span>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-row">
+          <span class="input-prompt">&gt;</span>
+          <input class="cmd-input" id="cmdInput" placeholder="ENTER COMMAND OR QUERY..." type="text"
+                 onkeydown="if(event.key==='Enter') executeQuery()"/>
+          <div class="lang-toggle">
+            <button class="lang-btn active" onclick="setLang(this,'en')">EN</button>
+            <button class="lang-btn" onclick="setLang(this,'it')">IT</button>
+          </div>
+          <button class="exec-btn" onclick="executeQuery()">Execute</button>
+        </div>
+      </div>
+
+      <!-- GOVERNANCE PANEL -->
+      <div class="gov-panel fu3">
+        <div class="gov-header">
+          <span class="material-symbols-outlined" style="color:var(--yellow); font-size:16px;">verified_user</span>
+          <span class="gov-title">Governance Audit</span>
+        </div>
+
+        <!-- Sources -->
+        <div class="gov-section">
+          <div class="gov-section-label">Source Validation</div>
+          <div class="source-row-gov">
+            <span class="source-name">FIA Regulation Corpus</span>
+            <span class="material-symbols-outlined check-icon" id="srcPrimary">radio_button_unchecked</span>
+          </div>
+          <div class="source-row-gov">
+            <span class="source-name">FastF1 Telemetry</span>
+            <span class="material-symbols-outlined check-icon" id="srcSecondary">radio_button_unchecked</span>
+          </div>
+        </div>
+
+        <!-- Hooks — corrected names -->
+        <div class="gov-section">
+          <div class="gov-section-label">Overseer Validation Hooks</div>
+          <div class="hook-row">
+            <span class="hook-name">Hook 1 — Transcript</span>
+            <span id="hook1Status" class="hook-pass" style="color:var(--text-muted);">——</span>
+          </div>
+          <div class="hook-row">
+            <span class="hook-name">Hook 2 — Retrieval</span>
+            <span id="hook2Status" class="hook-pass" style="color:var(--text-muted);">——</span>
+          </div>
+          <div class="hook-row">
+            <span class="hook-name">Hook 3 — Pre-Delivery</span>
+            <span id="hook3Status" class="hook-pass" style="color:var(--text-muted);">——</span>
+          </div>
+        </div>
+
+        <!-- Confidence -->
+        <div class="conf-section">
+          <div class="conf-header">
+            <span class="conf-label">Confidence Coefficient</span>
+            <span class="conf-value" id="confValue">——</span>
+          </div>
+          <div class="conf-bar">
+            <div class="conf-fill" id="confFill" style="width:0%;"></div>
+          </div>
+        </div>
+
+        <!-- Audit log -->
+        <div class="audit-section">
+          <div class="audit-count-row">
+            <span class="gov-section-label" style="margin-bottom:0;">Audit Log</span>
+            <span class="audit-count" id="auditCount">[ 00 ]</span>
+          </div>
+          <div class="audit-log" id="auditLog">
+            <div class="audit-entry">
+              <span class="audit-time">——:——</span>
+              <span class="audit-event" style="color:var(--text-muted);">AWAITING_QUERY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Stack -->
+        <div class="ai-stack">
+          <div class="ai-stack-header">
+            <span class="gov-section-label" style="margin-bottom:0; color:var(--blue);">AI Analytics Stack</span>
+            <span class="ai-active-badge">Active</span>
+          </div>
+          <div style="margin-bottom:4px;">
+            <div class="ai-engine-label">Core Model</div>
+            <div class="ai-model-name">watsonx.granite-4h</div>
+          </div>
+          <div>
+            <div class="ai-engine-label">Speech Engine</div>
+            <div class="ai-engine-val">
+              Watson STT/TTS
+              <span class="ai-latency" id="sttLatency">—ms</span>
+            </div>
+          </div>
+          <div style="margin-top:10px; display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; justify-content:space-between;">
+              <span class="mono" style="font-size:9px; color:var(--text-muted);">RAG</span>
+              <span class="mono" style="font-size:9px; color:var(--text-dim);">ChromaDB + Docling</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span class="mono" style="font-size:9px; color:var(--text-muted);">Telemetry</span>
+              <span class="mono" style="font-size:9px; color:var(--text-dim);">FastF1 v3.8.2</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span class="mono" style="font-size:9px; color:var(--text-muted);">Locale</span>
+              <span class="mono" style="font-size:9px; color:var(--text-dim);" id="aiLocale">EN-US / IT-IT</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- FLOATING MIC -->
+<div class="mic-float">
+  <button class="mic-btn" id="micBtn" onclick="toggleMic()">
+    <span class="material-symbols-outlined" id="micIcon">mic</span>
+  </button>
+  <span class="mic-label" id="micLabel">Voice Command</span>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let micActive = false;
+  let currentLang = 'en';
+  let currentAudio = null;
+  let mediaRecorder = null;
+  let audioChunks = [];
+
+  // ── Mic / MediaRecorder ───────────────────────────────────────────────────
+  async function toggleMic() {
+    if (!micActive) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(t => t.stop());
+          deactivateMic();
+          const mimeType = mediaRecorder.mimeType || 'audio/webm';
+          const blob = new Blob(audioChunks, { type: mimeType });
+          const b64 = await blobToBase64(blob);
+          await submitQuery(null, b64);
+        };
+        mediaRecorder.start();
+        activateMic();
+      } catch (err) {
+        console.warn('Mic access denied:', err);
+        document.getElementById('micLabel').textContent = 'No Mic Access';
+      }
+    } else {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    }
+  }
+
+  function blobToBase64(blob) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function activateMic() {
+    micActive = true;
+    document.getElementById('micBtn').classList.add('active');
+    document.getElementById('micIcon').textContent = 'stop';
+    document.getElementById('micLabel').textContent = 'Tap to Submit';
+    document.getElementById('micLabel').style.color = 'var(--red)';
+    document.getElementById('voiceIdle').style.display = 'none';
+    document.getElementById('voiceActive').style.display = 'flex';
+    document.getElementById('localeBadge').textContent = currentLang === 'it' ? 'IT-IT' : 'EN-US';
+  }
+
+  function deactivateMic() {
+    micActive = false;
+    document.getElementById('micBtn').classList.remove('active');
+    document.getElementById('micIcon').textContent = 'mic';
+    document.getElementById('micLabel').textContent = 'Voice Command';
+    document.getElementById('micLabel').style.color = '';
+    document.getElementById('voiceIdle').style.display = 'flex';
+    document.getElementById('voiceActive').style.display = 'none';
+  }
+
+  // ── Query submission ──────────────────────────────────────────────────────
+  function executeQuery() {
+    const q = document.getElementById('cmdInput').value.trim();
+    if (!q) return;
+    document.getElementById('cmdInput').value = '';
+    submitQuery(q, null);
+  }
+
+  async function submitQuery(textQuery, audioB64) {
+    showProcessing(textQuery || 'Voice query');
+
+    const body = audioB64
+      ? { audio_b64: audioB64, language: currentLang }
+      : { text_query: textQuery, language: currentLang };
+
+    const t0 = Date.now();
+    try {
+      const res = await fetch('/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || res.statusText);
+      }
+      const data = await res.json();
+      const elapsed = Date.now() - t0;
+      showResponse(data, textQuery || 'Voice query', elapsed);
+      fetchAuditLog();
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  // ── Response rendering ────────────────────────────────────────────────────
+  function showProcessing(label) {
+    const qid = 'QRY_' + Math.floor(Math.random() * 9000 + 1000) + '_' +
+                String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
+                String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    document.getElementById('queryIdDisplay').textContent = 'Engineering Query_ID: ' + qid;
+    document.getElementById('responseTitleDisplay').textContent = label.toUpperCase().slice(0, 40);
+    document.getElementById('statusBadge').className = 'badge-processing';
+    document.getElementById('statusBadge').innerHTML =
+      '<span class="material-symbols-outlined" style="font-size:14px;">hourglass_empty</span> Processing...';
+    document.getElementById('narrativeText').className = '';
+    document.getElementById('narrativeText').style.cssText =
+      'color:var(--text-dim); font-family:\'JetBrains Mono\',monospace; font-size:12px;';
+    document.getElementById('narrativeText').textContent =
+      'Routing to IBM watsonx Granite 4-h via /process...';
+    document.getElementById('audioPlayer').style.display = 'none';
+    document.getElementById('sourceRow').style.display = 'none';
+    resetHooks();
+  }
+
+  function showResponse(data, queryLabel, elapsedMs) {
+    // Badge
+    const badge = document.getElementById('statusBadge');
+    if (data.output_type === 'confirmed') {
+      badge.className = 'badge-confirmed';
+      badge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">verified</span> Confirmed';
+    } else if (data.output_type === 'retry_corrected') {
+      badge.className = 'badge-retry';
+      badge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">refresh</span> Retry Corrected';
+    } else {
+      badge.className = 'badge-uncertainty';
+      badge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">warning</span> Uncertainty';
+    }
+
+    // Title
+    document.getElementById('responseTitleDisplay').textContent =
+      (queryLabel || 'Response').toUpperCase().slice(0, 40);
+
+    // Narrative — restore drop-cap styling
+    const nt = document.getElementById('narrativeText');
+    nt.className = 'narrative-text';
+    nt.style.cssText = '';
+    nt.textContent = data.text;
+
+    // Source citation
+    if (data.traceability_link) {
+      document.getElementById('sourceDisplay').textContent = data.traceability_link;
+      document.getElementById('sourceRow').style.display = 'flex';
+    }
+
+    // Audio player
+    if (data.audio_b64) {
+      setupAudio(data.audio_b64);
+      const ttsVoice = currentLang === 'it' ? 'TTS: IT-IT FRANCESCAV3' : 'TTS: EN-US ALLISONV3';
+      document.getElementById('ttsLabel').textContent = ttsVoice;
+      document.getElementById('audioPlayer').style.display = 'flex';
+    }
+
+    // Governance hooks
+    updateHooks(data.output_type);
+    document.getElementById('sttLatency').textContent = elapsedMs + 'ms';
+  }
+
+  function showError(msg) {
+    document.getElementById('statusBadge').className = 'badge-retry';
+    document.getElementById('statusBadge').innerHTML =
+      '<span class="material-symbols-outlined" style="font-size:14px;">error</span> Error';
+    const nt = document.getElementById('narrativeText');
+    nt.className = '';
+    nt.style.cssText = '';
+    nt.innerHTML = '<span class="error-text">API error: ' + msg + '</span>';
+  }
+
+  // ── Governance panel ──────────────────────────────────────────────────────
+  function resetHooks() {
+    ['hook1Status','hook2Status','hook3Status'].forEach(id => {
+      const el = document.getElementById(id);
+      el.className = 'hook-pass';
+      el.style.color = 'var(--text-muted)';
+      el.textContent = '——';
+    });
+    document.getElementById('srcPrimary').textContent = 'radio_button_unchecked';
+    document.getElementById('srcPrimary').className = 'material-symbols-outlined check-icon';
+    document.getElementById('srcSecondary').textContent = 'radio_button_unchecked';
+    document.getElementById('srcSecondary').className = 'material-symbols-outlined check-icon';
+    document.getElementById('confValue').textContent = '——';
+    document.getElementById('confFill').style.width = '0%';
+  }
+
+  function updateHooks(outputType) {
+    const h1 = document.getElementById('hook1Status');
+    const h2 = document.getElementById('hook2Status');
+    const h3 = document.getElementById('hook3Status');
+
+    // Hook 1 — Transcript Audit: always PASS (request reached the pipeline)
+    h1.className = 'hook-pass'; h1.style.color = ''; h1.textContent = 'PASS';
+
+    if (outputType === 'confirmed') {
+      h2.className = 'hook-pass'; h2.style.color = ''; h2.textContent = 'PASS';
+      h3.className = 'hook-pass'; h3.style.color = ''; h3.textContent = 'PASS';
+      document.getElementById('confValue').textContent = '0.92';
+      document.getElementById('confFill').style.width = '92%';
+    } else if (outputType === 'retry_corrected') {
+      h2.className = 'hook-pass'; h2.style.color = ''; h2.textContent = 'PASS';
+      h3.className = ''; h3.style.color = ''; h3.innerHTML = '<span class="hook-warn">RETRY</span>';
+      document.getElementById('confValue').textContent = '0.71';
+      document.getElementById('confFill').style.width = '71%';
+    } else {
+      h2.className = ''; h2.style.color = ''; h2.innerHTML = '<span class="hook-warn">LOW</span>';
+      h3.className = ''; h3.style.color = ''; h3.innerHTML = '<span class="hook-fail">FAIL</span>';
+      document.getElementById('confValue').textContent = '0.32';
+      document.getElementById('confFill').style.width = '32%';
+    }
+
+    // Source icons
+    document.getElementById('srcPrimary').textContent = 'check_circle';
+    document.getElementById('srcPrimary').className = 'material-symbols-outlined check-icon';
+    document.getElementById('srcSecondary').textContent = 'check_circle';
+    document.getElementById('srcSecondary').className =
+      'material-symbols-outlined check-icon' + (outputType === 'uncertainty' ? ' warn' : '');
+  }
+
+  async function fetchAuditLog() {
+    try {
+      const res = await fetch('/audit');
+      if (!res.ok) return;
+      const entries = await res.json();
+      renderAuditLog(entries);
+    } catch {}
+  }
+
+  function renderAuditLog(entries) {
+    const log = document.getElementById('auditLog');
+    const total = entries.length;
+    document.getElementById('auditCount').textContent =
+      '[ ' + String(total).padStart(2, '0') + ' ]';
+
+    const last5 = entries.slice(-5).reverse();
+    log.innerHTML = last5.map(e => {
+      const ts = e.timestamp ? e.timestamp.split('T')[1].slice(0, 8) : '--:--:--';
+      const event = (e.verdict || e.hook || e.anomaly_type || 'EVENT')
+        .toUpperCase().slice(0, 22);
+      return `<div class="audit-entry">
+        <span class="audit-time">${ts}</span>
+        <span class="audit-event">${event}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Audio playback ────────────────────────────────────────────────────────
+  function setupAudio(b64) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    const bytes = atob(b64);
+    const arr = new Uint8Array(bytes.length);
+    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+    const blob = new Blob([arr], { type: 'audio/wav' });
+    currentAudio = new Audio(URL.createObjectURL(blob));
+    currentAudio.onended = () => {
+      document.getElementById('playIcon').textContent = 'play_arrow';
+    };
+  }
+
+  function togglePlay() {
+    if (!currentAudio) return;
+    if (currentAudio.paused) {
+      currentAudio.play();
+      document.getElementById('playIcon').textContent = 'pause';
+    } else {
+      currentAudio.pause();
+      document.getElementById('playIcon').textContent = 'play_arrow';
+    }
+  }
+
+  // ── Language toggle ───────────────────────────────────────────────────────
+  function setLang(btn, lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent.toLowerCase() === lang);
+    });
+    const locale = lang === 'it' ? 'IT-IT' : 'EN-US';
+    document.getElementById('localeBadge').textContent = locale;
+    document.getElementById('aiLocale').textContent =
+      lang === 'it' ? 'IT-IT / EN-US' : 'EN-US / IT-IT';
+    document.getElementById('ttsLabel').textContent =
+      lang === 'it' ? 'TTS: IT-IT FRANCESCAV3' : 'TTS: EN-US ALLISONV3';
+  }
+
+  function setNav(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function setHNav(el) {
+    document.querySelectorAll('.hnav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('[Pit-Wall] SW registered:', reg.scope))
+        .catch(err => console.error('[Pit-Wall] SW registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
