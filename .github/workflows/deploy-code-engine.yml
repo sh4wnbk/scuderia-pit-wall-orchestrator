@@ -1,0 +1,83 @@
+name: Deploy to IBM Code Engine
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: pit-wall-orchestrator
+      # IBM Container Registry domain for us-south is us.icr.io, not us-south.icr.io
+      ICR_DOMAIN: us.icr.io
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install IBM Cloud CLI
+        run: |
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+          ibmcloud plugin install container-registry -f
+          ibmcloud plugin install code-engine -f
+
+      - name: Login to IBM Cloud
+        run: |
+          ibmcloud login --apikey "${{ secrets.IBM_CLOUD_API_KEY }}" -r "${{ secrets.IBM_REGION }}" -g "${{ secrets.IBM_RESOURCE_GROUP }}"
+
+      - name: Login to IBM Container Registry
+        run: ibmcloud cr login
+
+      - name: Build and push image
+        run: |
+          IMAGE_TAG="${ICR_DOMAIN}/${{ secrets.ICR_NAMESPACE }}/${IMAGE_NAME}:${GITHUB_SHA}"
+          docker build -t "$IMAGE_TAG" .
+          docker push "$IMAGE_TAG"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
+
+      - name: Select or create Code Engine project
+        run: |
+          ibmcloud ce project create --name "${{ secrets.CE_PROJECT }}" || true
+          ibmcloud ce project select --name "${{ secrets.CE_PROJECT }}"
+
+      - name: Create or update Code Engine application
+        run: |
+          if ibmcloud ce application get --name "${{ secrets.CE_APP_NAME }}" > /dev/null 2>&1; then
+            ibmcloud ce application update \
+              --name "${{ secrets.CE_APP_NAME }}" \
+              --image "$IMAGE_TAG" \
+              --port 8080 \
+              --env WATSONX_API_KEY="${{ secrets.WATSONX_API_KEY }}" \
+              --env WATSONX_URL="${{ secrets.WATSONX_URL }}" \
+              --env WATSONX_PROJECT_ID="${{ secrets.WATSONX_PROJECT_ID }}" \
+              --env WATSON_STT_API_KEY="${{ secrets.WATSON_STT_API_KEY }}" \
+              --env WATSON_STT_URL="${{ secrets.WATSON_STT_URL }}" \
+              --env WATSON_TTS_API_KEY="${{ secrets.WATSON_TTS_API_KEY }}" \
+              --env WATSON_TTS_URL="${{ secrets.WATSON_TTS_URL }}" \
+              --env RACE_YEAR=2026 \
+              --env RACE_NAME=Miami \
+              --env RACE_DRIVER=LEC
+          else
+            ibmcloud ce application create \
+              --name "${{ secrets.CE_APP_NAME }}" \
+              --image "$IMAGE_TAG" \
+              --port 8080 \
+              --min-scale 1 \
+              --max-scale 3 \
+              --cpu 1 \
+              --memory 2G \
+              --env WATSONX_API_KEY="${{ secrets.WATSONX_API_KEY }}" \
+              --env WATSONX_URL="${{ secrets.WATSONX_URL }}" \
+              --env WATSONX_PROJECT_ID="${{ secrets.WATSONX_PROJECT_ID }}" \
+              --env WATSON_STT_API_KEY="${{ secrets.WATSON_STT_API_KEY }}" \
+              --env WATSON_STT_URL="${{ secrets.WATSON_STT_URL }}" \
+              --env WATSON_TTS_API_KEY="${{ secrets.WATSON_TTS_API_KEY }}" \
+              --env WATSON_TTS_URL="${{ secrets.WATSON_TTS_URL }}" \
+              --env RACE_YEAR=2026 \
+              --env RACE_NAME=Miami \
+              --env RACE_DRIVER=LEC
+          fi
+
+      - name: Print application URL
+        run: ibmcloud ce application get --name "${{ secrets.CE_APP_NAME }}" --output url

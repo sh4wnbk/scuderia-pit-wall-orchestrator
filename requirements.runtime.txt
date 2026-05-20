@@ -1,0 +1,11 @@
+fastapi==0.116.1
+aiofiles==25.1.0
+uvicorn==0.42.0
+pydantic==2.12.5
+python-dotenv==1.2.2
+ibm-cloud-sdk-core==3.24.4
+ibm-watson==11.2.0
+ibm-watsonx-ai==1.5.5
+chromadb==1.5.5
+fastf1==3.8.2
+pandas==2.3.3
