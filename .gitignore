@@ -3,3 +3,10 @@
 __pycache__/
 */__pycache__/
 .venv/
+fastf1_cache/
+bob_sessions/
+docs/session_handoff.md
+assets/IBM SkillsBuild_AI Experiential Learning Lab_2026_Guide.md
+
+# reB0ot
+.bob/context/

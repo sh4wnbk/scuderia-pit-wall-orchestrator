@@ -181,6 +181,34 @@ WATSON_TTS_URL=your_url_here
 python main.py
 ```
 
+## IBM Cloud Migration
+
+This repository now includes an IBM Cloud deployable API wrapper:
+
+- `app.py` (FastAPI service entrypoint)
+- `Dockerfile` and `.dockerignore`
+- `docs/08_ibm_cloud_migration.md` (step-by-step runbook for IBM Code Engine)
+
+Run the API locally:
+
+```bash
+uvicorn app:app --host 0.0.0.0 --port 8080
+```
+
+Then validate:
+
+```bash
+curl http://localhost:8080/health
+curl -X POST http://localhost:8080/process \
+  -H "Content-Type: application/json" \
+  -d '{"text_query":"Why did Leclerc lift on the straight?"}'
+```
+
+For IBM Cloud deployment, follow the full runbook:
+
+- [`docs/08_ibm_cloud_migration.md`](./docs/08_ibm_cloud_migration.md)
+- [`docs/09_code_engine_cicd_and_secrets.md`](./docs/09_code_engine_cicd_and_secrets.md)
+
 The demo indexes a sample FIA regulation document, sets race context to Bahrain 2024 tracking Leclerc, and processes the query: *"Why did Leclerc just lift on the straight? Is the MGU-K failing?"*
 
 ---
