@@ -1,0 +1,13 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.ibm_scuderia/bin/python",
+  "terminal.integrated.defaultProfile.windows": "WSL",
+  "terminal.integrated.profiles.windows": {
+    "WSL": {
+      "path": "wsl.exe",
+      "args": ["-d", "Ubuntu"],
+      "icon": "terminal-linux"
+    }
+  },
+  "remote.WSL.fileWatcher.polling": true,
+  "files.eol": "\n"
+}
