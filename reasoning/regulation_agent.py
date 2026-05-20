@@ -19,6 +19,32 @@ from memory.rag_store import RAGStore
 from models import Narrative, RAGResult, StructuredSignal
 
 
+# Fan-facing terms → 2026 regulation language.
+# The 2026 regs retired several common F1 abbreviations.
+_TERM_SYNONYMS: dict[str, str] = {
+    "drs": "movable rear wing flap rear wing adjuster system",
+    "drag reduction system": "movable rear wing flap rear wing adjuster system",
+    "ers": "energy recovery system MGU-K MGU-H energy store",
+    "mgu-h": "Motor Generator Unit Heat energy recovery",
+    "mgu-k": "Motor Generator Unit Kinetic energy recovery",
+    "kers": "energy recovery system kinetic energy store",
+    "floor": "floor body underfloor ground effect",
+    "porpoising": "aerodynamic oscillation plank ride height",
+    "parc ferme": "parc ferme impound",
+    "power unit": "power unit internal combustion engine PU",
+}
+
+
+def _expand_query(query: str) -> str:
+    """Append regulation synonyms for known fan shorthand terms."""
+    q_lower = query.lower()
+    extras = []
+    for fan_term, reg_terms in _TERM_SYNONYMS.items():
+        if fan_term in q_lower:
+            extras.append(reg_terms)
+    return f"{query} {' '.join(extras)}".strip() if extras else query
+
+
 _REGULATION_PROMPT = """You are a Formula 1 technical regulation expert for Scuderia Ferrari fans.
 
 Your ONLY source of knowledge is the regulation context provided below.
@@ -35,7 +61,8 @@ Regulation context:
 Instructions:
 1. Answer in plain English that a knowledgeable Ferrari fan can understand.
 2. Keep the answer under 60 words.
-3. End with exactly this format on a new line:
+3. {language_instruction}
+4. End with exactly this format on a new line:
    [Citation: {citation}]
 
 Answer:"""
@@ -71,7 +98,7 @@ class RegulationAgent:
         amended_context is passed on retry — the Overseer's corrected scope.
         """
         # ── Step 1: Retrieve (ALWAYS before reasoning) ─────────────────────
-        query = amended_context or signal.raw_text
+        query = _expand_query(amended_context or signal.raw_text)
         rag_result: RAGResult = self._rag.query_regulations(query)
 
         if not rag_result.meets_threshold(config.confidence_threshold):
@@ -83,10 +110,16 @@ class RegulationAgent:
         cited_chunk = rag_result.best_chunk()
 
         # ── Step 3: Reason (Granite call) ───────────────────────────────────
+        lang_instruction = (
+            "Respond in Italian (Italiano)."
+            if signal.language == "it"
+            else "Respond in English."
+        )
         prompt = _REGULATION_PROMPT.format(
             query=signal.raw_text,
             context=context,
             citation=citation,
+            language_instruction=lang_instruction,
         )
         raw_response = self._model.generate_text(prompt).strip()
 

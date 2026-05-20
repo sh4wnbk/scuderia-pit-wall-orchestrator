@@ -17,6 +17,7 @@ Embeddings: sentence-transformers all-MiniLM-L6-v2 for MVP.
 Swap to ibm/slate-125m-english-rtrvr via watsonx for production.
 """
 
+import hashlib
 import os
 from pathlib import Path
 from typing import Optional
@@ -32,11 +33,8 @@ class RAGStore:
 
     def __init__(self):
         self._client = chromadb.PersistentClient(path=config.chroma_path)
-        self._embed_fn = (
-            embedding_functions.SentenceTransformerEmbeddingFunction(
-                model_name="all-MiniLM-L6-v2"
-            )
-        )
+        # Use Chroma's default ONNX-based embedder to keep deployment light.
+        self._embed_fn = embedding_functions.DefaultEmbeddingFunction()
         self._fia_collection = self._client.get_or_create_collection(
             name=config.fia_collection,
             embedding_function=self._embed_fn,
@@ -75,9 +73,9 @@ class RAGStore:
                     "title": doc.get("title", ""),
                     "chunk_index": j,
                 })
-                ids.append(f"fia_{i}_{j}")
+                ids.append("fia_" + hashlib.md5(f"{len(ids)}:{para}".encode()).hexdigest()[:16])
 
-        self._fia_collection.add(
+        self._fia_collection.upsert(
             documents=chunks,
             metadatas=metadatas,
             ids=ids,
@@ -100,9 +98,9 @@ class RAGStore:
                     "year": str(doc.get("year", "")),
                     "outcome": doc.get("outcome", ""),
                 })
-                ids.append(f"strat_{i}_{j}")
+                ids.append("strat_" + hashlib.md5(f"{len(ids)}:{para}".encode()).hexdigest()[:16])
 
-        self._strategy_collection.add(
+        self._strategy_collection.upsert(
             documents=chunks,
             metadatas=metadatas,
             ids=ids,
