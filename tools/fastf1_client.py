@@ -16,6 +16,7 @@ MVP: uses historical session data to simulate live race telemetry.
 Production: point to the live timing feed when available.
 """
 
+import os
 from dataclasses import dataclass
 from typing import Optional
 
@@ -29,6 +30,7 @@ from models import LiveTelemetry
 class FastF1Client:
 
     def __init__(self):
+        os.makedirs(config.fastf1_cache_path, exist_ok=True)
         fastf1.Cache.enable_cache(config.fastf1_cache_path)
 
     def get_driver_telemetry(
@@ -109,8 +111,15 @@ class FastF1Client:
             except Exception:
                 return default
 
+        try:
+            row = session.results[session.results["Abbreviation"] == driver_code]
+            driver_name = row["FullName"].iloc[0] if not row.empty else driver_code
+        except Exception:
+            driver_name = driver_code
+
         return LiveTelemetry(
             driver_code=driver_code,
+            driver_name=driver_name,
             lap_number=safe_int(lap.get("LapNumber")),
             lap_time_str=safe_str(lap.get("LapTime")),
             tyre_compound=safe_str(lap.get("Compound")),

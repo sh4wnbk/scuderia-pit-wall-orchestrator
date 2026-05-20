@@ -25,8 +25,11 @@ _STRATEGY_PROMPT = """You are a Formula 1 race strategy analyst for Scuderia Fer
 
 You have access to two information sources. Use both.
 
-LIVE RACE TELEMETRY (current lap data):
+LIVE RACE TELEMETRY — {primary_driver}:
 {telemetry_context}
+
+LIVE RACE TELEMETRY — TEAMMATE {teammate_driver}:
+{teammate_context}
 
 HISTORICAL STRATEGY CONTEXT (retrieved patterns):
 {strategy_context}
@@ -35,10 +38,12 @@ Fan question or race event: {query}
 
 Instructions:
 1. Synthesise the live telemetry and historical strategy to explain what is happening.
-2. Predict the most likely next strategic move within 2–3 laps.
-3. Write in plain English for a knowledgeable Ferrari fan. Under 80 words.
-4. Do NOT speculate beyond what the data supports.
-5. End with exactly this format on a new line:
+2. Compare both drivers' situations where relevant to the question.
+3. Predict the most likely next strategic move within 2–3 laps.
+4. Write for a knowledgeable Ferrari fan. Under 90 words.
+5. Do NOT speculate beyond what the data supports.
+6. {language_instruction}
+7. End with exactly this format on a new line:
    [Citation: {citation}]
 
 Analysis:"""
@@ -81,15 +86,24 @@ class AgenticStrategist:
             },
         )
         # Current race context — set before each race session
-        self._race_year: int = 2024
-        self._race_name: str = "Bahrain"
+        self._race_year: int = 2026
+        self._race_name: str = "Miami"
         self._driver: str = "LEC"
+        self._ferrari_drivers: list[str] = ["LEC", "HAM"]
 
-    def set_race_context(self, year: int, race: str, driver: str):
+    def set_race_context(
+        self,
+        year: int,
+        race: str,
+        driver: str,
+        ferrari_drivers: list[str] | None = None,
+    ):
         """Call once at session start to configure the live data target."""
         self._race_year = year
         self._race_name = race
         self._driver = driver
+        if ferrari_drivers is not None:
+            self._ferrari_drivers = ferrari_drivers
 
     def answer(
         self,
@@ -107,21 +121,42 @@ class AgenticStrategist:
         cited_chunk = rag_result.best_chunk()
         strategy_context = "\n\n".join(rag_result.chunks) if rag_result.chunks else "No historical context retrieved."
 
-        # ── Step 2: FastF1 live data (after RAG, before reasoning) ─────────
-        telemetry: LiveTelemetry | None = self._f1.get_driver_telemetry(
+        # ── Step 2: FastF1 live data for both Ferrari drivers ──────────────
+        snapshot = self._f1.get_race_snapshot(
             year=self._race_year,
             race=self._race_name,
-            session_type="R",
-            driver_code=self._driver,
+            drivers=self._ferrari_drivers,
+        )
+        telemetry: LiveTelemetry | None = snapshot.get(self._driver)
+        teammates = [d for d in self._ferrari_drivers if d != self._driver]
+        teammate_code = teammates[0] if teammates else None
+        teammate_telemetry: LiveTelemetry | None = (
+            snapshot.get(teammate_code) if teammate_code else None
         )
 
         # ── Step 3: Build prompt ─────────────────────────────────────────────
+        lang_instruction = (
+            "Respond in Italian (Italiano)."
+            if signal.language == "it"
+            else "Respond in English."
+        )
         if telemetry:
+            teammate_ctx = (
+                teammate_telemetry.to_context_string()
+                if teammate_telemetry
+                else "Teammate data unavailable."
+            )
+            primary_name = telemetry.driver_name
+            teammate_name = teammate_telemetry.driver_name if teammate_telemetry else (teammate_code or "Teammate")
             prompt = _STRATEGY_PROMPT.format(
+                primary_driver=primary_name,
                 telemetry_context=telemetry.to_context_string(),
+                teammate_driver=teammate_name,
+                teammate_context=teammate_ctx,
                 strategy_context=strategy_context,
                 query=signal.raw_text,
                 citation=citation,
+                language_instruction=lang_instruction,
             )
         else:
             prompt = _NO_TELEMETRY_PROMPT.format(

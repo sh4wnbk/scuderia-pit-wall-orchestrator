@@ -40,7 +40,7 @@ from models import Narrative, OverseerDecision
 
 
 _CROSS_VALIDATION_PROMPT = """You are a governance overseer for an AI assistant used by Ferrari fans.
-Your job: verify that a narrative accurately represents its cited source.
+Your job: verify that the narrative does not contradict or misrepresent its cited source.
 
 NARRATIVE (what the AI told the fan):
 {narrative}
@@ -51,12 +51,14 @@ CLAIMED CITATION:
 ACTUAL CITED SOURCE TEXT:
 {cited_chunk}
 
-Does the narrative accurately represent what the cited source says?
-Be strict. Flag any claim not directly supported by the source text.
+Does the narrative contradict or misrepresent the cited source?
+Only flag if a claim in the narrative directly conflicts with or is incompatible with the source text.
+Do NOT flag claims about live telemetry data — those come from a separate validated source.
+Do NOT flag the narrative for containing more information than the source — only for contradicting it.
 
 Respond with EXACTLY one of these two formats:
-VALIDATED: <one sentence explaining why it is accurate>
-INVALID: <specific failure reason> | AMENDED_SCOPE: <corrected query scope for retry>
+VALIDATED: <one sentence explaining why the narrative is consistent with the source>
+INVALID: <specific contradiction found> | AMENDED_SCOPE: <corrected query scope for retry>
 
 Response:"""
 

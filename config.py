@@ -5,28 +5,56 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _read_secret_from_file(path: str) -> str:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
+
+def _get_secret(name: str, default: str = "") -> str:
+    """
+    Prefer env var value, then fall back to file-mounted secret.
+    Supports Code Engine secret mounts with <NAME>_FILE paths.
+    """
+    direct = os.getenv(name)
+    if direct:
+        return direct
+
+    file_path = os.getenv(f"{name}_FILE", "")
+    if file_path:
+        value = _read_secret_from_file(file_path)
+        if value:
+            return value
+
+    return default
+
+
 @dataclass
 class Config:
     # ── IBM watsonx.ai ────────────────────────────────────────────────────────
-    watsonx_api_key: str = os.getenv("WATSONX_API_KEY", "")
+    watsonx_api_key: str = _get_secret("WATSONX_API_KEY")
     watsonx_url: str = os.getenv(
         "WATSONX_URL", "https://us-south.ml.cloud.ibm.com"
     )
-    watsonx_project_id: str = os.getenv("WATSONX_PROJECT_ID", "")
-    granite_model_id: str = "ibm/granite-13b-chat-v2"
+    watsonx_project_id: str = _get_secret("WATSONX_PROJECT_ID")
+    granite_model_id: str = "ibm/granite-4-h-small"
 
     # ── IBM Watson Speech-to-Text ─────────────────────────────────────────────
-    stt_api_key: str = os.getenv("WATSON_STT_API_KEY", "")
+    stt_api_key: str = _get_secret("WATSON_STT_API_KEY")
     stt_url: str = os.getenv("WATSON_STT_URL", "")
-    stt_model: str = "en-US_BroadbandModel"   # handles heavy accents + noise
+    stt_model: str = "en-US_BroadbandModel"
+    stt_model_it: str = "it-IT_BroadbandModel"
 
     # ── IBM Watson Text-to-Speech ─────────────────────────────────────────────
-    tts_api_key: str = os.getenv("WATSON_TTS_API_KEY", "")
+    tts_api_key: str = _get_secret("WATSON_TTS_API_KEY")
     tts_url: str = os.getenv("WATSON_TTS_URL", "")
     tts_voice: str = "en-US_AllisonV3Voice"
+    tts_voice_it: str = "it-IT_FrancescaV3Voice"
 
     # ── Governance thresholds ─────────────────────────────────────────────────
-    confidence_threshold: float = 0.7   # RAG similarity floor
+    confidence_threshold: float = 0.55  # RAG similarity floor; FIA legal text embeds lower than plain English
     max_retries: int = 2                # Overseer retry budget
 
     # ── Latency budget (milliseconds) ─────────────────────────────────────────

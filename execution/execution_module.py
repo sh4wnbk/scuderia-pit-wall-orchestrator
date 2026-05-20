@@ -48,6 +48,7 @@ class ExecutionModule:
         narrative: Narrative,
         signal: StructuredSignal,
         agent_callable: Callable[[StructuredSignal, Optional[str]], Narrative],
+        language: str = "en",
     ) -> FinalOutput:
         """
         Main delivery pipeline with retry loop.
@@ -66,12 +67,12 @@ class ExecutionModule:
                 # ── APPROVED ────────────────────────────────────────────────
                 output_type = "retry_corrected" if retry_count > 0 else "confirmed"
                 return self._build_output(
-                    current_narrative, output_type, retry_count > 0
+                    current_narrative, output_type, retry_count > 0, language
                 )
 
             if decision.amended_context is None:
                 # ── SUPPRESS (retry budget exhausted or no citation) ─────────
-                return self._uncertainty_output(current_narrative)
+                return self._uncertainty_output(current_narrative, language)
 
             # ── RETRY with amended context ───────────────────────────────────
             retry_count += 1
@@ -82,13 +83,13 @@ class ExecutionModule:
     # ── Private ──────────────────────────────────────────────────────────────
 
     def _build_output(
-        self, narrative: Narrative, output_type: str, audit_flag: bool
+        self, narrative: Narrative, output_type: str, audit_flag: bool, language: str = "en"
     ) -> FinalOutput:
         """
         Build a confirmed or retry_corrected FinalOutput.
-        Synthesises audio via Watson TTS.
+        Synthesises audio via Watson TTS in the fan's language.
         """
-        audio = self._synthesise_audio(narrative.text)
+        audio = self._synthesise_audio(narrative.text, language)
         traceability = f"Source: {narrative.citation}"
 
         return FinalOutput(
@@ -99,16 +100,15 @@ class ExecutionModule:
             traceability_link=traceability,
         )
 
-    def _uncertainty_output(self, narrative: Narrative) -> FinalOutput:
+    def _uncertainty_output(self, narrative: Narrative, language: str = "en") -> FinalOutput:
         """
         Build the uncertainty response.
         Delivers partial, honest context — never confident wrong output.
         Trust preserved over false confidence.
         """
-        # Use what we can verify — the citation reference at minimum
-        partial = narrative.citation if narrative.has_citation() else "data is still loading"
+        partial = narrative.text if narrative.text else "data is still loading"
         text = _UNCERTAINTY_TEMPLATE.format(partial_context=partial)
-        audio = self._synthesise_audio(text)
+        audio = self._synthesise_audio(text, language)
 
         return FinalOutput(
             text=text,
@@ -118,17 +118,19 @@ class ExecutionModule:
             traceability_link=None,
         )
 
-    def _synthesise_audio(self, text: str) -> Optional[bytes]:
+    def _synthesise_audio(self, text: str, language: str = "en") -> Optional[bytes]:
         """
         Watson Text-to-Speech — the Audio Overlay implementation.
+        Selects voice based on language: Allison (EN) or Francesca (IT).
         Returns None gracefully if TTS credentials are not configured.
         """
         if not config.tts_api_key or not config.tts_url:
             return None
+        voice = config.tts_voice_it if language == "it" else config.tts_voice
         try:
             response = self._tts.synthesize(
                 text,
-                voice=config.tts_voice,
+                voice=voice,
                 accept="audio/wav",
             ).get_result()
             return response.content

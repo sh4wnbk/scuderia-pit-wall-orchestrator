@@ -14,6 +14,7 @@ class StructuredSignal:
     transcript_confidence: float
     timestamp: datetime = field(default_factory=datetime.utcnow)
     telemetry: Optional[dict] = None   # populated for telemetry_event signals
+    language: str = "en"               # "en" | "it" — governs STT model, TTS voice, prompt language
 
     def is_high_confidence(self, threshold: float = 0.75) -> bool:
         return self.transcript_confidence >= threshold
@@ -53,6 +54,7 @@ class LiveTelemetry:
     Output of the FastF1 tool invocation (Tools layer).
     """
     driver_code: str
+    driver_name: str
     lap_number: int
     lap_time_str: str
     tyre_compound: str
@@ -67,7 +69,7 @@ class LiveTelemetry:
 
     def to_context_string(self) -> str:
         return (
-            f"Driver: {self.driver_code} | Lap: {self.lap_number} | "
+            f"Driver: {self.driver_name} | Lap: {self.lap_number} | "
             f"Lap Time: {self.lap_time_str} | Tyre: {self.tyre_compound} "
             f"({self.tyre_age_laps} laps old) | Position: P{self.position} | "
             f"Gap to leader: {self.gap_to_leader} | "

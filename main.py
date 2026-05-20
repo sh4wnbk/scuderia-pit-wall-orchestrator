@@ -17,7 +17,7 @@ Pipeline execution order (matches the sequence diagram exactly):
 
 Usage:
     orchestrator = PitWallOrchestrator()
-    orchestrator.set_race_context(year=2024, race="Bahrain", driver="LEC")
+    orchestrator.set_race_context(year=2026, race="Miami", driver="LEC")
 
     # Text query from Sofia
     result = orchestrator.process(text_query="Why did Leclerc just lift?")
@@ -66,12 +66,21 @@ class PitWallOrchestrator:
         self._rag.register_audit_callback(self._overseer.receive_audit)
         # Hook 3: Execution Module → Overseer (wired inside ExecutionModule)
 
-    def set_race_context(self, year: int, race: str, driver: str):
+    def set_race_context(
+        self,
+        year: int,
+        race: str,
+        driver: str,
+        ferrari_drivers: list[str] | None = None,
+    ):
         """
         Configure the live race session.
-        Call once at the start of each race session.
+        ferrari_drivers: both Ferrari drivers at this race (defaults to LEC + HAM).
         """
-        self._strat_agent.set_race_context(year, race, driver)
+        self._strat_agent.set_race_context(
+            year, race, driver,
+            ferrari_drivers=ferrari_drivers or ["LEC", "HAM"],
+        )
         print(f"[Orchestrator] Race context set: {year} {race} — tracking {driver}")
 
     def index_documents(
@@ -105,15 +114,17 @@ class PitWallOrchestrator:
         audio_bytes: Optional[bytes] = None,
         telemetry_event: Optional[str] = None,
         telemetry_data: Optional[dict] = None,
+        language: str = "en",
     ) -> FinalOutput:
         """
         Single public method. Exactly one input type should be provided.
+        language: "en" (English) or "it" (Italian) — governs STT, TTS, and response language.
         Returns a FinalOutput with output_type in:
           "confirmed" | "retry_corrected" | "uncertainty"
         """
         # ── Step 1: Perception ────────────────────────────────────────────
         signal: StructuredSignal = self._perceive(
-            text_query, audio_bytes, telemetry_event, telemetry_data
+            text_query, audio_bytes, telemetry_event, telemetry_data, language
         )
 
         # ── Step 2: Planning — intent classification and routing ──────────
@@ -130,7 +141,7 @@ class PitWallOrchestrator:
             agent_callable = self._strat_agent.answer
 
         # ── Steps 6–8: Governance gate + retry loop + delivery ────────────
-        output = self._execution.deliver(narrative, signal, agent_callable)
+        output = self._execution.deliver(narrative, signal, agent_callable, language)
 
         print(f"[Orchestrator] Output delivered — type: {output.output_type}")
         return output
@@ -150,11 +161,12 @@ class PitWallOrchestrator:
         audio_bytes: Optional[bytes],
         telemetry_event: Optional[str],
         telemetry_data: Optional[dict],
+        language: str = "en",
     ) -> StructuredSignal:
         if audio_bytes is not None:
-            return self._nlp.process_audio(audio_bytes)
+            return self._nlp.process_audio(audio_bytes, language)
         if text_query is not None:
-            return self._nlp.process_text_query(text_query)
+            return self._nlp.process_text_query(text_query, language)
         if telemetry_event is not None:
             return self._nlp.process_telemetry_event(
                 telemetry_event, telemetry_data or {}
@@ -189,12 +201,12 @@ if __name__ == "__main__":
     }
 
     orchestrator.index_documents(fia_documents=[sample_fia_doc])
-    orchestrator.set_race_context(year=2024, race="Bahrain", driver="LEC")
+    orchestrator.set_race_context(year=2026, race="Miami", driver="LEC")
 
     # Simulate Sofia's query
     print("\n── Processing fan query ──")
     result = orchestrator.process(
-        text_query="Why did Leclerc just lift on the straight? Is the MGU-K failing?"
+        text_query="Leclerc started P3 and finished P8 in Miami — what went wrong with the strategy?"
     )
 
     print(f"\nOutput type: {result.output_type}")

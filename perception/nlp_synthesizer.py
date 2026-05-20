@@ -48,22 +48,22 @@ class NLPSynthesizer:
 
     # ── Public API ──────────────────────────────────────────────────────────
 
-    def process_audio(self, audio_bytes: bytes) -> StructuredSignal:
+    def process_audio(self, audio_bytes: bytes, language: str = "en") -> StructuredSignal:
         """
         Full pipeline: raw audio → Watson STT → structured signal → audit.
-        Used for pit-wall radio transcription.
+        language selects the STT model: "en" or "it".
         """
-        transcript, confidence = self._transcribe(audio_bytes)
-        signal = self._structure(transcript, confidence)
+        transcript, confidence = self._transcribe(audio_bytes, language)
+        signal = self._structure(transcript, confidence, language)
         self._fire_audit(signal)
         return signal
 
-    def process_text_query(self, text: str) -> StructuredSignal:
+    def process_text_query(self, text: str, language: str = "en") -> StructuredSignal:
         """
-        Direct text path: Sofia's typed query → structured signal → audit.
+        Direct text path: typed query → structured signal → audit.
         Confidence is 1.0 — no transcription uncertainty.
         """
-        signal = self._structure(text, confidence=1.0)
+        signal = self._structure(text, confidence=1.0, language=language)
         self._fire_audit(signal)
         return signal
 
@@ -86,16 +86,25 @@ class NLPSynthesizer:
 
     # ── Private methods ─────────────────────────────────────────────────────
 
-    def _transcribe(self, audio_bytes: bytes) -> tuple[str, float]:
+    def _transcribe(self, audio_bytes: bytes, language: str = "en") -> tuple[str, float]:
         """
         Watson STT call. Returns (transcript, confidence).
         smart_formatting=True handles numbers and technical notation.
         """
+        stt_model = config.stt_model_it if language == "it" else config.stt_model
+        # Detect format from magic bytes so browser WebM and WAV files both work
+        if audio_bytes[:4] == b'OggS':
+            content_type = "audio/ogg;codecs=opus"
+        elif audio_bytes[:4] == b'RIFF':
+            content_type = "audio/wav"
+        else:
+            content_type = "audio/webm"  # Chrome/Edge MediaRecorder default
+
         result = (
             self._stt.recognize(
                 audio=io.BytesIO(audio_bytes),
-                content_type="audio/wav",
-                model=config.stt_model,
+                content_type=content_type,
+                model=stt_model,
                 smart_formatting=True,
             )
             .get_result()
@@ -107,7 +116,7 @@ class NLPSynthesizer:
         best = result["results"][0]["alternatives"][0]
         return best["transcript"].strip(), best.get("confidence", 0.0)
 
-    def _structure(self, text: str, confidence: float) -> StructuredSignal:
+    def _structure(self, text: str, confidence: float, language: str = "en") -> StructuredSignal:
         """
         Classify the signal type based on content.
         Radio/telemetry language is distinguishable from fan queries.
@@ -121,6 +130,7 @@ class NLPSynthesizer:
             signal_type=signal_type,
             transcript_confidence=confidence,
             timestamp=datetime.utcnow(),
+            language=language,
         )
 
     def _fire_audit(self, signal: StructuredSignal) -> None:
