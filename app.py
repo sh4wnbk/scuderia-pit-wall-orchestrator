@@ -19,6 +19,7 @@ class ProcessRequest(BaseModel):
     telemetry_event: Optional[str] = Field(default=None, description="Telemetry event label")
     telemetry_data: Optional[dict] = Field(default=None, description="Telemetry payload")
     language: str = Field(default="en", description="Response language: 'en' or 'it'")
+    voice: Optional[str] = Field(default=None, description="EN voice: allison | michael | george | emma | lisa")
 
 
 class ProcessResponse(BaseModel):
@@ -116,6 +117,7 @@ def process(payload: ProcessRequest) -> ProcessResponse:
         telemetry_event=payload.telemetry_event,
         telemetry_data=payload.telemetry_data,
         language=payload.language,
+        voice=payload.voice,
     )
 
     output_audio_b64 = (

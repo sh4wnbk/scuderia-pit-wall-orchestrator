@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -50,8 +50,15 @@ class Config:
     # ── IBM Watson Text-to-Speech ─────────────────────────────────────────────
     tts_api_key: str = _get_secret("WATSON_TTS_API_KEY")
     tts_url: str = os.getenv("WATSON_TTS_URL", "")
-    tts_voice: str = "en-US_AllisonV3Voice"
-    tts_voice_it: str = "it-IT_FrancescaV3Voice"
+    tts_voice: str = "en-US_AllisonExpressive"      # EN default
+    tts_voice_it: str = "it-IT_FrancescaV3Voice"    # IT only option
+    tts_voices: dict = field(default_factory=lambda: {
+        "allison": "en-US_AllisonExpressive",
+        "michael": "en-US_MichaelExpressive",
+        "george":  "en-GB_GeorgeExpressive",
+        "emma":    "en-US_EmmaExpressive",
+        "lisa":    "en-US_LisaExpressive",
+    })
 
     # ── Governance thresholds ─────────────────────────────────────────────────
     confidence_threshold: float = 0.55  # RAG similarity floor; FIA legal text embeds lower than plain English

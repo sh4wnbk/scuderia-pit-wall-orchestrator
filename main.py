@@ -115,6 +115,7 @@ class PitWallOrchestrator:
         telemetry_event: Optional[str] = None,
         telemetry_data: Optional[dict] = None,
         language: str = "en",
+        voice: Optional[str] = None,
     ) -> FinalOutput:
         """
         Single public method. Exactly one input type should be provided.
@@ -141,7 +142,7 @@ class PitWallOrchestrator:
             agent_callable = self._strat_agent.answer
 
         # ── Steps 6–8: Governance gate + retry loop + delivery ────────────
-        output = self._execution.deliver(narrative, signal, agent_callable, language)
+        output = self._execution.deliver(narrative, signal, agent_callable, language, voice)
 
         print(f"[Orchestrator] Output delivered — type: {output.output_type}")
         return output

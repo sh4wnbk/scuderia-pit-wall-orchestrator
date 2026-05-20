@@ -915,6 +915,16 @@ header {
               <button class="lang-btn" onclick="setLang(this,'it')">IT</button>
             </div>
           </div>
+          <div id="voiceSelector">
+            <div class="gov-section-label" style="margin-bottom:4px;">Voice</div>
+            <div class="lang-toggle">
+              <button class="lang-btn voice-btn active" onclick="setVoice(this,'allison')" title="Allison — US Female">ALI</button>
+              <button class="lang-btn voice-btn" onclick="setVoice(this,'george')" title="George — British Male">GEO</button>
+              <button class="lang-btn voice-btn" onclick="setVoice(this,'michael')" title="Michael — US Male">MIC</button>
+              <button class="lang-btn voice-btn" onclick="setVoice(this,'emma')" title="Emma — US Female">EMM</button>
+              <button class="lang-btn voice-btn" onclick="setVoice(this,'lisa')" title="Lisa — US Female">LIS</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1164,6 +1174,7 @@ header {
   // ── State ──────────────────────────────────────────────────────────────────
   let micActive = false;
   let currentLang = 'en';
+  let currentVoice = 'allison';
   let currentAudio = null;
   let mediaRecorder = null;
   let audioChunks = [];
@@ -1236,8 +1247,8 @@ header {
     showProcessing(textQuery || 'Voice query');
 
     const body = audioB64
-      ? { audio_b64: audioB64, language: currentLang }
-      : { text_query: textQuery, language: currentLang };
+      ? { audio_b64: audioB64, language: currentLang, voice: currentVoice }
+      : { text_query: textQuery, language: currentLang, voice: currentVoice };
 
     const t0 = Date.now();
     try {
@@ -1312,7 +1323,7 @@ header {
     // Audio player
     if (data.audio_b64) {
       setupAudio(data.audio_b64);
-      const ttsVoice = currentLang === 'it' ? 'TTS: IT-IT FRANCESCAV3' : 'TTS: EN-US ALLISONV3';
+      const ttsVoice = currentLang === 'it' ? 'TTS: IT-IT FRANCESCAV3' : `TTS: ${currentVoice.toUpperCase()} EXPRESSIVE`;
       document.getElementById('ttsLabel').textContent = ttsVoice;
       document.getElementById('audioPlayer').style.display = 'flex';
     }
@@ -1443,7 +1454,17 @@ header {
     document.getElementById('aiLocale').textContent =
       lang === 'it' ? 'IT-IT / EN-US' : 'EN-US / IT-IT';
     document.getElementById('ttsLabel').textContent =
-      lang === 'it' ? 'TTS: IT-IT FRANCESCAV3' : 'TTS: EN-US ALLISONV3';
+      lang === 'it' ? 'TTS: IT-IT FRANCESCAV3' : `TTS: ${currentVoice.toUpperCase()} EXPRESSIVE`;
+    const voiceRow = document.getElementById('voiceSelector');
+    if (voiceRow) voiceRow.style.display = lang === 'it' ? 'none' : 'flex';
+  }
+
+  // ── Voice selector ────────────────────────────────────────────────────────
+  function setVoice(btn, voice) {
+    currentVoice = voice;
+    document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('ttsLabel').textContent = `TTS: ${voice.toUpperCase()} EXPRESSIVE`;
   }
 
   function setNav(el) {
