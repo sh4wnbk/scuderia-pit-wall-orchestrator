@@ -8,4 +8,5 @@ docs/session_handoff.md
 assets/IBM SkillsBuild_AI Experiential Learning Lab_2026_Guide.md
 
 # reB0ot
-.bob/context/
+.bob/context/*
+!.bob/context/reboot_latest.md
