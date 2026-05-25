@@ -27,7 +27,9 @@ jobs:
           ibmcloud login --apikey "${{ secrets.IBM_CLOUD_API_KEY }}" -r "${{ secrets.IBM_REGION }}" -g "${{ secrets.IBM_RESOURCE_GROUP }}"
 
       - name: Login to IBM Container Registry
-        run: ibmcloud cr login
+        run: |
+          ibmcloud cr region-set us-south
+          ibmcloud cr login
 
       - name: Build and push image
         run: |
