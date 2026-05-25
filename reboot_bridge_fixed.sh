@@ -15,11 +15,14 @@ fi
 
 export PROJECT_ID="$WATSONX_PROJECT_ID"
 
-# Try python3 first, then python
-if command -v python3 &> /dev/null; then
+# Use venv python if available, else fall back to system python
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+VENV_PYTHON="$SCRIPT_DIR/.ibm_scuderia/bin/python"
+
+if [ -f "$VENV_PYTHON" ]; then
+    "$VENV_PYTHON" /mnt/c/Users/shawn/bob/reboot/reboot.py "$@"
+elif command -v python3 &> /dev/null; then
     python3 /mnt/c/Users/shawn/bob/reboot/reboot.py "$@"
-elif command -v python &> /dev/null; then
-    python /mnt/c/Users/shawn/bob/reboot/reboot.py "$@"
 else
     echo "Error: Python not found"
     exit 1

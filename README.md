@@ -217,7 +217,7 @@ The demo indexes a sample FIA regulation document, sets race context to Bahrain 
 
 | Component | IBM Product |
 |---|---|
-| Core LLM | IBM watsonx.ai — Granite 13B Chat v2 |
+| Core LLM | IBM watsonx.ai — Granite 4 (granite-4-h-small) |
 | Speech transcription | IBM Watson Speech-to-Text |
 | Audio delivery | IBM Watson Text-to-Speech |
 | Governance & audit | IBM watsonx.governance |
