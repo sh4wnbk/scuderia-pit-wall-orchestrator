@@ -7,6 +7,8 @@ fastf1_cache/
 docs/session_handoff.md
 assets/IBM SkillsBuild_AI Experiential Learning Lab_2026_Guide.md
 PROJECT_ANALYSIS.md
+CLAUDE.md
+.claude/
 
 # reB0ot
 .bob/context/*
