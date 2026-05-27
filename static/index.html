@@ -205,7 +205,7 @@ tailwind.config = {
     <span class="text-headline-md font-headline-md font-extrabold text-primary-container uppercase tracking-tighter">SCUDERIA PIT-WALL</span>
     <div class="flex items-center gap-margin-sm">
       <span class="text-label-caps font-label-caps text-on-surface-variant opacity-70">IBM watsonx</span>
-      <span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant transition-colors duration-150 p-1 cursor-pointer">settings</span>
+      <span onclick="openDiagnostics()" class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant transition-colors duration-150 p-1 cursor-pointer">settings</span>
       <span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant transition-colors duration-150 p-1 cursor-pointer">account_circle</span>
     </div>
   </header>
@@ -262,7 +262,10 @@ tailwind.config = {
           <div class="waveform-bar" style="height:10px;"></div>
         </div>
         <h2 class="text-headline-lg font-headline-lg text-on-surface tracking-widest">AWAITING COMMAND</h2>
-        <p class="text-label-caps font-label-caps text-primary-container mt-1">SYSTEM ONLINE / READY TO ANALYZE</p>
+        <p class="text-label-caps font-label-caps text-on-surface-variant mt-1 flex items-center justify-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+          Scuderia AI · watsonx Active
+        </p>
       </div>
       <!-- Text input -->
       <div class="w-full max-w-lg mt-6 flex gap-2">
@@ -277,27 +280,6 @@ tailwind.config = {
 
     <!-- Bottom modules -->
     <div class="space-y-margin-md">
-      <!-- IBM Granite -->
-      <section class="bg-surface-container border border-outline-variant p-margin-md relative">
-        <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
-        <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-        <div class="flex justify-between items-start mb-margin-sm border-b border-outline-variant pb-margin-sm">
-          <span class="text-label-caps font-label-caps text-on-surface">ibm/granite-4-h-small</span>
-          <span class="text-label-caps font-label-caps text-tertiary">ACTIVE</span>
-        </div>
-        <div class="grid grid-cols-2 gap-margin-md">
-          <div>
-            <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">INFERENCE LATENCY</p>
-            <p id="latency-ready" class="text-data-mono font-data-mono text-on-surface">--ms</p>
-          </div>
-          <div>
-            <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">RAG INDEX</p>
-            <p class="text-data-mono font-data-mono text-on-surface">777 chunks</p>
-          </div>
-        </div>
-        <p class="mt-margin-sm text-body-sm font-body-sm text-on-surface-variant italic">"RAG over FIA 2026 regulations + live race telemetry"</p>
-      </section>
-
       <!-- Tyre + Brake -->
       <section class="grid grid-cols-2 gap-gutter bg-outline-variant border border-outline-variant">
         <div class="bg-surface-container p-margin-md flex flex-col gap-2">
@@ -365,6 +347,53 @@ tailwind.config = {
       <span class="text-label-caps font-label-caps">VOICE</span>
     </button>
   </nav>
+
+  <!-- Diagnostics Modal -->
+  <div id="diagnosticsModal" class="hidden absolute inset-0 bg-background z-50 flex flex-col p-margin-md overflow-y-auto">
+    <div class="flex justify-between items-center mb-margin-md border-b border-outline-variant pb-margin-sm">
+      <span class="text-label-caps font-label-caps text-on-surface tracking-widest">SYSTEM DIAGNOSTICS</span>
+      <button onclick="closeDiagnostics()" class="text-on-surface-variant hover:text-on-surface">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="space-y-margin-md">
+      <section class="bg-surface-container border border-outline-variant p-margin-md relative">
+        <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+        <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+        <div class="flex justify-between items-center mb-margin-sm border-b border-outline-variant pb-margin-sm">
+          <span class="text-label-caps font-label-caps text-on-surface">ibm/granite-4-h-small</span>
+          <span class="text-label-caps font-label-caps text-tertiary">ACTIVE</span>
+        </div>
+        <div class="grid grid-cols-2 gap-margin-md">
+          <div>
+            <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">INFERENCE LATENCY</p>
+            <p id="latency-ready" class="text-data-mono font-data-mono text-on-surface">--ms</p>
+          </div>
+          <div>
+            <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">RAG INDEX</p>
+            <p class="text-data-mono font-data-mono text-on-surface">777 chunks · FIA 2026</p>
+          </div>
+        </div>
+      </section>
+      <section class="bg-surface-container border border-outline-variant p-margin-md relative">
+        <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+        <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-margin-sm">OVERSEER PIPELINE</p>
+        <div class="space-y-1 text-label-caps font-label-caps text-[10px]">
+          <div class="flex items-center gap-2"><span class="text-tertiary">01</span><span class="text-on-surface-variant">TRANSCRIPT AUDIT</span></div>
+          <div class="flex items-center gap-2"><span class="text-tertiary">02</span><span class="text-on-surface-variant">RETRIEVAL AUDIT</span></div>
+          <div class="flex items-center gap-2"><span class="text-tertiary">03</span><span class="text-on-surface-variant">PRE-DELIVERY VALIDATION</span></div>
+        </div>
+      </section>
+      <section class="bg-surface-container border border-outline-variant p-margin-md">
+        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-margin-sm">STT / TTS</p>
+        <div class="text-data-mono font-data-mono text-[10px] text-on-surface space-y-1">
+          <p>Watson STT · EN + IT</p>
+          <p>Watson TTS · Allison / Francesca</p>
+        </div>
+      </section>
+    </div>
+  </div>
 
 </div><!-- /screen-ready -->
 
@@ -993,6 +1022,14 @@ function stopTtsWave() {
   document.querySelectorAll('#waveform-tts .waveform-bar').forEach(b => {
     b.style.height = '4px';
   });
+}
+
+// ── Diagnostics Modal ─────────────────────────────────────────────────────
+function openDiagnostics() {
+  document.getElementById('diagnosticsModal').classList.remove('hidden');
+}
+function closeDiagnostics() {
+  document.getElementById('diagnosticsModal').classList.add('hidden');
 }
 
 // ── Custom scroll pip + smooth wheel ─────────────────────────────────────
