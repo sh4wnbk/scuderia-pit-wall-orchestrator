@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
@@ -139,3 +139,69 @@ def process(payload: ProcessRequest) -> ProcessResponse:
 @app.get("/audit")
 def audit_log() -> list[dict]:
     return orchestrator.get_audit_log()
+
+
+# ── Telemetry ─────────────────────────────────────────────────────────────────
+
+_telemetry_cache: dict[str, tuple[datetime, dict]] = {}
+_TELEMETRY_TTL_SECONDS = 60
+_SESSION_PRIORITY = ["R", "Q", "FP3", "FP2", "FP1"]
+
+
+@app.get("/telemetry")
+def get_telemetry() -> dict:
+    """
+    Fetch driver telemetry from FastF1 for the current race context.
+    Tries Race → Qualifying → Practice sessions in order.
+    Cached for 60 seconds to avoid redundant session loads.
+    """
+    strat = orchestrator._strat_agent
+    year, race, driver = strat._race_year, strat._race_name, strat._driver
+
+    cache_key = f"{year}:{race}:{driver}"
+    now = datetime.utcnow()
+
+    if cache_key in _telemetry_cache:
+        cached_at, cached_data = _telemetry_cache[cache_key]
+        if (now - cached_at) < timedelta(seconds=_TELEMETRY_TTL_SECONDS):
+            return cached_data
+
+    telemetry = None
+    session_type_used = None
+    for st in _SESSION_PRIORITY:
+        t = orchestrator._f1.get_driver_telemetry(year, race, st, driver)
+        if t is not None:
+            telemetry = t
+            session_type_used = st
+            break
+
+    if telemetry is None:
+        return {
+            "available": False,
+            "driver": driver,
+            "race": race,
+            "year": year,
+            "message": "No session data available yet",
+        }
+
+    result = {
+        "available": True,
+        "driver_code": telemetry.driver_code,
+        "driver_name": telemetry.driver_name,
+        "session_type": session_type_used,
+        "lap_number": telemetry.lap_number,
+        "tyre_compound": telemetry.tyre_compound,
+        "tyre_age_laps": telemetry.tyre_age_laps,
+        "position": telemetry.position,
+        "gap_to_leader": telemetry.gap_to_leader,
+        "lap_time": telemetry.lap_time_str,
+        "sector_1": telemetry.sector_1,
+        "sector_2": telemetry.sector_2,
+        "sector_3": telemetry.sector_3,
+        "session_name": telemetry.session_name,
+        "race_year": telemetry.race_year,
+        "fetched_at": now.isoformat(),
+    }
+
+    _telemetry_cache[cache_key] = (now, result)
+    return result

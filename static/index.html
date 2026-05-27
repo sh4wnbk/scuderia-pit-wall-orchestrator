@@ -355,40 +355,43 @@ tailwind.config = {
       <!-- Tyre + Brake -->
       <section class="grid grid-cols-2 gap-gutter bg-outline-variant border border-outline-variant">
         <div class="bg-surface-container p-margin-md flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">tire_repair</span>
-            <span class="text-label-caps font-label-caps text-on-surface">TYRE DATA</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">tire_repair</span>
+              <span class="text-label-caps font-label-caps text-on-surface">TYRE</span>
+            </div>
+            <span id="tyre-compound" class="text-label-caps font-label-caps text-[10px] px-2 py-0.5 bg-surface-variant text-on-surface-variant">--</span>
           </div>
           <div class="space-y-1">
             <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">FL TEMP</span>
-              <span class="text-data-mono font-data-mono text-on-surface">94°C</span>
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">AGE</span>
+              <span id="tyre-age" class="text-data-mono font-data-mono text-on-surface">-- laps</span>
             </div>
             <div class="w-full bg-surface-variant h-1">
-              <div class="bg-tertiary h-full w-[85%]"></div>
+              <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:#e0e0e0;"></div>
             </div>
             <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">WEAR</span>
-              <span class="text-data-mono font-data-mono text-on-surface">18%</span>
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">SESSION</span>
+              <span id="session-badge" class="text-data-mono font-data-mono text-on-surface-variant">--</span>
             </div>
           </div>
         </div>
         <div class="bg-surface-container p-margin-md flex flex-col gap-2">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">speed</span>
-            <span class="text-label-caps font-label-caps text-on-surface">BRAKES</span>
+            <span class="text-label-caps font-label-caps text-on-surface">RACE STATUS</span>
           </div>
           <div class="space-y-1">
             <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">TEMP</span>
-              <span class="text-data-mono font-data-mono text-on-surface">412°C</span>
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">POSITION</span>
+              <span id="race-position" class="text-data-mono font-data-mono text-on-surface">--</span>
             </div>
             <div class="w-full bg-surface-variant h-1">
-              <div class="bg-primary-container h-full w-[60%]"></div>
+              <div id="position-bar" class="bg-primary-container h-full transition-all duration-700" style="width:0%"></div>
             </div>
             <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">HEALTH</span>
-              <span class="text-data-mono font-data-mono text-on-surface">NOMINAL</span>
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">GAP TO LEAD</span>
+              <span id="gap-to-leader" class="text-data-mono font-data-mono text-on-surface">--</span>
             </div>
           </div>
         </div>
@@ -1239,6 +1242,50 @@ setInterval(() => {
   });
 }, 150);
 
+// ── Telemetry ─────────────────────────────────────────────────────────────
+const COMPOUND_COLORS = {
+  SOFT: '#dc0000', MEDIUM: '#FFE034', HARD: '#e0e0e0',
+  INTERMEDIATE: '#4caf50', WET: '#2196f3',
+};
+const COMPOUND_LIFE = { SOFT: 25, MEDIUM: 35, HARD: 50, INTERMEDIATE: 40, WET: 40 };
+
+function updateTyreWidget(data) {
+  if (!data.available) return;
+  const compound = (data.tyre_compound || '').toUpperCase();
+  const age      = data.tyre_age_laps || 0;
+  const life     = COMPOUND_LIFE[compound] || 40;
+  const pct      = Math.min(100, Math.round((age / life) * 100));
+  const color    = COMPOUND_COLORS[compound] || '#e0e0e0';
+
+  const el = document.getElementById('tyre-compound');
+  if (el) { el.textContent = compound || '--'; el.style.color = color; el.style.borderColor = color; el.style.border = `1px solid ${color}`; }
+
+  const ageEl = document.getElementById('tyre-age');
+  if (ageEl) ageEl.textContent = age ? `${age} laps` : '--';
+
+  const bar = document.getElementById('tyre-bar');
+  if (bar) { bar.style.width = pct + '%'; bar.style.background = color; }
+
+  const sessionEl = document.getElementById('session-badge');
+  if (sessionEl) sessionEl.textContent = data.session_type || '--';
+
+  const pos = document.getElementById('race-position');
+  if (pos) pos.textContent = data.position ? `P${data.position}` : '--';
+
+  const posBar = document.getElementById('position-bar');
+  if (posBar) posBar.style.width = data.position ? Math.max(5, Math.round((21 - data.position) / 20 * 100)) + '%' : '0%';
+
+  const gap = document.getElementById('gap-to-leader');
+  if (gap) gap.textContent = data.gap_to_leader || '--';
+}
+
+function fetchTelemetry() {
+  fetch('/telemetry')
+    .then(r => r.json())
+    .then(data => { updateTyreWidget(data); })
+    .catch(err => console.warn('[Pit-Wall] telemetry:', err));
+}
+
 // ── Startup ───────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
   fetch('/race-context', {
@@ -1253,6 +1300,8 @@ window.addEventListener('load', () => {
         document.getElementById('ctx-race').textContent   = data.race.toUpperCase() + ' GP';
         document.getElementById('ctx-driver').textContent = data.driver === 'LEC' ? 'LECLERC' : data.driver;
       }
+      fetchTelemetry();
+      setInterval(fetchTelemetry, 60000);
     })
     .catch(err => console.error('[Pit-Wall] race context:', err));
 });
