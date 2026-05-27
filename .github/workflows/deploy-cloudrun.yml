@@ -1,0 +1,57 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/433469729276/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
+          service_account: pit-wall-cicd@project-d97c2ed2-123c-47df-bc4.iam.gserviceaccount.com
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t us-central1-docker.pkg.dev/project-d97c2ed2-123c-47df-bc4/pit-wall/pit-wall-orchestrator:${{ github.sha }} \
+            -t us-central1-docker.pkg.dev/project-d97c2ed2-123c-47df-bc4/pit-wall/pit-wall-orchestrator:latest \
+            .
+
+      - name: Push to Artifact Registry
+        run: |
+          docker push us-central1-docker.pkg.dev/project-d97c2ed2-123c-47df-bc4/pit-wall/pit-wall-orchestrator:${{ github.sha }}
+          docker push us-central1-docker.pkg.dev/project-d97c2ed2-123c-47df-bc4/pit-wall/pit-wall-orchestrator:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy pit-wall-orchestrator \
+            --image us-central1-docker.pkg.dev/project-d97c2ed2-123c-47df-bc4/pit-wall/pit-wall-orchestrator:${{ github.sha }} \
+            --region us-central1 \
+            --quiet \
+            --allow-unauthenticated \
+            --memory 2Gi \
+            --cpu 1 \
+            --min-instances 1 \
+            --max-instances 3 \
+            --port 8080 \
+            --set-env-vars "WATSONX_API_KEY=${{ secrets.WATSONX_API_KEY }},WATSONX_URL=${{ secrets.WATSONX_URL }},WATSONX_PROJECT_ID=${{ secrets.WATSONX_PROJECT_ID }},WATSON_STT_API_KEY=${{ secrets.WATSON_STT_API_KEY }},WATSON_STT_URL=${{ secrets.WATSON_STT_URL }},WATSON_TTS_API_KEY=${{ secrets.WATSON_TTS_API_KEY }},WATSON_TTS_URL=${{ secrets.WATSON_TTS_URL }},RACE_YEAR=2026,RACE_NAME=Miami,RACE_DRIVER=LEC"
+
+      - name: Print service URL
+        run: |
+          gcloud run services describe pit-wall-orchestrator \
+            --region us-central1 \
+            --format="value(status.url)"
