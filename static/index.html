@@ -44,6 +44,36 @@
   }
   .animate-glow-lg { animation: pulse-red-lg 1.5s infinite; }
 
+  /* Radar pulse rings on LIVE icon */
+  @keyframes radar-expand {
+    0%   { transform: scale(0.85); opacity: 0.7; }
+    100% { transform: scale(2.2);  opacity: 0;   }
+  }
+  .live-radar {
+    position: absolute;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid #dc0000;
+    animation: radar-expand 2.4s infinite ease-out;
+    transform-origin: center;
+    pointer-events: none;
+  }
+  .live-radar-2 { animation-delay: 1.2s; }
+
+  /* Staggered dot loader for inference wait */
+  @keyframes dot-bounce {
+    0%, 100% { transform: translateY(0) scale(1);    opacity: 0.35; }
+    50%       { transform: translateY(-7px) scale(1.15); opacity: 1;    }
+  }
+  .thinking-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background-color: #dc0000;
+    animation: dot-bounce 1.3s infinite ease-in-out;
+    margin: 0 3px;
+  }
+
   .waveform-bar { width: 3px; background-color: #dc0000; margin: 0 1px; height: 4px; transition: height 0.2s ease; }
 
   /* ── Phone frame layout ──────────────────────────────────────────── */
@@ -334,8 +364,16 @@ tailwind.config = {
       <span class="material-symbols-outlined">analytics</span>
       <span class="text-label-caps font-label-caps">DATA</span>
     </button>
-    <button onclick="toggleMic()" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-4 -mt-8 scale-110 shadow-[0_0_10px_2px_rgba(220,0,0,0.9)]">
-      <span class="material-symbols-outlined fab-icon">sensors</span>
+    <button onclick="toggleMic()" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+      <div class="live-icon-wrap relative flex items-center justify-center" style="width:24px;height:24px;">
+        <span class="live-radar"></span>
+        <span class="live-radar live-radar-2"></span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9"   stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="5"   stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="2"   fill="currentColor"/>
+        </svg>
+      </div>
       <span class="text-label-caps font-label-caps">LIVE</span>
     </button>
     <button onclick="openSync()" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
@@ -573,8 +611,17 @@ tailwind.config = {
 
   <!-- Single FAB nav for response screen -->
   <nav class="flex justify-center items-end pb-4 bg-surface-container-high border-t-2 border-primary-container">
-    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-5 -mt-8 shadow-[0_0_10px_2px_rgba(220,0,0,0.9)]">
-      <span class="material-symbols-outlined fab-icon" style="font-size:28px;">mic</span>
+    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+      <div class="live-icon-wrap relative flex items-center justify-center" style="width:24px;height:24px;">
+        <span class="live-radar"></span>
+        <span class="live-radar live-radar-2"></span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9"   stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="5"   stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="2"   fill="currentColor"/>
+        </svg>
+      </div>
+      <span class="text-label-caps font-label-caps">LIVE</span>
     </button>
   </nav>
 
@@ -684,8 +731,17 @@ tailwind.config = {
   </main>
 
   <nav class="flex justify-center items-end pb-4 bg-surface-container-high border-t-2 border-primary-container">
-    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-5 -mt-8 shadow-[0_0_10px_2px_rgba(220,0,0,0.9)]">
-      <span class="material-symbols-outlined fab-icon" style="font-size:28px;">mic</span>
+    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+      <div class="live-icon-wrap relative flex items-center justify-center" style="width:24px;height:24px;">
+        <span class="live-radar"></span>
+        <span class="live-radar live-radar-2"></span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9"   stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="5"   stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="2"   fill="currentColor"/>
+        </svg>
+      </div>
+      <span class="text-label-caps font-label-caps">LIVE</span>
     </button>
   </nav>
 
@@ -812,7 +868,6 @@ async function startRecording() {
     };
     mediaRecorder.start(250);
     micActive = true;
-    document.querySelectorAll('.fab-icon').forEach(el => el.classList.add('msym-fill'));
     showScreen('recording');
     recWaveInterval = setInterval(() => {
       document.querySelectorAll('#waveform-rec .waveform-bar').forEach(b => {
@@ -826,7 +881,6 @@ async function startRecording() {
 
 function stopRecording() {
   micActive = false;
-  document.querySelectorAll('.fab-icon').forEach(el => el.classList.remove('msym-fill'));
   clearInterval(recWaveInterval);
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
   showProcessing('Voice query');
@@ -856,7 +910,12 @@ function submitText() {
 function showProcessing(label) {
   lastQuery = label || 'Query';
   document.getElementById('response-title').textContent = label ? label.toUpperCase() : 'ANALYZING...';
-  document.getElementById('narrative-text').textContent = 'Consulting the pit wall...';
+  document.getElementById('narrative-text').innerHTML =
+    '<span style="display:flex;justify-content:center;align-items:flex-end;height:32px;gap:0">' +
+    '<span class="thinking-dot" style="animation-delay:0s"></span>' +
+    '<span class="thinking-dot" style="animation-delay:0.22s"></span>' +
+    '<span class="thinking-dot" style="animation-delay:0.44s"></span>' +
+    '</span>';
 
   const badge = document.getElementById('response-badge');
   badge.className = 'flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-outline text-on-surface-variant';
