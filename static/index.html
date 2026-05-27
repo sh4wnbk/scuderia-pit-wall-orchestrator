@@ -519,9 +519,8 @@ tailwind.config = {
     <section class="bg-surface-container border border-outline-variant p-margin-md relative">
       <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
       <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-margin-sm">RACE ANALYSIS</p>
       <p id="narrative-text" class="text-body-md font-body-md text-on-surface leading-relaxed">
-        Routing to IBM watsonx Granite 4-h via /process...
+        Consulting the pit wall...
       </p>
     </section>
 
@@ -855,7 +854,7 @@ function submitText() {
 function showProcessing(label) {
   lastQuery = label || 'Query';
   document.getElementById('response-title').textContent = label ? label.toUpperCase() : 'ANALYZING...';
-  document.getElementById('narrative-text').textContent = 'Routing to IBM watsonx Granite 4-h via /process...';
+  document.getElementById('narrative-text').textContent = 'Consulting the pit wall...';
 
   const badge = document.getElementById('response-badge');
   badge.className = 'flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-outline text-on-surface-variant';
@@ -921,7 +920,7 @@ function showResponse(data, elapsedMs) {
     const item = document.createElement('div');
     item.className = 'flex items-center gap-2 bg-surface-container border border-outline-variant p-margin-sm text-label-caps font-label-caps text-[10px]';
     item.innerHTML = `<span class="material-symbols-outlined text-primary-container msym-fill flex-shrink-0" style="font-size:14px;">article</span>`
-      + `<span class="text-on-surface-variant break-all">${data.traceability_link.replace(/_/g, ' ').replace(/^Source:\s*/i, '')}</span>`;
+      + `<span class="text-on-surface-variant break-words">${data.traceability_link.replace(/_/g, ' ').replace(/^Source:\s*/i, '').replace(/\s*—.*$/, '').trim()}</span>`;
     list.appendChild(item);
     const cit = document.getElementById('source-citations');
     cit.style.display = 'flex';
