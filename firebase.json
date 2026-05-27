@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "site": "tifosi-muretto",
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "pit-wall-orchestrator",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}
