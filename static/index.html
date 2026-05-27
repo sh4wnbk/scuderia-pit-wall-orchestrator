@@ -60,21 +60,54 @@
   }
   .live-radar-2 { animation-delay: 1.2s; }
 
-  /* Staggered dot loader for inference wait */
-  @keyframes dot-bounce {
-    0%, 100% { transform: translateY(0) scale(1);    opacity: 0.35; }
-    50%       { transform: translateY(-7px) scale(1.15); opacity: 1;    }
+  /* Synchronized swimming — 3 independent choreographies */
+  @keyframes swim-1 {
+    0%   { transform: translate(0px,   0px) scale(1.0); opacity: 0.9; }
+    12%  { transform: translate(0px,  -9px) scale(1.1); opacity: 1.0; }
+    28%  { transform: translate(-20px,  4px) scale(0.9); opacity: 0.8; }
+    45%  { transform: translate(-13px,-15px) scale(1.1); opacity: 1.0; }
+    60%  { transform: translate(5px,  -5px) scale(1.0); opacity: 0.9; }
+    75%  { transform: translate(14px,   8px) scale(0.9); opacity: 0.8; }
+    88%  { transform: translate(0px,    5px) scale(1.0); opacity: 0.9; }
+    100% { transform: translate(0px,   0px) scale(1.0); opacity: 0.9; }
+  }
+  @keyframes swim-2 {
+    0%   { transform: translate(0px,   0px) scale(1.0); opacity: 0.9; }
+    12%  { transform: translate(0px, -15px) scale(1.2); opacity: 1.0; }
+    28%  { transform: translate(0px,  18px) scale(0.8); opacity: 0.7; }
+    45%  { transform: translate(17px,   0px) scale(1.1); opacity: 1.0; }
+    60%  { transform: translate(0px, -18px) scale(1.2); opacity: 1.0; }
+    75%  { transform: translate(-14px,  6px) scale(0.9); opacity: 0.8; }
+    88%  { transform: translate(0px,  -4px) scale(1.0); opacity: 0.9; }
+    100% { transform: translate(0px,   0px) scale(1.0); opacity: 0.9; }
+  }
+  @keyframes swim-3 {
+    0%   { transform: translate(0px,   0px) scale(1.0); opacity: 0.9; }
+    12%  { transform: translate(0px,  -6px) scale(1.0); opacity: 0.9; }
+    28%  { transform: translate(20px,   4px) scale(0.9); opacity: 0.8; }
+    45%  { transform: translate(12px,  17px) scale(0.9); opacity: 0.8; }
+    60%  { transform: translate(-6px,   8px) scale(1.0); opacity: 0.9; }
+    75%  { transform: translate(-16px,-10px) scale(1.1); opacity: 1.0; }
+    88%  { transform: translate(0px,    4px) scale(1.0); opacity: 0.9; }
+    100% { transform: translate(0px,   0px) scale(1.0); opacity: 0.9; }
+  }
+  @keyframes dot-converge {
+    0%   { transform: translate(0,0) scale(1.0); opacity: 1; }
+    60%  { transform: translate(0,0) scale(1.6); opacity: 1; }
+    100% { transform: translate(0,0) scale(0);   opacity: 0; }
   }
   .thinking-dot {
     display: inline-block;
-    width: 6px; height: 6px;
+    width: 7px; height: 7px;
     border-radius: 50%;
-    background-color: #dc0000;
-    animation: dot-bounce 1.3s infinite ease-in-out;
-    margin: 0 3px;
+    background-color: #FFCC00;
+    margin: 0 4px;
+  }
+  .thinking-dot.converging {
+    animation: dot-converge 0.35s ease-in forwards !important;
   }
 
-  .waveform-bar { width: 3px; background-color: #dc0000; margin: 0 1px; height: 4px; transition: height 0.2s ease; }
+  .waveform-bar { width: 3px; background-color: #FFCC00; margin: 0 1px; height: 4px; transition: height 0.2s ease; }
 
   /* ── Phone frame layout ──────────────────────────────────────────── */
   html {
@@ -156,6 +189,15 @@
     z-index: 80;
   }
   #syncPanel.open { transform: translateY(0); }
+
+  #raceSheet, #driverSheet {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 95;
+  }
+  #raceSheet.open, #driverSheet.open { transform: translateY(0); }
 </style>
 <script id="tailwind-config">
 tailwind.config = {
@@ -763,20 +805,32 @@ tailwind.config = {
     </button>
   </div>
   <div class="flex flex-col gap-margin-sm mb-margin-md">
+    <!-- YEAR counter -->
     <div class="flex flex-col gap-1">
       <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">YEAR</span>
-      <input id="sync-year" type="number"
-        class="bg-surface-container border border-outline-variant text-on-surface text-sm font-label-caps px-3 py-2 outline-none focus:border-primary-container w-full"/>
+      <div class="flex items-center justify-between bg-surface-container border border-outline-variant px-3 py-2">
+        <button onclick="adjustYear(-1)" class="text-on-surface-variant hover:text-primary-container font-bold text-lg px-2">−</button>
+        <span id="sync-year-display" class="text-data-mono font-data-mono text-on-surface">2026</span>
+        <button onclick="adjustYear(1)" class="text-on-surface-variant hover:text-primary-container font-bold text-lg px-2">+</button>
+      </div>
     </div>
+
+    <!-- RACE selector -->
     <div class="flex flex-col gap-1">
       <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">RACE</span>
-      <input id="sync-race" type="text" placeholder="e.g. Monaco"
-        class="bg-surface-container border border-outline-variant text-on-surface text-sm font-label-caps px-3 py-2 outline-none focus:border-primary-container w-full"/>
+      <button onclick="openSheet('race')" class="flex items-center justify-between bg-surface-container border border-outline-variant px-3 py-2 w-full hover:border-primary-container transition-colors">
+        <span id="sync-race-display" class="text-data-mono font-data-mono text-on-surface">MIAMI GP</span>
+        <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px;">expand_more</span>
+      </button>
     </div>
+
+    <!-- DRIVER selector -->
     <div class="flex flex-col gap-1">
       <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">DRIVER</span>
-      <input id="sync-driver" type="text" placeholder="e.g. LEC"
-        class="bg-surface-container border border-outline-variant text-on-surface text-sm font-label-caps px-3 py-2 outline-none focus:border-primary-container w-full"/>
+      <button onclick="openSheet('driver')" class="flex items-center justify-between bg-surface-container border border-outline-variant px-3 py-2 w-full hover:border-primary-container transition-colors">
+        <span id="sync-driver-display" class="text-data-mono font-data-mono text-primary-container">LECLERC</span>
+        <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px;">expand_more</span>
+      </button>
     </div>
   </div>
   <div class="flex gap-margin-sm">
@@ -790,6 +844,28 @@ tailwind.config = {
     </button>
   </div>
   <p id="sync-status" class="text-label-caps font-label-caps text-[10px] text-tertiary mt-margin-sm text-center hidden">CONTEXT UPDATED</p>
+</div>
+
+<!-- Race bottom sheet -->
+<div id="raceSheet" class="bg-surface-container-highest border-t-2 border-primary-container">
+  <div class="flex justify-between items-center p-margin-md border-b border-outline-variant">
+    <span class="text-label-caps font-label-caps text-on-surface tracking-widest">SELECT RACE</span>
+    <button onclick="closeSheet('race')" class="text-on-surface-variant hover:text-on-surface">
+      <span class="material-symbols-outlined" style="font-size:20px;">close</span>
+    </button>
+  </div>
+  <div id="race-list" class="overflow-y-auto" style="max-height:300px;"></div>
+</div>
+
+<!-- Driver bottom sheet -->
+<div id="driverSheet" class="bg-surface-container-highest border-t-2 border-primary-container">
+  <div class="flex justify-between items-center p-margin-md border-b border-outline-variant">
+    <span class="text-label-caps font-label-caps text-on-surface tracking-widest">SELECT DRIVER</span>
+    <button onclick="closeSheet('driver')" class="text-on-surface-variant hover:text-on-surface">
+      <span class="material-symbols-outlined" style="font-size:20px;">close</span>
+    </button>
+  </div>
+  <div id="driver-list" class="overflow-y-auto" style="max-height:300px;"></div>
 </div>
 
 </div><!-- /app-shell -->
@@ -807,6 +883,30 @@ let govOpen         = false;
 let recWaveInterval = null;
 let ttsWaveInterval = null;
 let lastQuery       = '';
+let syncDriverCode  = 'LEC';
+
+const RACES_2026 = [
+  'Bahrain','Saudi Arabia','Australia','Japan','China','Miami',
+  'Imola','Monaco','Spain','Canada','Austria','Great Britain',
+  'Belgium','Hungary','Netherlands','Italy','Azerbaijan',
+  'Singapore','United States','Mexico','Brazil','Las Vegas',
+  'Qatar','Abu Dhabi'
+];
+
+const DRIVERS_2026 = [
+  {name:'LECLERC',    code:'LEC', team:'Ferrari'},
+  {name:'HAMILTON',   code:'HAM', team:'Ferrari'},
+];
+// ── Utility functions ─────────────────────────────────────────────────────
+function formatSource(raw) {
+  const s = raw.replace(/_/g, ' ').replace(/^Source:\s*/i, '').replace(/\s*—.*$/, '').trim();
+  if (/strategy|terminology/i.test(s))  return 'Strategy & Terminology Guide';
+  if (/technical/i.test(s))             return 'FIA Technical Regulations';
+  if (/sporting/i.test(s))              return 'FIA Sporting Regulations';
+  if (/financial/i.test(s))             return 'FIA Financial Regulations';
+  return 'FIA 2026 Regulations';
+}
+
 
 // ── Screens ───────────────────────────────────────────────────────────────
 function showScreen(name) {
@@ -911,10 +1011,10 @@ function showProcessing(label) {
   lastQuery = label || 'Query';
   document.getElementById('response-title').textContent = label ? label.toUpperCase() : 'ANALYZING...';
   document.getElementById('narrative-text').innerHTML =
-    '<span style="display:flex;justify-content:center;align-items:flex-end;height:32px;gap:0">' +
-    '<span class="thinking-dot" style="animation-delay:0s"></span>' +
-    '<span class="thinking-dot" style="animation-delay:0.22s"></span>' +
-    '<span class="thinking-dot" style="animation-delay:0.44s"></span>' +
+    '<span style="display:flex;justify-content:center;align-items:center;height:40px;gap:0">' +
+    '<span class="thinking-dot" style="animation:swim-1 3.8s infinite ease-in-out;animation-delay:0s"></span>' +
+    '<span class="thinking-dot" style="animation:swim-2 3.8s infinite ease-in-out;animation-delay:0.15s"></span>' +
+    '<span class="thinking-dot" style="animation:swim-3 3.8s infinite ease-in-out;animation-delay:0.3s"></span>' +
     '</span>';
 
   const badge = document.getElementById('response-badge');
@@ -953,7 +1053,15 @@ async function submitQuery(textQuery, audioB64) {
 }
 
 function showResponse(data, elapsedMs) {
-  document.getElementById('narrative-text').textContent = data.text;
+  const dots = document.querySelectorAll('.thinking-dot');
+  if (dots.length) {
+    dots.forEach(d => d.classList.add('converging'));
+    setTimeout(() => {
+      document.getElementById('narrative-text').textContent = data.text;
+    }, 380);
+  } else {
+    document.getElementById('narrative-text').textContent = data.text;
+  }
   document.getElementById('latency-gov').textContent    = elapsedMs + 'ms';
   document.getElementById('latency-ready').textContent  = elapsedMs + 'ms';
 
@@ -981,7 +1089,7 @@ function showResponse(data, elapsedMs) {
     const item = document.createElement('div');
     item.className = 'flex items-center gap-2 bg-surface-container border border-outline-variant p-margin-sm text-label-caps font-label-caps text-[10px]';
     item.innerHTML = `<span class="material-symbols-outlined text-primary-container msym-fill flex-shrink-0" style="font-size:14px;">article</span>`
-      + `<span class="text-on-surface-variant break-words">${data.traceability_link.replace(/_/g, ' ').replace(/^Source:\s*/i, '').replace(/\s*—.*$/, '').trim()}</span>`;
+      + `<span class="text-on-surface-variant">${formatSource(data.traceability_link)}</span>`;
     list.appendChild(item);
     const cit = document.getElementById('source-citations');
     cit.style.display = 'flex';
@@ -1000,7 +1108,15 @@ function showResponse(data, elapsedMs) {
 }
 
 function showError(msg) {
-  document.getElementById('narrative-text').textContent = 'Error: ' + msg;
+  const dots = document.querySelectorAll('.thinking-dot');
+  if (dots.length) {
+    dots.forEach(d => d.classList.add('converging'));
+    setTimeout(() => {
+      document.getElementById('narrative-text').textContent = 'Error: ' + msg;
+    }, 380);
+  } else {
+    document.getElementById('narrative-text').textContent = 'Error: ' + msg;
+  }
   const badge = document.getElementById('response-badge');
   badge.className = 'flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-error text-error';
   document.getElementById('badge-icon').textContent = 'error';
@@ -1158,21 +1274,58 @@ document.addEventListener('mouseleave', () => { spotlight.style.background = '';
 
 // ── SYNC ──────────────────────────────────────────────────────
 function openSync() {
-  document.getElementById('sync-year').value  = document.getElementById('ctx-year').textContent.trim();
-  document.getElementById('sync-race').value  = document.getElementById('ctx-race').textContent.trim();
-  document.getElementById('sync-driver').value = document.getElementById('ctx-driver').textContent.trim();
+  document.getElementById('sync-year-display').textContent   = document.getElementById('ctx-year').textContent.trim();
+  document.getElementById('sync-race-display').textContent   = document.getElementById('ctx-race').textContent.trim();
+  document.getElementById('sync-driver-display').textContent = document.getElementById('ctx-driver').textContent.trim();
   document.getElementById('sync-status').classList.add('hidden');
   document.getElementById('syncPanel').classList.add('open');
 }
 
 function closeSync() {
   document.getElementById('syncPanel').classList.remove('open');
+
+function adjustYear(delta) {
+  const el = document.getElementById('sync-year-display');
+  el.textContent = parseInt(el.textContent) + delta;
+}
+
+function openSheet(type) {
+  if (type === 'race') {
+    document.getElementById('race-list').innerHTML = RACES_2026.map(r =>
+      `<button onclick="selectRace('${r}')" class="w-full text-left px-margin-md py-3 text-label-caps font-label-caps text-on-surface hover:bg-surface-container-high hover:text-primary-container border-b border-outline-variant transition-colors">${r.toUpperCase()} GP</button>`
+    ).join('');
+    document.getElementById('raceSheet').classList.add('open');
+  } else {
+    document.getElementById('driver-list').innerHTML = DRIVERS_2026.map(d =>
+      `<button onclick="selectDriver('${d.name}','${d.code}')" class="w-full text-left px-margin-md py-3 border-b border-outline-variant hover:bg-surface-container-high transition-colors flex justify-between items-center">
+        <span class="text-label-caps font-label-caps text-on-surface">${d.name}</span>
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">${d.team}</span>
+      </button>`
+    ).join('');
+    document.getElementById('driverSheet').classList.add('open');
+  }
+}
+
+function closeSheet(type) {
+  document.getElementById(type === 'race' ? 'raceSheet' : 'driverSheet').classList.remove('open');
+}
+
+function selectRace(race) {
+  document.getElementById('sync-race-display').textContent = race.toUpperCase() + ' GP';
+  closeSheet('race');
+}
+
+function selectDriver(name, code) {
+  document.getElementById('sync-driver-display').textContent = name;
+  syncDriverCode = code;
+  closeSheet('driver');
+}
 }
 
 async function submitSync() {
-  const year   = parseInt(document.getElementById('sync-year').value) || 2026;
-  const race   = document.getElementById('sync-race').value.trim();
-  const driver = document.getElementById('sync-driver').value.trim().toUpperCase();
+  const year   = parseInt(document.getElementById('sync-year-display').textContent) || 2026;
+  const race   = document.getElementById('sync-race-display').textContent.trim().replace(/ GP$/, '');
+  const driver = syncDriverCode;
   if (!race || !driver) return;
   try {
     const res = await fetch('/race-context', {
@@ -1183,7 +1336,7 @@ async function submitSync() {
     if (res.ok) {
       document.getElementById('ctx-year').textContent   = year;
       document.getElementById('ctx-race').textContent   = race.toUpperCase();
-      document.getElementById('ctx-driver').textContent = driver;
+      document.getElementById('ctx-driver').textContent = document.getElementById('sync-driver-display').textContent;
       const status = document.getElementById('sync-status');
       status.classList.remove('hidden');
       setTimeout(() => { status.classList.add('hidden'); closeSync(); }, 1200);
