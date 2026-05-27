@@ -27,6 +27,9 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
+      - name: Inject build hash into service worker
+        run: sed -i "s/BUILD_HASH/${{ github.sha }}/g" static/service-worker.js
+
       - name: Build Docker image
         run: |
           docker build \

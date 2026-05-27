@@ -4,9 +4,9 @@
 // cache-first for static assets
 // ═══════════════════════════════════════════════
 
-const CACHE_NAME = 'pitwall-v4';
-const STATIC_CACHE = 'pitwall-static-v4';
-const API_CACHE = 'pitwall-api-v4';
+const CACHE_NAME = 'pitwall-BUILD_HASH';
+const STATIC_CACHE = 'pitwall-static-BUILD_HASH';
+const API_CACHE = 'pitwall-api-BUILD_HASH';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
@@ -86,6 +86,12 @@ self.addEventListener('fetch', (event) => {
   // API routes — network-first, cache fallback
   if (API_ROUTES.some(route => url.pathname.startsWith(route))) {
     event.respondWith(networkFirstStrategy(request, API_CACHE));
+    return;
+  }
+
+  // HTML document — always network-first so deploys are instant
+  if (request.mode === 'navigate' || url.pathname === '/' || url.pathname === '') {
+    event.respondWith(networkFirstStrategy(request, STATIC_CACHE));
     return;
   }
 
