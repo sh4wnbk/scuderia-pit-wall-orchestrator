@@ -1332,6 +1332,7 @@ function openSync() {
 
 function closeSync() {
   document.getElementById('syncPanel').classList.remove('open');
+}
 
 function adjustYear(delta) {
   const el = document.getElementById('sync-year-display');
@@ -1368,7 +1369,6 @@ function selectDriver(name, code) {
   document.getElementById('sync-driver-display').textContent = name;
   syncDriverCode = code;
   closeSheet('driver');
-}
 }
 
 async function submitSync() {
