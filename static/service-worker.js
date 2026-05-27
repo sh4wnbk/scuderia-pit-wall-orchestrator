@@ -4,9 +4,9 @@
 // cache-first for static assets
 // ═══════════════════════════════════════════════
 
-const CACHE_NAME = 'pitwall-v3';
-const STATIC_CACHE = 'pitwall-static-v3';
-const API_CACHE = 'pitwall-api-v3';
+const CACHE_NAME = 'pitwall-v4';
+const STATIC_CACHE = 'pitwall-static-v4';
+const API_CACHE = 'pitwall-api-v4';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
