@@ -1,1491 +1,979 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Scuderia Pit-Wall | Race Ops Terminal</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SCUDERIA PIT-WALL</title>
 <link rel="manifest" href="/static/manifest.json">
 <meta name="theme-color" content="#dc0000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pit-Wall">
 <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&family=Barlow+Condensed:wght@700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <style>
-:root {
-  --red: #dc0000;
-  --red-dim: #930100;
-  --red-glow: rgba(220,0,0,0.4);
-  --red-subtle: rgba(220,0,0,0.08);
-  --yellow: #fecb00;
-  --yellow-glow: rgba(254,203,0,0.35);
-  --green: #00e676;
-  --green-glow: rgba(0,230,118,0.3);
-  --blue: #4589ff;
-  --blue-glow: rgba(69,137,255,0.3);
-  --orange: #ff6b00;
-  --bg: #0e0a09;
-  --bg-warm: #120c0a;
-  --s1: #1a1210;
-  --s2: #221714;
-  --s3: #2a1f1c;
-  --border: #2d1f1c;
-  --border-bright: #3d2a26;
-  --text: #f5ede8;
-  --text-dim: #8a6f68;
-  --text-muted: #4a3330;
-}
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .msym-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+  .scuderia-bracket-tl { border-top: 2px solid #dc0000; border-left: 2px solid #dc0000; width: 8px; height: 8px; position: absolute; top: -1px; left: -1px; }
+  .scuderia-bracket-tr { border-top: 2px solid #dc0000; border-right: 2px solid #dc0000; width: 8px; height: 8px; position: absolute; top: -1px; right: -1px; }
+  .scuderia-bracket-bl { border-bottom: 2px solid #dc0000; border-left: 2px solid #dc0000; width: 8px; height: 8px; position: absolute; bottom: -1px; left: -1px; }
+  .scuderia-bracket-br { border-bottom: 2px solid #dc0000; border-right: 2px solid #dc0000; width: 8px; height: 8px; position: absolute; bottom: -1px; right: -1px; }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 15px;
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  cursor: default;
-}
+  .bg-grid {
+    background-image: linear-gradient(to right, #1a0907 1px, transparent 1px),
+                      linear-gradient(to bottom, #1a0907 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
 
-.mono { font-family: 'JetBrains Mono', monospace; }
-.condensed { font-family: 'Barlow Condensed', sans-serif; }
-.material-symbols-outlined { font-variation-settings: 'FILL' 1; vertical-align: middle; }
+  @keyframes pulse-red {
+    0%   { box-shadow: 0 0 0 0 rgba(220,0,0,0.4); }
+    70%  { box-shadow: 0 0 0 20px rgba(220,0,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(220,0,0,0); }
+  }
+  .animate-glow { animation: pulse-red 2s infinite; }
 
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background-image:
-    linear-gradient(rgba(45,31,28,0.35) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(45,31,28,0.35) 1px, transparent 1px);
-  background-size: 48px 48px;
-  pointer-events: none; z-index: 0;
-}
+  @keyframes pulse-red-lg {
+    0%   { box-shadow: 0 0 0 0 rgba(220,0,0,0.5); }
+    70%  { box-shadow: 0 0 0 40px rgba(220,0,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(220,0,0,0); }
+  }
+  .animate-glow-lg { animation: pulse-red-lg 1.5s infinite; }
 
-/* ═══ HEADER ═══ */
-header {
-  height: 48px;
-  background: var(--bg-warm);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  gap: 20px;
-  position: relative; z-index: 10;
-  flex-shrink: 0;
-}
+  .waveform-bar { width: 3px; background-color: #dc0000; margin: 0 1px; height: 4px; transition: height 0.2s ease; }
 
-.wordmark {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 20px; font-weight: 900;
-  letter-spacing: 0.06em;
-  color: var(--red);
-  text-transform: uppercase;
-  display: flex; align-items: center; gap: 10px;
-}
-.wordmark-sub {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; font-weight: 400;
-  color: var(--text-dim);
-  letter-spacing: 0.08em;
-  border-left: 1px solid var(--border-bright);
-  padding-left: 12px;
-  text-transform: uppercase;
-}
+  /* ── Phone frame layout ──────────────────────────────────────────── */
+  html {
+    background-color: #111;
+    background-image: url('/static/tifosi-bg.png');
+    background-size: cover;
+    background-position: center bottom;
+    background-attachment: fixed;
+  }
+  html::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.58);
+    backdrop-filter: blur(3px);
+    z-index: 0;
+  }
+  
+  #phone-frame {
+    position: relative;
+    z-index: 1;
+    width: 402px;        /* content width + border */
+    height: 872px;
+    margin: 40px auto;
+    border: 14px solid #8c8c8c;
+    border-radius: 48px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px #b4b4b4,
+      inset 0 0 0 1px #5a5a5a,
+      0 32px 80px rgba(0,0,0,0.22);
+  }
 
-.header-nav { display: flex; gap: 4px; margin-left: auto; }
-.hnav-item {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--text-dim);
-  padding: 6px 14px;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.hnav-item:hover { color: var(--text); }
-.hnav-item.active { color: var(--red); border-bottom-color: var(--red); }
+  #app-shell {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
 
-.ibm-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  padding: 4px 12px;
-  background: rgba(69,137,255,0.1);
-  border: 1px solid rgba(69,137,255,0.4);
-  color: var(--blue);
-  display: flex; align-items: center; gap: 6px;
-  letter-spacing: 0.05em;
-}
-.ibm-dot { width: 6px; height: 6px; background: var(--blue); border-radius: 50%; }
+  /* Fill viewport on real phones */
+  @media (max-width: 480px) {
+    #phone-frame {
+      width: 100%;
+      height: 100dvh;
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
 
-.header-icons { display: flex; gap: 8px; margin-left: 12px; }
-.header-icons span { color: var(--text-dim); font-size: 20px; cursor: pointer; }
-.header-icons span:hover { color: var(--text); }
+  /* ── Screen state machine ─────────────────────────────────────────── */
+  /* Each screen fills the frame; main scrolls; header+nav stay fixed in flow */
+  .screen { display: none; height: 100%; flex-direction: column; overflow: hidden; }
+  .screen.active { display: flex; }
+  .screen { position: relative; }
+  .screen > main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; scrollbar-width: none; -ms-overflow-style: none; }
+  .screen > main::-webkit-scrollbar { display: none; }
+  .scroll-pip { position: absolute; right: 0; width: 1px; height: 24px; background: rgba(220,0,0,0.55); border-radius: 1px; opacity: 0; transition: opacity 0.6s ease; pointer-events: none; z-index: 20; }
+  .screen > nav  { flex-shrink: 0; }
 
-/* ═══ LAYOUT ═══ */
-.layout {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  position: relative; z-index: 1;
-}
-
-/* ═══ SIDEBAR ═══ */
-.sidebar {
-  width: 240px;
-  flex-shrink: 0;
-  background: var(--bg-warm);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.race-session-block {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 12px;
-}
-.race-icon {
-  width: 36px; height: 36px;
-  background: var(--red);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.race-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-}
-.race-name {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 15px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.04em;
-  color: var(--text);
-}
-
-.ctx-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.ctx-cell { background: var(--s1); padding: 10px 14px; }
-.ctx-cell-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 3px;
-}
-.ctx-cell-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px; font-weight: 700;
-  color: var(--text);
-}
-.ctx-cell-val.red { color: var(--red); }
-
-.nav-items { padding: 8px 0; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 600;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--text-dim);
-  cursor: pointer;
-  border-left: 2px solid transparent;
-  transition: all 0.12s;
-}
-.nav-item:hover { color: var(--text); background: var(--s1); }
-.nav-item.active { color: var(--text); background: var(--red-subtle); border-left-color: var(--red); }
-.nav-item .material-symbols-outlined { font-size: 18px; }
-
-.pit-btn {
-  margin: 12px 16px;
-  padding: 10px 16px;
-  background: transparent;
-  border: 1px solid var(--red);
-  color: var(--red);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.15s;
-  width: calc(100% - 32px);
-  text-align: center;
-}
-.pit-btn:hover {
-  background: var(--red);
-  color: white;
-  box-shadow: 0 0 16px var(--red-glow);
-}
-
-.sidebar-footer {
-  margin-top: auto;
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
-  display: flex; flex-direction: column; gap: 6px;
-}
-.status-row {
-  display: flex; align-items: center; gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--text-dim);
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.dot-green { width:5px; height:5px; border-radius:50%; background:var(--green); animation: pulse 1.5s ease-in-out infinite; }
-.dot-blue  { width:5px; height:5px; border-radius:50%; background:var(--blue);  animation: pulse 1.5s ease-in-out infinite 0.4s; }
-.dot-yellow{ width:5px; height:5px; border-radius:50%; background:var(--yellow);animation: pulse 1.5s ease-in-out infinite 0.8s; }
-
-/* ═══ MAIN ═══ */
-.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-
-/* ═══ VOICE PANEL ═══ */
-.voice-panel {
-  position: relative;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.voice-idle {
-  background: var(--s1);
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.voice-idle-title {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 42px; font-weight: 900;
-  letter-spacing: 0.04em; text-transform: uppercase;
-  color: rgba(245,237,232,0.15);
-  text-align: center; line-height: 1;
-}
-.voice-idle-sub {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--text-dim);
-  letter-spacing: 0.15em; text-transform: uppercase;
-}
-
-.voice-active {
-  display: none;
-  background: var(--s1);
-  padding: 24px 28px 20px;
-  flex-direction: column;
-  gap: 16px;
-}
-.voice-active-label {
-  display: flex; align-items: center; gap: 8px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--red);
-}
-.listening-dot { width:7px; height:7px; border-radius:50%; background:var(--red); animation: pulse 0.8s ease-in-out infinite; }
-.voice-active-title {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 32px; font-weight: 900;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--text);
-}
-
-.waveform {
-  display: flex; align-items: center; gap: 3px;
-  height: 64px; width: 100%;
-}
-@keyframes wave {
-  0%,100% { transform: scaleY(0.15); }
-  50%      { transform: scaleY(1); }
-}
-.wbar {
-  flex: 1; background: var(--red);
-  transform-origin: center;
-  border-radius: 1px;
-  max-width: 6px;
-}
-.wbar.active   { animation: wave 0.6s ease-in-out infinite; }
-.wbar.inactive { transform: scaleY(0.1); background: var(--border-bright); }
-
-.transcript-panel {
-  background: var(--s2);
-  border: 1px solid var(--border);
-  padding: 12px 14px;
-}
-.transcript-ago {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 5px;
-}
-.transcript-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px; color: var(--text);
-  font-style: italic;
-}
-.transcript-cursor {
-  display: inline-block; width: 7px; height: 13px;
-  background: var(--red); vertical-align: middle;
-  margin-left: 3px;
-  animation: pulse 0.8s steps(1) infinite;
-}
-
-.stt-readouts { display: flex; gap: 12px; }
-.stt-box {
-  background: var(--s2);
-  border: 1px solid var(--border-bright);
-  padding: 10px 20px;
-  text-align: center;
-}
-.stt-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 5px;
-}
-.stt-value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 20px; font-weight: 700;
-  color: var(--text); letter-spacing: 0.05em;
-}
-
-.status-bar {
-  display: flex;
-  border-top: 1px solid var(--border);
-  background: var(--bg-warm);
-  flex-shrink: 0;
-}
-.status-cell {
-  flex: 1;
-  padding: 10px 16px;
-  border-right: 1px solid var(--border);
-}
-.status-cell:last-child { border-right: none; }
-.status-cell-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 3px;
-}
-.status-cell-val {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 20px; font-weight: 800;
-  letter-spacing: 0.04em; text-transform: uppercase;
-}
-.status-cell-sub {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--text-dim);
-}
-
-/* ═══ BOTTOM SPLIT ═══ */
-.bottom-split { flex: 1; display: flex; overflow: hidden; }
-
-/* ═══ RESPONSE AREA ═══ */
-.response-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-right: 1px solid var(--border);
-}
-
-.response-header {
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--s1);
-  flex-shrink: 0;
-}
-.query-id {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-}
-.response-title {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 22px; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--text);
-  margin-top: 2px;
-}
-
-.badge-confirmed {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 5px 14px;
-  background: rgba(254,203,0,0.1);
-  border: 1px solid var(--yellow);
-  color: var(--yellow);
-  display: flex; align-items: center; gap: 6px;
-  box-shadow: 0 0 10px var(--yellow-glow);
-}
-.badge-retry {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 5px 14px;
-  background: rgba(220,0,0,0.1);
-  border: 1px solid var(--red);
-  color: var(--red);
-  display: flex; align-items: center; gap: 6px;
-}
-.badge-uncertainty {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 5px 14px;
-  background: rgba(138,111,104,0.1);
-  border: 1px solid var(--text-dim);
-  color: var(--text-dim);
-  display: flex; align-items: center; gap: 6px;
-}
-.badge-processing {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 5px 14px;
-  background: rgba(138,111,104,0.1);
-  border: 1px solid var(--text-dim);
-  color: var(--text-dim);
-  animation: pulse 1s ease-in-out infinite;
-  display: flex; align-items: center; gap: 6px;
-}
-
-.response-body {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.narrative-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  border-left: 2px solid var(--border-bright);
-  padding-left: 8px;
-  margin-bottom: 10px;
-}
-.narrative-text {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 16px; line-height: 1.7;
-  color: var(--text);
-}
-.narrative-text::first-letter {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 52px; font-weight: 900;
-  color: var(--red);
-  float: left;
-  line-height: 0.85;
-  margin-right: 6px;
-  margin-top: 4px;
-}
-
-.audio-player {
-  background: var(--s2);
-  border: 1px solid var(--border);
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.play-btn {
-  width: 38px; height: 38px;
-  background: var(--red);
-  border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-.play-btn:hover { background: #ff0000; box-shadow: 0 0 12px var(--red-glow); }
-.play-btn .material-symbols-outlined { color: white; font-size: 20px; }
-.audio-wave {
-  flex: 1;
-  display: flex; align-items: center; gap: 2px; height: 28px;
-}
-.audio-bar { width: 3px; border-radius: 1px; }
-.audio-bar.played   { background: var(--red); }
-.audio-bar.unplayed { background: var(--border-bright); }
-.tts-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  background: var(--s3); border: 1px solid var(--border);
-  padding: 3px 8px;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  flex-shrink: 0;
-}
-
-.source-row {
-  display: flex; align-items: center; gap: 10px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-}
-.source-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--text-dim);
-  letter-spacing: 0.04em;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 2px 8px;
-  border: 1px solid var(--border-bright);
-  color: var(--text-dim);
-  flex-shrink: 0;
-}
-
-.input-row {
-  border-top: 1px solid var(--border);
-  padding: 12px 16px;
-  display: flex; gap: 10px; align-items: center;
-  background: var(--bg-warm);
-  flex-shrink: 0;
-}
-.input-prompt {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px; color: var(--red);
-  animation: pulse 1s steps(1) infinite;
-  flex-shrink: 0;
-}
-.cmd-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border-bright);
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  padding: 6px 0;
-  outline: none;
-}
-.cmd-input::placeholder { color: var(--text-muted); }
-.cmd-input:focus { border-bottom-color: var(--red); }
-.exec-btn {
-  background: var(--red);
-  border: none;
-  color: white;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.exec-btn:hover { background: #ff0000; box-shadow: 0 0 12px var(--red-glow); }
-.lang-toggle { display: flex; }
-.lang-btn {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 6px 10px;
-  background: var(--s2);
-  border: 1px solid var(--border-bright);
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.lang-btn.active { background: var(--red); border-color: var(--red); color: white; }
-.lang-btn:first-child { border-right: none; }
-
-/* ═══ GOVERNANCE PANEL ═══ */
-.gov-panel {
-  width: 300px;
-  flex-shrink: 0;
-  background: var(--s1);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.gov-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 8px;
-  background: var(--s2);
-}
-.gov-title {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.12em;
-  color: var(--text);
-}
-
-.gov-section { border-bottom: 1px solid var(--border); padding: 14px 16px; }
-.gov-section-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 10px;
-}
-
-.source-row-gov {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 7px 10px;
-  background: var(--s2);
-  border: 1px solid var(--border);
-  margin-bottom: 6px;
-}
-.source-name {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.06em;
-}
-.check-icon      { font-size: 16px; color: var(--green); }
-.check-icon.warn { color: var(--yellow); font-size: 15px; }
-.check-icon.fail { color: var(--red); font-size: 15px; }
-
-.hook-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
-}
-.hook-row:last-child { border-bottom: none; }
-.hook-name {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--text-dim);
-  text-transform: uppercase;
-}
-.hook-pass {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--green);
-  text-transform: uppercase;
-}
-.hook-warn {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 2px 6px;
-  background: rgba(254,203,0,0.1);
-  border: 1px solid var(--yellow);
-  color: var(--yellow);
-  text-transform: uppercase;
-}
-.hook-fail {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 2px 6px;
-  background: rgba(220,0,0,0.15);
-  border: 1px solid var(--red);
-  color: var(--red);
-  text-transform: uppercase;
-}
-
-.conf-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-.conf-header {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 8px;
-}
-.conf-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-}
-.conf-value {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 24px; font-weight: 700;
-  color: var(--yellow);
-}
-.conf-bar { height: 4px; background: var(--border); }
-.conf-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--yellow), var(--red));
-  transition: width 1.2s ease;
-}
-
-.audit-section { padding: 14px 16px; }
-.audit-count-row {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 10px;
-}
-.audit-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 20px; font-weight: 700;
-  color: var(--text);
-  border: 1px solid var(--border-bright);
-  padding: 2px 10px;
-}
-.audit-log { display: flex; flex-direction: column; gap: 3px; }
-.audit-entry {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px; color: var(--text-dim);
-  display: flex; gap: 8px;
-  padding: 3px 0;
-  border-bottom: 1px solid var(--border);
-}
-.audit-entry:last-child { border-bottom: none; }
-.audit-time  { color: var(--text-muted); flex-shrink: 0; }
-.audit-event { color: var(--text-dim); }
-
-.ai-stack { padding: 14px 16px; border-top: 1px solid var(--border); }
-.ai-stack-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 12px;
-}
-.ai-active-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 2px 8px;
-  background: rgba(69,137,255,0.15);
-  border: 1px solid rgba(69,137,255,0.5);
-  color: var(--blue);
-  text-transform: uppercase;
-}
-.ai-model-name {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px; font-weight: 600;
-  color: var(--text); margin-bottom: 4px;
-}
-.ai-engine-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin-bottom: 2px; margin-top: 8px;
-}
-.ai-engine-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; color: var(--text);
-  display: flex; justify-content: space-between;
-}
-.ai-latency { color: var(--green); }
-
-/* Floating mic */
-.mic-float {
-  position: fixed;
-  bottom: 24px; left: 50%;
-  transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  z-index: 100;
-}
-.mic-btn {
-  width: 56px; height: 56px;
-  background: var(--red);
-  border: none; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-}
-.mic-btn:hover { box-shadow: 0 0 0 6px var(--red-glow), 0 4px 20px rgba(0,0,0,0.5); }
-.mic-btn.active { animation: mic-ring 1s ease-in-out infinite; }
-@keyframes mic-ring {
-  0%,100% { box-shadow: 0 0 0 4px var(--red-glow), 0 4px 20px rgba(0,0,0,0.5); }
-  50%      { box-shadow: 0 0 0 12px rgba(220,0,0,0.1), 0 4px 20px rgba(0,0,0,0.5); }
-}
-.mic-btn .material-symbols-outlined { color: white; font-size: 26px; }
-.mic-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px; font-weight: 700;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--red); }
-
-@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-.fu  { animation: fadeUp 0.35s ease forwards; }
-.fu1 { animation: fadeUp 0.35s ease 0.1s forwards; opacity:0; }
-.fu2 { animation: fadeUp 0.35s ease 0.2s forwards; opacity:0; }
-.fu3 { animation: fadeUp 0.35s ease 0.3s forwards; opacity:0; }
-
-.error-text { color: var(--red); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  /* Governance panel (position:absolute inside screen-response) */
+  #governancePanel {
+    position: absolute;
+    bottom: 0; left: 0; width: 100%;
+    max-height: 80%;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 60;
+  }
+  #governancePanel.open { transform: translateY(0); }
 </style>
-</head>
-<body>
-
-<!-- HEADER -->
-<header class="fu">
-  <div class="wordmark">
-    <div style="width:5px; height:26px; background:var(--red);"></div>
-    SCUDERIA PIT-WALL
-    <span class="wordmark-sub">Race Ops Terminal</span>
-  </div>
-  <nav class="header-nav">
-    <div class="hnav-item" onclick="setHNav(this)">Overview</div>
-    <div class="hnav-item active" onclick="setHNav(this)">Strategy</div>
-    <div class="hnav-item" onclick="setHNav(this)">Telemetry</div>
-  </nav>
-  <div class="ibm-badge" style="margin-left:auto;">
-    <div class="ibm-dot"></div>
-    Powered by IBM watsonx
-  </div>
-  <div class="header-icons">
-    <span class="material-symbols-outlined">settings</span>
-    <span class="material-symbols-outlined">account_circle</span>
-  </div>
-</header>
-
-<div class="layout">
-
-  <!-- SIDEBAR -->
-  <nav class="sidebar fu1">
-    <div class="race-session-block">
-      <div class="race-icon">
-        <span class="material-symbols-outlined" style="color:white; font-size:20px;">sports_score</span>
-      </div>
-      <div>
-        <div class="race-label">Race Session</div>
-        <div class="race-name">Monza GP — Live</div>
-      </div>
-    </div>
-
-    <div class="ctx-grid">
-      <div class="ctx-cell">
-        <div class="ctx-cell-label">Year</div>
-        <div class="ctx-cell-val">2026</div>
-      </div>
-      <div class="ctx-cell">
-        <div class="ctx-cell-label">Driver</div>
-        <div class="ctx-cell-val red">Leclerc</div>
-      </div>
-    </div>
-
-    <div class="nav-items">
-      <div class="nav-item" onclick="setNav(this)"><span class="material-symbols-outlined">analytics</span> Telemetry</div>
-      <div class="nav-item active" onclick="setNav(this)"><span class="material-symbols-outlined">map</span> Strategy</div>
-      <div class="nav-item" onclick="setNav(this)"><span class="material-symbols-outlined">settings_input_antenna</span> Radio</div>
-      <div class="nav-item" onclick="setNav(this)"><span class="material-symbols-outlined">tire_repair</span> Tyre Data</div>
-      <div class="nav-item" onclick="setNav(this)"><span class="material-symbols-outlined">cloud</span> Weather</div>
-    </div>
-
-    <div style="padding: 12px 16px; border-top: 1px solid var(--border);">
-      <button class="pit-btn">Initiate Pit Stop</button>
-    </div>
-
-    <div class="sidebar-footer">
-      <div class="status-row"><div class="dot-green"></div><span style="color:var(--green);">Watson STT/TTS Active</span></div>
-      <div class="status-row"><div class="dot-blue"></div><span style="color:var(--blue);">Granite 4-h Online</span></div>
-      <div class="status-row"><div class="dot-yellow"></div><span style="color:var(--yellow);">ChromaDB Ready</span></div>
-    </div>
-  </nav>
-
-  <!-- MAIN -->
-  <main class="main">
-
-    <!-- VOICE PANEL -->
-    <div class="voice-panel fu2">
-      <!-- IDLE -->
-      <div class="voice-idle" id="voiceIdle">
-        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-          <div class="waveform" style="height:32px; justify-content:center; max-width:360px;">
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-            <div class="wbar inactive" style="height:32px;"></div>
-          </div>
-          <div class="voice-idle-title">Awaiting Command</div>
-          <div class="voice-idle-sub">"Voice analysis standby..."</div>
-        </div>
-        <div style="display:flex; gap:12px; align-items:center;">
-          <div class="stt-readouts">
-            <div class="stt-box">
-              <div class="stt-label">STT Confidence</div>
-              <div class="stt-value" style="color:var(--text-dim);">[ — ]</div>
-            </div>
-          </div>
-          <div>
-            <div class="gov-section-label" style="margin-bottom:4px;">Language</div>
-            <div class="lang-toggle">
-              <button class="lang-btn active" onclick="setLang(this,'en')">EN</button>
-              <button class="lang-btn" onclick="setLang(this,'it')">IT</button>
-            </div>
-          </div>
-          <div id="voiceSelector">
-            <div class="gov-section-label" style="margin-bottom:4px;">Voice</div>
-            <div class="lang-toggle">
-              <button class="lang-btn voice-btn active" onclick="setVoice(this,'allison')" title="Allison — US Female">ALI</button>
-              <button class="lang-btn voice-btn" onclick="setVoice(this,'george')" title="George — British Male">GEO</button>
-              <button class="lang-btn voice-btn" onclick="setVoice(this,'michael')" title="Michael — US Male">MIC</button>
-              <button class="lang-btn voice-btn" onclick="setVoice(this,'emma')" title="Emma — US Female">EMM</button>
-              <button class="lang-btn voice-btn" onclick="setVoice(this,'lisa')" title="Lisa — US Female">LIS</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ACTIVE -->
-      <div class="voice-active" id="voiceActive">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          <div>
-            <div class="voice-active-label"><div class="listening-dot"></div> Listening...</div>
-            <div class="voice-active-title">Voice Override Active</div>
-          </div>
-          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-            <div class="lang-toggle">
-              <button class="lang-btn active" onclick="setLang(this,'en')">EN</button>
-              <button class="lang-btn" onclick="setLang(this,'it')">IT</button>
-            </div>
-          </div>
-        </div>
-        <div class="waveform" style="max-width:500px;">
-          <div class="wbar active" style="height:64px; animation-delay:0.00s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.08s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.16s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.04s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.20s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.12s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.24s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.06s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.18s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.10s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.22s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.14s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.02s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.19s;"></div>
-          <div class="wbar active" style="height:64px; animation-delay:0.09s;"></div>
-        </div>
-        <div style="display:flex; gap:12px; align-items:flex-start;">
-          <div style="flex:1;">
-            <div class="transcript-panel" style="border-top:2px solid var(--red);">
-              <div class="transcript-ago" style="color:var(--red);">Recording — tap mic to submit</div>
-              <div class="transcript-text" id="liveTranscript">Speak your query...<span class="transcript-cursor"></span></div>
-            </div>
-          </div>
-          <div class="stt-box">
-            <div class="stt-label">Active Locale</div>
-            <div class="stt-value" id="localeBadge">EN-US</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- STATUS BAR -->
-    <div class="status-bar fu3">
-      <div class="status-cell">
-        <div class="status-cell-label">Driver 16 — Leclerc</div>
-        <div class="status-cell-val">P1 <span style="font-size:14px; color:var(--red);">GAP: +1.432s</span></div>
-      </div>
-      <div class="status-cell">
-        <div class="status-cell-label">Pit Window</div>
-        <div class="status-cell-val">Open <span style="font-size:13px; color:var(--yellow);">Lap 24–28</span></div>
-      </div>
-      <div class="status-cell">
-        <div class="status-cell-label">Weather Status</div>
-        <div class="status-cell-val">Dry <span style="font-size:13px; color:var(--text-dim);">0% Precip</span></div>
-      </div>
-      <div class="status-cell" style="flex:0.5;">
-        <div class="status-cell-label">Tyre</div>
-        <div class="status-cell-val" style="color:var(--yellow);">Hard</div>
-        <div class="status-cell-sub">Lap 36</div>
-      </div>
-    </div>
-
-    <!-- BOTTOM SPLIT -->
-    <div class="bottom-split">
-
-      <!-- RESPONSE AREA -->
-      <div class="response-area fu3">
-        <div class="response-header">
-          <div>
-            <div class="query-id" id="queryIdDisplay">Engineering Query_ID: ——</div>
-            <div class="response-title" id="responseTitleDisplay">Awaiting Query</div>
-          </div>
-          <div id="statusBadge" class="badge-uncertainty">
-            <span class="material-symbols-outlined" style="font-size:14px;">radio_button_unchecked</span>
-            Standby
-          </div>
-        </div>
-
-        <div class="response-body">
-          <div>
-            <div class="narrative-label">Narrative_Log</div>
-            <div class="narrative-text" id="narrativeText" style="color:var(--text-dim); font-family:'JetBrains Mono',monospace; font-size:12px;">
-              Submit a query via text input or voice command to receive a grounded pit-wall analysis.
-            </div>
-          </div>
-
-          <!-- Audio player — hidden until response arrives -->
-          <div class="audio-player" id="audioPlayer" style="display:none;">
-            <button class="play-btn" onclick="togglePlay()">
-              <span class="material-symbols-outlined" id="playIcon">play_arrow</span>
-            </button>
-            <div class="audio-wave">
-              <div class="audio-bar played"   style="height:10px;"></div>
-              <div class="audio-bar played"   style="height:18px;"></div>
-              <div class="audio-bar played"   style="height:26px;"></div>
-              <div class="audio-bar played"   style="height:20px;"></div>
-              <div class="audio-bar played"   style="height:12px;"></div>
-              <div class="audio-bar played"   style="height:8px;"></div>
-              <div class="audio-bar unplayed" style="height:16px;"></div>
-              <div class="audio-bar unplayed" style="height:22px;"></div>
-              <div class="audio-bar unplayed" style="height:14px;"></div>
-              <div class="audio-bar unplayed" style="height:10px;"></div>
-              <div class="audio-bar unplayed" style="height:20px;"></div>
-              <div class="audio-bar unplayed" style="height:26px;"></div>
-              <div class="audio-bar unplayed" style="height:18px;"></div>
-              <div class="audio-bar unplayed" style="height:8px;"></div>
-              <div class="audio-bar unplayed" style="height:14px;"></div>
-            </div>
-            <div class="tts-label" id="ttsLabel">TTS: EN-US ALLISONV3</div>
-          </div>
-
-          <div class="source-row" id="sourceRow" style="display:none;">
-            <span class="material-symbols-outlined" style="font-size:14px; color:var(--text-muted);">link</span>
-            <span class="source-text" id="sourceDisplay">—</span>
-          </div>
-        </div>
-
-        <!-- Input -->
-        <div class="input-row">
-          <span class="input-prompt">&gt;</span>
-          <input class="cmd-input" id="cmdInput" placeholder="ENTER COMMAND OR QUERY..." type="text"
-                 onkeydown="if(event.key==='Enter') executeQuery()"/>
-          <div class="lang-toggle">
-            <button class="lang-btn active" onclick="setLang(this,'en')">EN</button>
-            <button class="lang-btn" onclick="setLang(this,'it')">IT</button>
-          </div>
-          <button class="exec-btn" onclick="executeQuery()">Execute</button>
-        </div>
-      </div>
-
-      <!-- GOVERNANCE PANEL -->
-      <div class="gov-panel fu3">
-        <div class="gov-header">
-          <span class="material-symbols-outlined" style="color:var(--yellow); font-size:16px;">verified_user</span>
-          <span class="gov-title">Governance Audit</span>
-        </div>
-
-        <!-- Sources -->
-        <div class="gov-section">
-          <div class="gov-section-label">Source Validation</div>
-          <div class="source-row-gov">
-            <span class="source-name">FIA Regulation Corpus</span>
-            <span class="material-symbols-outlined check-icon" id="srcPrimary">radio_button_unchecked</span>
-          </div>
-          <div class="source-row-gov">
-            <span class="source-name">FastF1 Telemetry</span>
-            <span class="material-symbols-outlined check-icon" id="srcSecondary">radio_button_unchecked</span>
-          </div>
-        </div>
-
-        <!-- Hooks — corrected names -->
-        <div class="gov-section">
-          <div class="gov-section-label">Overseer Validation Hooks</div>
-          <div class="hook-row">
-            <span class="hook-name">Hook 1 — Transcript</span>
-            <span id="hook1Status" class="hook-pass" style="color:var(--text-muted);">——</span>
-          </div>
-          <div class="hook-row">
-            <span class="hook-name">Hook 2 — Retrieval</span>
-            <span id="hook2Status" class="hook-pass" style="color:var(--text-muted);">——</span>
-          </div>
-          <div class="hook-row">
-            <span class="hook-name">Hook 3 — Pre-Delivery</span>
-            <span id="hook3Status" class="hook-pass" style="color:var(--text-muted);">——</span>
-          </div>
-        </div>
-
-        <!-- Confidence -->
-        <div class="conf-section">
-          <div class="conf-header">
-            <span class="conf-label">Confidence Coefficient</span>
-            <span class="conf-value" id="confValue">——</span>
-          </div>
-          <div class="conf-bar">
-            <div class="conf-fill" id="confFill" style="width:0%;"></div>
-          </div>
-        </div>
-
-        <!-- Audit log -->
-        <div class="audit-section">
-          <div class="audit-count-row">
-            <span class="gov-section-label" style="margin-bottom:0;">Audit Log</span>
-            <span class="audit-count" id="auditCount">[ 00 ]</span>
-          </div>
-          <div class="audit-log" id="auditLog">
-            <div class="audit-entry">
-              <span class="audit-time">——:——</span>
-              <span class="audit-event" style="color:var(--text-muted);">AWAITING_QUERY</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- AI Stack -->
-        <div class="ai-stack">
-          <div class="ai-stack-header">
-            <span class="gov-section-label" style="margin-bottom:0; color:var(--blue);">AI Analytics Stack</span>
-            <span class="ai-active-badge">Active</span>
-          </div>
-          <div style="margin-bottom:4px;">
-            <div class="ai-engine-label">Core Model</div>
-            <div class="ai-model-name">watsonx.granite-4h</div>
-          </div>
-          <div>
-            <div class="ai-engine-label">Speech Engine</div>
-            <div class="ai-engine-val">
-              Watson STT/TTS
-              <span class="ai-latency" id="sttLatency">—ms</span>
-            </div>
-          </div>
-          <div style="margin-top:10px; display:flex; flex-direction:column; gap:4px;">
-            <div style="display:flex; justify-content:space-between;">
-              <span class="mono" style="font-size:9px; color:var(--text-muted);">RAG</span>
-              <span class="mono" style="font-size:9px; color:var(--text-dim);">ChromaDB + Docling</span>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span class="mono" style="font-size:9px; color:var(--text-muted);">Telemetry</span>
-              <span class="mono" style="font-size:9px; color:var(--text-dim);">FastF1 v3.8.2</span>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span class="mono" style="font-size:9px; color:var(--text-muted);">Locale</span>
-              <span class="mono" style="font-size:9px; color:var(--text-dim);" id="aiLocale">EN-US / IT-IT</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
-
-<!-- FLOATING MIC -->
-<div class="mic-float">
-  <button class="mic-btn" id="micBtn" onclick="toggleMic()">
-    <span class="material-symbols-outlined" id="micIcon">mic</span>
-  </button>
-  <span class="mic-label" id="micLabel">Voice Command</span>
-</div>
-
-<script>
-  // ── State ──────────────────────────────────────────────────────────────────
-  let micActive = false;
-  let currentLang = 'en';
-  let currentVoice = 'allison';
-  let currentAudio = null;
-  let mediaRecorder = null;
-  let audioChunks = [];
-
-  // ── Mic / MediaRecorder ───────────────────────────────────────────────────
-  async function toggleMic() {
-    if (!micActive) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-        mediaRecorder.onstop = async () => {
-          stream.getTracks().forEach(t => t.stop());
-          deactivateMic();
-          const mimeType = mediaRecorder.mimeType || 'audio/webm';
-          const blob = new Blob(audioChunks, { type: mimeType });
-          const b64 = await blobToBase64(blob);
-          await submitQuery(null, b64);
-        };
-        mediaRecorder.start();
-        activateMic();
-      } catch (err) {
-        console.warn('Mic access denied:', err);
-        document.getElementById('micLabel').textContent = 'No Mic Access';
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface-bright": "#4a3430",
+        "inverse-on-surface": "#412b27",
+        "outline-variant": "#5e3f3a",
+        "surface-container-lowest": "#1a0907",
+        "on-error": "#690005",
+        "on-surface-variant": "#e9bcb5",
+        "on-primary-container": "#ffece9",
+        "error": "#ffb4ab",
+        "on-primary": "#690000",
+        "surface-container-high": "#3a2521",
+        "inverse-surface": "#ffdad5",
+        "on-tertiary": "#3d2f00",
+        "surface": "#200f0c",
+        "primary": "#ffb4a8",
+        "surface-dim": "#200f0c",
+        "outline": "#af8781",
+        "on-background": "#ffdad5",
+        "surface-container": "#2e1a17",
+        "error-container": "#93000a",
+        "primary-fixed": "#ffdad4",
+        "surface-variant": "#462f2c",
+        "on-secondary-container": "#e1e8ff",
+        "surface-container-highest": "#462f2c",
+        "inverse-primary": "#c00000",
+        "secondary": "#aec6ff",
+        "on-surface": "#ffdad5",
+        "background": "#200f0c",
+        "surface-container-low": "#2a1714",
+        "tertiary": "#f1c100",
+        "on-secondary": "#002e6b",
+        "primary-container": "#dc0000"
+      },
+      spacing: {
+        "gutter": "1px",
+        "margin-lg": "24px",
+        "margin-xs": "4px",
+        "margin-sm": "8px",
+        "margin-md": "16px",
+        "grid_unit": "40px"
+      },
+      fontFamily: {
+        "headline-lg": ["Barlow Condensed"],
+        "headline-md": ["Barlow Condensed"],
+        "label-caps":  ["JetBrains Mono"],
+        "body-md":     ["Barlow"],
+        "data-mono":   ["JetBrains Mono"],
+        "body-sm":     ["Barlow"]
       }
-    } else {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
     }
   }
-
-  function blobToBase64(blob) {
-    return new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.readAsDataURL(blob);
-    });
-  }
-
-  function activateMic() {
-    micActive = true;
-    document.getElementById('micBtn').classList.add('active');
-    document.getElementById('micIcon').textContent = 'stop';
-    document.getElementById('micLabel').textContent = 'Tap to Submit';
-    document.getElementById('micLabel').style.color = 'var(--red)';
-    document.getElementById('voiceIdle').style.display = 'none';
-    document.getElementById('voiceActive').style.display = 'flex';
-    document.getElementById('localeBadge').textContent = currentLang === 'it' ? 'IT-IT' : 'EN-US';
-  }
-
-  function deactivateMic() {
-    micActive = false;
-    document.getElementById('micBtn').classList.remove('active');
-    document.getElementById('micIcon').textContent = 'mic';
-    document.getElementById('micLabel').textContent = 'Voice Command';
-    document.getElementById('micLabel').style.color = '';
-    document.getElementById('voiceIdle').style.display = 'flex';
-    document.getElementById('voiceActive').style.display = 'none';
-  }
-
-  // ── Query submission ──────────────────────────────────────────────────────
-  function executeQuery() {
-    const q = document.getElementById('cmdInput').value.trim();
-    if (!q) return;
-    document.getElementById('cmdInput').value = '';
-    submitQuery(q, null);
-  }
-
-  async function submitQuery(textQuery, audioB64) {
-    showProcessing(textQuery || 'Voice query');
-
-    const body = audioB64
-      ? { audio_b64: audioB64, language: currentLang, voice: currentVoice }
-      : { text_query: textQuery, language: currentLang, voice: currentVoice };
-
-    const t0 = Date.now();
-    try {
-      const res = await fetch('/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: res.statusText }));
-        throw new Error(err.detail || res.statusText);
-      }
-      const data = await res.json();
-      const elapsed = Date.now() - t0;
-      showResponse(data, textQuery || 'Voice query', elapsed);
-      fetchAuditLog();
-    } catch (err) {
-      showError(err.message);
-    }
-  }
-
-  // ── Response rendering ────────────────────────────────────────────────────
-  function showProcessing(label) {
-    const qid = 'QRY_' + Math.floor(Math.random() * 9000 + 1000) + '_' +
-                String.fromCharCode(65 + Math.floor(Math.random() * 26)) +
-                String.fromCharCode(65 + Math.floor(Math.random() * 26));
-    document.getElementById('queryIdDisplay').textContent = 'Engineering Query_ID: ' + qid;
-    document.getElementById('responseTitleDisplay').textContent = label.toUpperCase().slice(0, 40);
-    document.getElementById('statusBadge').className = 'badge-processing';
-    document.getElementById('statusBadge').innerHTML =
-      '<span class="material-symbols-outlined" style="font-size:14px;">hourglass_empty</span> Processing...';
-    document.getElementById('narrativeText').className = '';
-    document.getElementById('narrativeText').style.cssText =
-      'color:var(--text-dim); font-family:\'JetBrains Mono\',monospace; font-size:12px;';
-    document.getElementById('narrativeText').textContent =
-      'Routing to IBM watsonx Granite 4-h via /process...';
-    document.getElementById('audioPlayer').style.display = 'none';
-    document.getElementById('sourceRow').style.display = 'none';
-    resetHooks();
-  }
-
-  function showResponse(data, queryLabel, elapsedMs) {
-    // Badge
-    const badge = document.getElementById('statusBadge');
-    if (data.output_type === 'confirmed') {
-      badge.className = 'badge-confirmed';
-      badge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">verified</span> Confirmed';
-    } else if (data.output_type === 'retry_corrected') {
-      badge.className = 'badge-retry';
-      badge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">refresh</span> Retry Corrected';
-    } else {
-      badge.className = 'badge-uncertainty';
-      badge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">warning</span> Uncertainty';
-    }
-
-    // Title
-    document.getElementById('responseTitleDisplay').textContent =
-      (queryLabel || 'Response').toUpperCase().slice(0, 40);
-
-    // Narrative — restore drop-cap styling
-    const nt = document.getElementById('narrativeText');
-    nt.className = 'narrative-text';
-    nt.style.cssText = '';
-    nt.textContent = data.text;
-
-    // Source citation
-    if (data.traceability_link) {
-      document.getElementById('sourceDisplay').textContent = data.traceability_link;
-      document.getElementById('sourceRow').style.display = 'flex';
-    }
-
-    // Audio player
-    if (data.audio_b64) {
-      setupAudio(data.audio_b64);
-      const ttsVoice = currentLang === 'it' ? 'TTS: IT-IT FRANCESCAV3' : `TTS: ${currentVoice.toUpperCase()} EXPRESSIVE`;
-      document.getElementById('ttsLabel').textContent = ttsVoice;
-      document.getElementById('audioPlayer').style.display = 'flex';
-    }
-
-    // Governance hooks
-    updateHooks(data.output_type);
-    document.getElementById('sttLatency').textContent = elapsedMs + 'ms';
-  }
-
-  function showError(msg) {
-    document.getElementById('statusBadge').className = 'badge-retry';
-    document.getElementById('statusBadge').innerHTML =
-      '<span class="material-symbols-outlined" style="font-size:14px;">error</span> Error';
-    const nt = document.getElementById('narrativeText');
-    nt.className = '';
-    nt.style.cssText = '';
-    nt.innerHTML = '<span class="error-text">API error: ' + msg + '</span>';
-  }
-
-  // ── Governance panel ──────────────────────────────────────────────────────
-  function resetHooks() {
-    ['hook1Status','hook2Status','hook3Status'].forEach(id => {
-      const el = document.getElementById(id);
-      el.className = 'hook-pass';
-      el.style.color = 'var(--text-muted)';
-      el.textContent = '——';
-    });
-    document.getElementById('srcPrimary').textContent = 'radio_button_unchecked';
-    document.getElementById('srcPrimary').className = 'material-symbols-outlined check-icon';
-    document.getElementById('srcSecondary').textContent = 'radio_button_unchecked';
-    document.getElementById('srcSecondary').className = 'material-symbols-outlined check-icon';
-    document.getElementById('confValue').textContent = '——';
-    document.getElementById('confFill').style.width = '0%';
-  }
-
-  function updateHooks(outputType) {
-    const h1 = document.getElementById('hook1Status');
-    const h2 = document.getElementById('hook2Status');
-    const h3 = document.getElementById('hook3Status');
-
-    // Hook 1 — Transcript Audit: always PASS (request reached the pipeline)
-    h1.className = 'hook-pass'; h1.style.color = ''; h1.textContent = 'PASS';
-
-    if (outputType === 'confirmed') {
-      h2.className = 'hook-pass'; h2.style.color = ''; h2.textContent = 'PASS';
-      h3.className = 'hook-pass'; h3.style.color = ''; h3.textContent = 'PASS';
-      document.getElementById('confValue').textContent = '0.92';
-      document.getElementById('confFill').style.width = '92%';
-    } else if (outputType === 'retry_corrected') {
-      h2.className = 'hook-pass'; h2.style.color = ''; h2.textContent = 'PASS';
-      h3.className = ''; h3.style.color = ''; h3.innerHTML = '<span class="hook-warn">RETRY</span>';
-      document.getElementById('confValue').textContent = '0.71';
-      document.getElementById('confFill').style.width = '71%';
-    } else {
-      h2.className = ''; h2.style.color = ''; h2.innerHTML = '<span class="hook-warn">LOW</span>';
-      h3.className = ''; h3.style.color = ''; h3.innerHTML = '<span class="hook-fail">FAIL</span>';
-      document.getElementById('confValue').textContent = '0.32';
-      document.getElementById('confFill').style.width = '32%';
-    }
-
-    // Source icons
-    document.getElementById('srcPrimary').textContent = 'check_circle';
-    document.getElementById('srcPrimary').className = 'material-symbols-outlined check-icon';
-    document.getElementById('srcSecondary').textContent = 'check_circle';
-    document.getElementById('srcSecondary').className =
-      'material-symbols-outlined check-icon' + (outputType === 'uncertainty' ? ' warn' : '');
-  }
-
-  async function fetchAuditLog() {
-    try {
-      const res = await fetch('/audit');
-      if (!res.ok) return;
-      const entries = await res.json();
-      renderAuditLog(entries);
-    } catch {}
-  }
-
-  function renderAuditLog(entries) {
-    const log = document.getElementById('auditLog');
-    const total = entries.length;
-    document.getElementById('auditCount').textContent =
-      '[ ' + String(total).padStart(2, '0') + ' ]';
-
-    const last5 = entries.slice(-5).reverse();
-    log.innerHTML = last5.map(e => {
-      const ts = e.timestamp ? e.timestamp.split('T')[1].slice(0, 8) : '--:--:--';
-      const event = (e.verdict || e.hook || e.anomaly_type || 'EVENT')
-        .toUpperCase().slice(0, 22);
-      return `<div class="audit-entry">
-        <span class="audit-time">${ts}</span>
-        <span class="audit-event">${event}</span>
-      </div>`;
-    }).join('');
-  }
-
-  // ── Audio playback ────────────────────────────────────────────────────────
-  function setupAudio(b64) {
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-    const bytes = atob(b64);
-    const arr = new Uint8Array(bytes.length);
-    for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-    const blob = new Blob([arr], { type: 'audio/wav' });
-    currentAudio = new Audio(URL.createObjectURL(blob));
-    currentAudio.onended = () => {
-      document.getElementById('playIcon').textContent = 'play_arrow';
-    };
-  }
-
-  function togglePlay() {
-    if (!currentAudio) return;
-    if (currentAudio.paused) {
-      currentAudio.play();
-      document.getElementById('playIcon').textContent = 'pause';
-    } else {
-      currentAudio.pause();
-      document.getElementById('playIcon').textContent = 'play_arrow';
-    }
-  }
-
-  // ── Language toggle ───────────────────────────────────────────────────────
-  function setLang(btn, lang) {
-    currentLang = lang;
-    document.querySelectorAll('.lang-btn').forEach(b => {
-      b.classList.toggle('active', b.textContent.toLowerCase() === lang);
-    });
-    const locale = lang === 'it' ? 'IT-IT' : 'EN-US';
-    document.getElementById('localeBadge').textContent = locale;
-    document.getElementById('aiLocale').textContent =
-      lang === 'it' ? 'IT-IT / EN-US' : 'EN-US / IT-IT';
-    document.getElementById('ttsLabel').textContent =
-      lang === 'it' ? 'TTS: IT-IT FRANCESCAV3' : `TTS: ${currentVoice.toUpperCase()} EXPRESSIVE`;
-    const voiceRow = document.getElementById('voiceSelector');
-    if (voiceRow) voiceRow.style.display = lang === 'it' ? 'none' : 'flex';
-  }
-
-  // ── Voice selector ────────────────────────────────────────────────────────
-  function setVoice(btn, voice) {
-    currentVoice = voice;
-    document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('ttsLabel').textContent = `TTS: ${voice.toUpperCase()} EXPRESSIVE`;
-  }
-
-  function setNav(el) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
-  }
-
-  function setHNav(el) {
-    document.querySelectorAll('.hnav-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
-  }
+}
 </script>
+</head>
+
+<body class="font-body-md selection:bg-primary-container selection:text-white">
+
+<!-- Spotlight on white page background -->
+<div id="spotlight" style="position:fixed;inset:0;pointer-events:none;z-index:0;"></div>
+
+<div id="phone-frame" style="position:relative;z-index:1;">
+<div id="app-shell" class="bg-background bg-grid text-on-background">
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 1 — READY STATE
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-ready" class="screen active">
+
+  <header class="bg-surface flex justify-between items-center w-full px-margin-md h-grid_unit border-b border-outline-variant flex-shrink-0">
+    <span class="text-headline-md font-headline-md font-extrabold text-primary-container uppercase tracking-tighter">SCUDERIA PIT-WALL</span>
+    <div class="flex items-center gap-margin-sm">
+      <span class="text-label-caps font-label-caps text-on-surface-variant opacity-70">IBM watsonx</span>
+      <span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant transition-colors duration-150 p-1 cursor-pointer">settings</span>
+      <span class="material-symbols-outlined text-on-surface-variant hover:bg-surface-variant transition-colors duration-150 p-1 cursor-pointer">account_circle</span>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col p-margin-md gap-margin-md pb-4">
+
+    <!-- Context Row -->
+    <div class="grid grid-cols-3 gap-gutter border border-outline-variant bg-outline-variant">
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant">YEAR</span>
+        <span id="ctx-year" class="text-data-mono font-data-mono text-on-surface">2026</span>
+      </div>
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center border-x border-outline-variant">
+        <span class="text-label-caps font-label-caps text-on-surface-variant">RACE</span>
+        <span id="ctx-race" class="text-data-mono font-data-mono text-on-surface">MIAMI GP</span>
+      </div>
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant">DRIVER</span>
+        <span id="ctx-driver" class="text-data-mono font-data-mono text-primary-container">LECLERC</span>
+      </div>
+    </div>
+
+    <!-- Language + Voice -->
+    <div class="flex flex-wrap justify-between items-center gap-2">
+      <div class="flex bg-surface-container border border-outline-variant p-1">
+        <button onclick="setLang('en')" id="btn-en" class="lang-btn px-3 py-1 text-label-caps font-label-caps bg-primary-container text-white">EN</button>
+        <button onclick="setLang('it')" id="btn-it" class="lang-btn px-3 py-1 text-label-caps font-label-caps text-on-surface-variant hover:text-on-surface">IT</button>
+      </div>
+      <div id="voice-selector" class="flex bg-surface-container border border-outline-variant p-1 gap-1">
+        <button onclick="setVoice(this,'allison')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">ALLISON</button>
+        <button onclick="setVoice(this,'michael')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] text-on-surface-variant">MICHAEL</button>
+        <button onclick="setVoice(this,'george')"  class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] text-on-surface-variant">GEORGE</button>
+        <button onclick="setVoice(this,'emma')"    class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] text-on-surface-variant">EMMA</button>
+      </div>
+    </div>
+
+    <!-- Central Mic -->
+    <div class="flex-1 flex flex-col items-center justify-center py-margin-lg">
+      <div class="relative group cursor-pointer" onclick="toggleMic()">
+        <div class="w-32 h-32 rounded-full bg-primary-container flex items-center justify-center animate-glow relative z-10 active:scale-95 transition-transform duration-100">
+          <span class="material-symbols-outlined text-white msym-fill" style="font-size:48px;">mic</span>
+        </div>
+        <div class="absolute -inset-4 border-2 border-dashed border-outline-variant rounded-full opacity-20"></div>
+      </div>
+      <div class="mt-8 text-center w-full">
+        <div class="flex justify-center items-end h-8 mb-2" id="waveform">
+          <div class="waveform-bar" style="height:10px;"></div>
+          <div class="waveform-bar" style="height:14px;"></div>
+          <div class="waveform-bar" style="height:8px;"></div>
+          <div class="waveform-bar" style="height:18px;"></div>
+          <div class="waveform-bar" style="height:12px;"></div>
+          <div class="waveform-bar" style="height:22px;"></div>
+          <div class="waveform-bar" style="height:16px;"></div>
+          <div class="waveform-bar" style="height:10px;"></div>
+        </div>
+        <h2 class="text-headline-lg font-headline-lg text-on-surface tracking-widest">AWAITING COMMAND</h2>
+        <p class="text-label-caps font-label-caps text-primary-container mt-1">SYSTEM ONLINE / READY TO ANALYZE</p>
+      </div>
+      <!-- Text input -->
+      <div class="w-full max-w-lg mt-6 flex gap-2">
+        <input id="text-input" type="text" placeholder="Type your question..."
+          class="flex-1 bg-surface-container border border-outline-variant text-on-surface text-sm font-label-caps px-3 py-2 outline-none focus:border-primary-container placeholder:text-on-surface-variant"
+          onkeydown="if(event.key==='Enter') submitText()"/>
+        <button onclick="submitText()" class="bg-primary-container text-white px-3 py-2 hover:bg-inverse-primary transition-colors">
+          <span class="material-symbols-outlined msym-fill" style="font-size:20px;">send</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom modules -->
+    <div class="space-y-margin-md">
+      <!-- IBM Granite -->
+      <section class="bg-surface-container border border-outline-variant p-margin-md relative">
+        <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+        <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+        <div class="flex justify-between items-start mb-margin-sm border-b border-outline-variant pb-margin-sm">
+          <span class="text-label-caps font-label-caps text-on-surface">ibm/granite-4-h-small</span>
+          <span class="text-label-caps font-label-caps text-tertiary">ACTIVE</span>
+        </div>
+        <div class="grid grid-cols-2 gap-margin-md">
+          <div>
+            <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">INFERENCE LATENCY</p>
+            <p id="latency-ready" class="text-data-mono font-data-mono text-on-surface">--ms</p>
+          </div>
+          <div>
+            <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">RAG INDEX</p>
+            <p class="text-data-mono font-data-mono text-on-surface">777 chunks</p>
+          </div>
+        </div>
+        <p class="mt-margin-sm text-body-sm font-body-sm text-on-surface-variant italic">"RAG over FIA 2026 regulations + live race telemetry"</p>
+      </section>
+
+      <!-- Tyre + Brake -->
+      <section class="grid grid-cols-2 gap-gutter bg-outline-variant border border-outline-variant">
+        <div class="bg-surface-container p-margin-md flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">tire_repair</span>
+            <span class="text-label-caps font-label-caps text-on-surface">TYRE DATA</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between">
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">FL TEMP</span>
+              <span class="text-data-mono font-data-mono text-on-surface">94°C</span>
+            </div>
+            <div class="w-full bg-surface-variant h-1">
+              <div class="bg-tertiary h-full w-[85%]"></div>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">WEAR</span>
+              <span class="text-data-mono font-data-mono text-on-surface">18%</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-surface-container p-margin-md flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">speed</span>
+            <span class="text-label-caps font-label-caps text-on-surface">BRAKES</span>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between">
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">TEMP</span>
+              <span class="text-data-mono font-data-mono text-on-surface">412°C</span>
+            </div>
+            <div class="w-full bg-surface-variant h-1">
+              <div class="bg-primary-container h-full w-[60%]"></div>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">HEALTH</span>
+              <span class="text-data-mono font-data-mono text-on-surface">NOMINAL</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <nav class="flex justify-between items-center px-margin-lg py-margin-sm bg-surface-container-high border-t-2 border-primary-container">
+    <button class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span class="text-label-caps font-label-caps">DASH</span>
+    </button>
+    <button class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+      <span class="material-symbols-outlined">analytics</span>
+      <span class="text-label-caps font-label-caps">DATA</span>
+    </button>
+    <button onclick="toggleMic()" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-4 -mt-8 scale-110 shadow-[0_0_15px_rgba(220,0,0,0.5)] border-4 border-background">
+      <span class="material-symbols-outlined msym-fill">sensors</span>
+      <span class="text-label-caps font-label-caps">LIVE</span>
+    </button>
+    <button class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+      <span class="material-symbols-outlined">sync</span>
+      <span class="text-label-caps font-label-caps">SYNC</span>
+    </button>
+    <button onclick="toggleMic()" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+      <span class="material-symbols-outlined">record_voice_over</span>
+      <span class="text-label-caps font-label-caps">VOICE</span>
+    </button>
+  </nav>
+
+</div><!-- /screen-ready -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 2 — ACTIVE RECORDING
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-recording" class="screen">
+
+  <header class="bg-surface flex-shrink-0 flex justify-between items-center w-full px-margin-md h-grid_unit border-b border-primary-container">
+    <span class="text-headline-md font-headline-md font-extrabold text-primary-container uppercase tracking-tighter">SCUDERIA PIT-WALL</span>
+    <div class="flex items-center gap-2">
+      <div class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></div>
+      <span class="text-label-caps font-label-caps text-primary-container">RECORDING</span>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col items-center justify-center gap-margin-lg p-margin-md pb-4">
+
+    <!-- Context strip -->
+    <div class="grid grid-cols-3 gap-gutter border border-outline-variant bg-outline-variant w-full max-w-lg">
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">YEAR</span>
+        <span class="text-data-mono font-data-mono text-on-surface text-xs">2026</span>
+      </div>
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center border-x border-outline-variant">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">RACE</span>
+        <span class="text-data-mono font-data-mono text-on-surface text-xs">MIAMI GP</span>
+      </div>
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">STT</span>
+        <span id="stt-lang" class="text-data-mono font-data-mono text-primary-container text-xs">EN-US</span>
+      </div>
+    </div>
+
+    <!-- Pulsing mic -->
+    <div class="relative flex items-center justify-center" style="width:220px;height:220px;">
+      <div class="absolute rounded-full bg-primary-container" style="width:200px;height:200px;opacity:0.08;animation:pulse-red-lg 1.2s ease-out infinite;"></div>
+      <div class="absolute rounded-full bg-primary-container" style="width:200px;height:200px;opacity:0.08;animation:pulse-red-lg 1.2s ease-out infinite 0.5s;"></div>
+      <div class="w-32 h-32 rounded-full bg-primary-container flex items-center justify-center animate-glow-lg relative z-10">
+        <span class="material-symbols-outlined text-white msym-fill" style="font-size:52px;">mic</span>
+      </div>
+    </div>
+
+    <!-- Active waveform -->
+    <div class="flex justify-center items-end gap-0.5 w-64" style="height:48px;" id="waveform-rec">
+      <div class="waveform-bar"></div><div class="waveform-bar"></div>
+      <div class="waveform-bar"></div><div class="waveform-bar"></div>
+      <div class="waveform-bar"></div><div class="waveform-bar"></div>
+      <div class="waveform-bar"></div><div class="waveform-bar"></div>
+      <div class="waveform-bar"></div><div class="waveform-bar"></div>
+      <div class="waveform-bar"></div><div class="waveform-bar"></div>
+    </div>
+
+    <div class="text-center">
+      <h2 class="text-headline-lg font-headline-lg text-primary-container tracking-widest">LISTENING...</h2>
+      <p class="text-label-caps font-label-caps text-on-surface-variant mt-1">WATSON STT ACTIVE</p>
+    </div>
+
+    <!-- Live transcript -->
+    <div class="w-full max-w-lg bg-surface-container border border-outline-variant p-margin-md relative">
+      <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+      <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-2">TRANSCRIPT</p>
+      <p id="live-transcript" class="text-body-sm font-body-sm text-on-surface-variant italic">Awaiting speech input...</p>
+    </div>
+
+    <!-- Stop -->
+    <button onclick="stopRecording()"
+      class="border-2 border-primary-container text-primary-container px-8 py-3 text-label-caps font-label-caps tracking-widest hover:bg-primary-container hover:text-white transition-colors">
+      STOP &amp; SUBMIT
+    </button>
+
+  </main>
+
+</div><!-- /screen-recording -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 3 — RESPONSE OUTPUT
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-response" class="screen" style="position:relative;">
+
+  <header class="bg-surface flex-shrink-0 w-full border-b border-outline-variant">
+    <div class="flex justify-between items-center w-full px-margin-md h-grid_unit">
+      <div class="flex items-center gap-2">
+        <button onclick="showScreen('ready')" class="text-on-surface-variant hover:text-on-surface mr-1">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <span class="text-headline-md font-headline-md font-extrabold text-primary-container uppercase tracking-tighter">SCUDERIA PIT-WALL</span>
+      </div>
+      <div id="response-badge" class="flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-outline text-on-surface-variant">
+        <span id="badge-icon" class="material-symbols-outlined msym-fill" style="font-size:14px;">pending</span>
+        <span id="badge-text">PROCESSING</span>
+      </div>
+    </div>
+    <div class="px-margin-md py-1 bg-surface-container-low border-t border-outline-variant flex items-center gap-2 overflow-hidden">
+      <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex-shrink-0">SESSION: MIAMI GP · LIVE</span>
+      <span class="text-on-surface-variant text-[10px] flex-shrink-0">·</span>
+      <span id="response-title" class="text-label-caps font-label-caps text-primary-container text-[10px] truncate uppercase">AWAITING RESPONSE</span>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col p-margin-md gap-margin-md pb-4">
+
+    <!-- Context row -->
+    <div class="grid grid-cols-3 gap-gutter border border-outline-variant bg-outline-variant">
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant">YEAR</span>
+        <span class="text-data-mono font-data-mono text-on-surface">2026</span>
+      </div>
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center border-x border-outline-variant">
+        <span class="text-label-caps font-label-caps text-on-surface-variant">RACE</span>
+        <span class="text-data-mono font-data-mono text-on-surface">MIAMI GP</span>
+      </div>
+      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant">DRIVER</span>
+        <span class="text-data-mono font-data-mono text-primary-container">LECLERC</span>
+      </div>
+    </div>
+
+    <!-- AI Narrative -->
+    <section class="bg-surface-container border border-outline-variant p-margin-md relative">
+      <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+      <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-margin-sm">IBM GRANITE · ANALYSIS</p>
+      <p id="narrative-text" class="text-body-md font-body-md text-on-surface leading-relaxed">
+        Routing to IBM watsonx Granite 4-h via /process...
+      </p>
+    </section>
+
+    <!-- Audio player with waveform -->
+    <div id="audio-player" style="display:none;"
+      class="flex items-center gap-margin-md bg-surface-container border border-outline-variant p-margin-md relative">
+      <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+      <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+      <button onclick="togglePlay()"
+        class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center flex-shrink-0 hover:bg-inverse-primary transition-colors">
+        <span id="play-icon" class="material-symbols-outlined text-white msym-fill" style="font-size:22px;">play_arrow</span>
+      </button>
+      <div class="flex-1 min-w-0 flex flex-col gap-1">
+        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">WATSON TTS · VOICE OUTPUT</p>
+        <p id="tts-label" class="text-data-mono font-data-mono text-on-surface text-sm truncate">TTS: ALLISON EXPRESSIVE</p>
+        <div class="flex items-end gap-0.5" style="height:18px;" id="waveform-tts">
+          <div class="waveform-bar"></div><div class="waveform-bar"></div>
+          <div class="waveform-bar"></div><div class="waveform-bar"></div>
+          <div class="waveform-bar"></div><div class="waveform-bar"></div>
+          <div class="waveform-bar"></div><div class="waveform-bar"></div>
+          <div class="waveform-bar"></div><div class="waveform-bar"></div>
+          <div class="waveform-bar"></div><div class="waveform-bar"></div>
+          <div class="waveform-bar"></div><div class="waveform-bar"></div>
+          <div class="waveform-bar"></div><div class="waveform-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Source citations -->
+    <div id="source-citations" style="display:none;" class="flex-col gap-1">
+      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-1">SOURCE CITATIONS</p>
+      <div id="source-list" class="flex flex-col gap-1"></div>
+    </div>
+
+    <!-- New query -->
+    <button onclick="showScreen('ready')"
+      class="w-full border border-primary-container text-primary-container text-label-caps font-label-caps tracking-widest py-3 hover:bg-primary-container hover:text-white transition-colors">
+      NEW QUERY
+    </button>
+
+  </main>
+
+  <!-- Governance handle — sits above the mic nav as a flex child -->
+  <div id="governanceHandle" class="flex-shrink-0 flex flex-col items-center cursor-pointer group border-t border-outline-variant" onclick="toggleGovernance()">
+    <div class="w-10 h-1 bg-outline-variant rounded-full my-2 group-hover:bg-primary-container transition-colors"></div>
+    <div class="w-full py-2 flex justify-center bg-surface-container-highest">
+      <span class="text-label-caps font-label-caps text-primary-container tracking-[0.2em]">GOVERNANCE AUDIT</span>
+    </div>
+  </div>
+
+  <!-- Single FAB nav for response screen -->
+  <nav class="flex justify-center items-end pb-4 bg-surface-container-high border-t-2 border-primary-container">
+    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-5 -mt-8 shadow-[0_0_15px_rgba(220,0,0,0.5)] border-4 border-background">
+      <span class="material-symbols-outlined msym-fill" style="font-size:28px;">mic</span>
+    </button>
+  </nav>
+
+  <!-- Governance slide panel (position:absolute within screen-response) -->
+  <div id="governancePanel" class="bg-surface-container-highest border-t-2 border-primary-container p-margin-md">
+
+    <div class="flex justify-center mb-margin-md cursor-pointer" onclick="toggleGovernance()">
+      <div class="w-12 h-1 bg-outline-variant rounded-full"></div>
+    </div>
+    <div class="flex justify-between items-center mb-margin-md">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary-container msym-fill" style="font-size:18px;">security</span>
+        <span class="text-label-caps font-label-caps text-on-surface tracking-widest">GOVERNANCE AUDIT</span>
+      </div>
+      <button onclick="toggleGovernance()" class="text-on-surface-variant hover:text-on-surface">
+        <span class="material-symbols-outlined" style="font-size:20px;">close</span>
+      </button>
+    </div>
+
+    <div class="mb-margin-md">
+      <div class="flex justify-between text-label-caps font-label-caps text-[10px] mb-2">
+        <span class="text-on-surface-variant">CONFIDENCE SCORE</span>
+        <span id="conf-value" class="text-on-surface font-bold">--</span>
+      </div>
+      <div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+        <div id="conf-fill" class="bg-primary-container h-full transition-all duration-700 rounded-full" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2 mb-margin-md border border-outline-variant p-margin-sm relative">
+      <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+      <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">OVERSEER PIPELINE — 3 HOOKS</p>
+      <div class="flex justify-between text-label-caps font-label-caps text-[10px]">
+        <span class="text-on-surface-variant">↳ TRANSCRIPT AUDIT</span>
+        <span id="hook1-status" class="text-on-surface-variant">——</span>
+      </div>
+      <div class="flex justify-between text-label-caps font-label-caps text-[10px]">
+        <span class="text-on-surface-variant">↳ RETRIEVAL AUDIT</span>
+        <span id="hook2-status" class="text-on-surface-variant">——</span>
+      </div>
+      <div class="flex justify-between text-label-caps font-label-caps text-[10px]">
+        <span class="text-on-surface-variant">↳ PRE-DELIVERY VALIDATION</span>
+        <span id="hook3-status" class="text-on-surface-variant">——</span>
+      </div>
+    </div>
+
+    <div class="flex justify-between text-label-caps font-label-caps text-[10px] mb-margin-sm">
+      <span class="text-on-surface-variant">INFERENCE LATENCY</span>
+      <span id="latency-gov" class="text-on-surface">--ms</span>
+    </div>
+
+    <div class="flex flex-col gap-1 border-t border-outline-variant pt-margin-sm mb-margin-md">
+      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-1">MODEL LINEAGE</p>
+      <div class="flex justify-between text-label-caps font-label-caps text-[10px]">
+        <span class="text-on-surface-variant">STT</span><span class="text-on-surface">Watson STT en-US_BroadbandModel</span>
+      </div>
+      <div class="flex justify-between text-label-caps font-label-caps text-[10px]">
+        <span class="text-on-surface-variant">LLM</span><span class="text-on-surface">ibm/granite-4-h-small</span>
+      </div>
+      <div class="flex justify-between text-label-caps font-label-caps text-[10px]">
+        <span class="text-on-surface-variant">TTS</span><span id="gov-tts" class="text-on-surface">Watson TTS AllisonV3</span>
+      </div>
+      <div class="flex justify-between text-label-caps font-label-caps text-[10px]">
+        <span class="text-on-surface-variant">RAG</span><span class="text-on-surface">ChromaDB · 777 chunks · FIA 2026</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-margin-sm">
+      <div class="border border-outline-variant p-margin-sm">
+        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-1">DATA PRIVACY</p>
+        <p class="text-label-caps font-label-caps text-[10px]" style="color:#4ade80;">PII CLEAR</p>
+      </div>
+      <div class="border border-outline-variant p-margin-sm">
+        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-1">BIAS DETECTION</p>
+        <p class="text-label-caps font-label-caps text-[10px]" style="color:#4ade80;">NOMINAL</p>
+      </div>
+    </div>
+
+  </div><!-- /governancePanel -->
+
+</div><!-- /screen-response -->
+
+
+
+</div><!-- /app-shell -->
+</div><!-- /phone-frame -->
 
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('[Pit-Wall] SW registered:', reg.scope))
-        .catch(err => console.error('[Pit-Wall] SW registration failed:', err));
-    });
+// ── State ─────────────────────────────────────────────────────────────────
+let currentLang     = 'en';
+let currentVoice    = 'allison';
+let currentAudio    = null;
+let mediaRecorder   = null;
+let audioChunks     = [];
+let micActive       = false;
+let govOpen         = false;
+let recWaveInterval = null;
+let ttsWaveInterval = null;
+let lastQuery       = '';
+
+// ── Screens ───────────────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (name !== 'response' && govOpen) toggleGovernance();
+}
+
+// ── Language ──────────────────────────────────────────────────────────────
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    const active = b.id === 'btn-' + lang;
+    b.classList.toggle('bg-primary-container', active);
+    b.classList.toggle('text-white', active);
+    b.classList.toggle('text-on-surface-variant', !active);
+  });
+  const vSel = document.getElementById('voice-selector');
+  if (vSel) vSel.style.display = lang === 'it' ? 'none' : '';
+  const sttEl = document.getElementById('stt-lang');
+  if (sttEl) sttEl.textContent = lang === 'it' ? 'IT-IT' : 'EN-US';
+}
+
+// ── Voice ─────────────────────────────────────────────────────────────────
+function setVoice(btn, voice) {
+  currentVoice = voice;
+  document.querySelectorAll('.voice-btn').forEach(b => {
+    b.classList.remove('bg-primary-container', 'text-white');
+    b.classList.add('text-on-surface-variant');
+  });
+  btn.classList.add('bg-primary-container', 'text-white');
+  btn.classList.remove('text-on-surface-variant');
+  const g = document.getElementById('gov-tts');
+  if (g && currentLang === 'en') g.textContent = `Watson TTS ${voice[0].toUpperCase()+voice.slice(1)}V3`;
+}
+
+// ── Governance bottom sheet ───────────────────────────────────────────────
+function toggleGovernance() {
+  govOpen = !govOpen;
+  document.getElementById('governancePanel').classList.toggle('open', govOpen);
+}
+
+// ── Recording ─────────────────────────────────────────────────────────────
+function toggleMic() {
+  if (!micActive) startRecording(); else stopRecording();
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      const b64  = await blobToBase64(blob);
+      submitQuery(null, b64);
+    };
+    mediaRecorder.start(250);
+    micActive = true;
+    showScreen('recording');
+    recWaveInterval = setInterval(() => {
+      document.querySelectorAll('#waveform-rec .waveform-bar').forEach(b => {
+        b.style.height = (Math.floor(Math.random() * 36) + 4) + 'px';
+      });
+    }, 120);
+  } catch (err) {
+    console.warn('[Pit-Wall] Mic denied:', err);
   }
+}
+
+function stopRecording() {
+  micActive = false;
+  clearInterval(recWaveInterval);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  showProcessing('Voice query');
+  showScreen('response');
+}
+
+function blobToBase64(blob) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ── Text submit ───────────────────────────────────────────────────────────
+function submitText() {
+  const q = document.getElementById('text-input').value.trim();
+  if (!q) return;
+  lastQuery = q;
+  document.getElementById('text-input').value = '';
+  showProcessing(q);
+  showScreen('response');
+  submitQuery(q, null);
+}
+
+// ── Processing state ──────────────────────────────────────────────────────
+function showProcessing(label) {
+  lastQuery = label || 'Query';
+  document.getElementById('response-title').textContent = label ? label.toUpperCase() : 'ANALYZING...';
+  document.getElementById('narrative-text').textContent = 'Routing to IBM watsonx Granite 4-h via /process...';
+
+  const badge = document.getElementById('response-badge');
+  badge.className = 'flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-outline text-on-surface-variant';
+  document.getElementById('badge-icon').textContent = 'pending';
+  document.getElementById('badge-text').textContent = 'PROCESSING';
+
+  document.getElementById('audio-player').style.display   = 'none';
+  document.getElementById('source-citations').style.display = 'none';
+  stopTtsWave();
+  resetHooks();
+}
+
+// ── API ───────────────────────────────────────────────────────────────────
+async function submitQuery(textQuery, audioB64) {
+  const body = audioB64
+    ? { audio_b64: audioB64, language: currentLang, voice: currentVoice }
+    : { text_query: textQuery, language: currentLang, voice: currentVoice };
+  const t0 = Date.now();
+  try {
+    const res = await fetch('/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(err.detail || res.statusText);
+    }
+    const data    = await res.json();
+    const elapsed = Date.now() - t0;
+    showResponse(data, elapsed);
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+function showResponse(data, elapsedMs) {
+  document.getElementById('narrative-text').textContent = data.text;
+  document.getElementById('latency-gov').textContent    = elapsedMs + 'ms';
+  document.getElementById('latency-ready').textContent  = elapsedMs + 'ms';
+
+  // Dynamic session title from first words of response
+  const words = (data.text || lastQuery).replace(/[^A-Za-z0-9\s]/g, '').trim().toUpperCase();
+  document.getElementById('response-title').textContent = words.slice(0, 55) || lastQuery.toUpperCase();
+
+  const badge = document.getElementById('response-badge');
+  const icon  = document.getElementById('badge-icon');
+  const text  = document.getElementById('badge-text');
+  if (data.output_type === 'confirmed') {
+    badge.className = 'flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-tertiary text-tertiary';
+    icon.textContent = 'check_circle'; text.textContent = 'CONFIRMED';
+  } else if (data.output_type === 'retry_corrected') {
+    badge.className = 'flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-outline text-on-surface';
+    icon.textContent = 'refresh'; text.textContent = 'RETRY CORRECTED';
+  } else {
+    badge.className = 'flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-error text-error';
+    icon.textContent = 'warning'; text.textContent = 'UNCERTAINTY';
+  }
+
+  if (data.traceability_link) {
+    const list = document.getElementById('source-list');
+    list.innerHTML = '';
+    const item = document.createElement('div');
+    item.className = 'flex items-center gap-2 bg-surface-container border border-outline-variant p-margin-sm text-label-caps font-label-caps text-[10px]';
+    item.innerHTML = `<span class="material-symbols-outlined text-primary-container msym-fill flex-shrink-0" style="font-size:14px;">article</span>`
+      + `<span class="text-on-surface-variant break-all">SRC_001 · ${data.traceability_link}</span>`;
+    list.appendChild(item);
+    const cit = document.getElementById('source-citations');
+    cit.style.display = 'flex';
+    cit.style.flexDirection = 'column';
+  }
+
+  if (data.audio_b64) {
+    setupAudio(data.audio_b64);
+    document.getElementById('tts-label').textContent = currentLang === 'it'
+      ? 'TTS: IT-IT FRANCESCAV3'
+      : `TTS: ${currentVoice.toUpperCase()} EXPRESSIVE`;
+    document.getElementById('audio-player').style.display = 'flex';
+  }
+
+  updateHooks(data.output_type);
+}
+
+function showError(msg) {
+  document.getElementById('narrative-text').textContent = 'Error: ' + msg;
+  const badge = document.getElementById('response-badge');
+  badge.className = 'flex items-center gap-1 text-label-caps font-label-caps px-3 py-1 border border-error text-error';
+  document.getElementById('badge-icon').textContent = 'error';
+  document.getElementById('badge-text').textContent = 'ERROR';
+}
+
+// ── Governance hooks ──────────────────────────────────────────────────────
+function resetHooks() {
+  ['hook1-status','hook2-status','hook3-status'].forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent = '——'; el.style.color = '';
+  });
+  document.getElementById('conf-value').textContent = '--';
+  document.getElementById('conf-fill').style.width  = '0%';
+}
+
+function updateHooks(outputType) {
+  const h1 = document.getElementById('hook1-status');
+  const h2 = document.getElementById('hook2-status');
+  const h3 = document.getElementById('hook3-status');
+  h1.textContent = 'PASS'; h1.style.color = '#4ade80';
+
+  if (outputType === 'confirmed') {
+    h2.textContent = 'PASS';  h2.style.color = '#4ade80';
+    h3.textContent = 'PASS';  h3.style.color = '#4ade80';
+    document.getElementById('conf-value').textContent = '0.92';
+    document.getElementById('conf-fill').style.width  = '92%';
+  } else if (outputType === 'retry_corrected') {
+    h2.textContent = 'PASS';  h2.style.color = '#4ade80';
+    h3.textContent = 'RETRY'; h3.style.color = '#f1c100';
+    document.getElementById('conf-value').textContent = '0.71';
+    document.getElementById('conf-fill').style.width  = '71%';
+  } else {
+    h2.textContent = 'LOW';  h2.style.color = '#f1c100';
+    h3.textContent = 'FAIL'; h3.style.color = '#ffb4ab';
+    document.getElementById('conf-value').textContent = '0.32';
+    document.getElementById('conf-fill').style.width  = '32%';
+  }
+}
+
+// ── Audio ─────────────────────────────────────────────────────────────────
+function setupAudio(b64) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  const bytes = atob(b64);
+  const arr   = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  const blob = new Blob([arr], { type: 'audio/wav' });
+  currentAudio = new Audio(URL.createObjectURL(blob));
+  currentAudio.onended = () => {
+    document.getElementById('play-icon').textContent = 'play_arrow';
+    stopTtsWave();
+  };
+}
+
+function togglePlay() {
+  if (!currentAudio) return;
+  if (currentAudio.paused) {
+    currentAudio.play();
+    document.getElementById('play-icon').textContent = 'pause';
+    startTtsWave();
+  } else {
+    currentAudio.pause();
+    document.getElementById('play-icon').textContent = 'play_arrow';
+    stopTtsWave();
+  }
+}
+
+function startTtsWave() {
+  stopTtsWave();
+  ttsWaveInterval = setInterval(() => {
+    document.querySelectorAll('#waveform-tts .waveform-bar').forEach(b => {
+      b.style.height = (Math.floor(Math.random() * 14) + 2) + 'px';
+    });
+  }, 100);
+}
+
+function stopTtsWave() {
+  clearInterval(ttsWaveInterval);
+  document.querySelectorAll('#waveform-tts .waveform-bar').forEach(b => {
+    b.style.height = '4px';
+  });
+}
+
+// ── Custom scroll pip + smooth wheel ─────────────────────────────────────
+document.querySelectorAll('.screen > main').forEach(el => {
+  const pip = document.createElement('div');
+  pip.className = 'scroll-pip';
+  el.parentElement.appendChild(pip);
+
+  let fadeTimer;
+  const PIP_H = 24;
+
+  el.addEventListener('scroll', () => {
+    if (el.scrollHeight <= el.clientHeight) return;
+    const ratio = el.scrollTop / (el.scrollHeight - el.clientHeight);
+    pip.style.top = (ratio * (el.clientHeight - PIP_H)) + 'px';
+    pip.style.opacity = '1';
+    clearTimeout(fadeTimer);
+    fadeTimer = setTimeout(() => { pip.style.opacity = '0'; }, 800);
+  }, { passive: true });
+
+  el.addEventListener('wheel', e => {
+    e.preventDefault();
+    el.scrollBy({ top: e.deltaY * 0.9, behavior: 'smooth' });
+  }, { passive: false });
+});
+
+// ── Idle waveform (ready screen) ──────────────────────────────────────────
+setInterval(() => {
+  document.querySelectorAll('#waveform .waveform-bar').forEach(b => {
+    b.style.height = (Math.floor(Math.random() * 20) + 4) + 'px';
+  });
+}, 150);
+
+// ── Startup ───────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  fetch('/race-context', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ year: 2026, race: 'Miami', driver: 'LEC' }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.race && data.year && data.driver) {
+        document.getElementById('ctx-year').textContent   = data.year;
+        document.getElementById('ctx-race').textContent   = data.race.toUpperCase() + ' GP';
+        document.getElementById('ctx-driver').textContent = data.driver === 'LEC' ? 'LECLERC' : data.driver;
+      }
+    })
+    .catch(err => console.error('[Pit-Wall] race context:', err));
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log('[Pit-Wall] SW registered:', reg.scope))
+      .catch(err => console.error('[Pit-Wall] SW failed:', err));
+  });
+}
+
+// ── Mouse spotlight on grid ───────────────────────────────────────────────
+const spotlight = document.getElementById('spotlight');
+document.addEventListener('mousemove', e => {
+  spotlight.style.background = `radial-gradient(400px circle at ${e.clientX}px ${e.clientY}px, rgba(220,0,0,0.05), transparent 70%)`;
+});
+document.addEventListener('mouseleave', () => { spotlight.style.background = ''; });
 </script>
 </body>
 </html>

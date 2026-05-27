@@ -4,9 +4,9 @@
 // cache-first for static assets
 // ═══════════════════════════════════════════════
 
-const CACHE_NAME = 'pitwall-v1';
-const STATIC_CACHE = 'pitwall-static-v1';
-const API_CACHE = 'pitwall-api-v1';
+const CACHE_NAME = 'pitwall-v3';
+const STATIC_CACHE = 'pitwall-static-v3';
+const API_CACHE = 'pitwall-api-v3';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
@@ -54,7 +54,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter(name => name !== STATIC_CACHE && name !== API_CACHE)
+          .filter(name => name !== STATIC_CACHE && name !== API_CACHE && name !== CACHE_NAME)
           .map(name => {
             console.log(`[Pit-Wall SW] Deleting old cache: ${name}`);
             return caches.delete(name);
