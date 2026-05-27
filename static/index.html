@@ -334,8 +334,8 @@ tailwind.config = {
       <span class="material-symbols-outlined">analytics</span>
       <span class="text-label-caps font-label-caps">DATA</span>
     </button>
-    <button onclick="toggleMic()" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-4 -mt-8 scale-110 shadow-[0_0_15px_rgba(220,0,0,0.5)] border-4 border-background">
-      <span class="material-symbols-outlined msym-fill">sensors</span>
+    <button onclick="toggleMic()" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-4 -mt-8 scale-110 shadow-[0_0_10px_2px_rgba(220,0,0,0.9)]">
+      <span class="material-symbols-outlined fab-icon">sensors</span>
       <span class="text-label-caps font-label-caps">LIVE</span>
     </button>
     <button onclick="openSync()" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
@@ -573,8 +573,8 @@ tailwind.config = {
 
   <!-- Single FAB nav for response screen -->
   <nav class="flex justify-center items-end pb-4 bg-surface-container-high border-t-2 border-primary-container">
-    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-5 -mt-8 shadow-[0_0_15px_rgba(220,0,0,0.5)] border-4 border-background">
-      <span class="material-symbols-outlined msym-fill" style="font-size:28px;">mic</span>
+    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-5 -mt-8 shadow-[0_0_10px_2px_rgba(220,0,0,0.9)]">
+      <span class="material-symbols-outlined fab-icon" style="font-size:28px;">mic</span>
     </button>
   </nav>
 
@@ -684,8 +684,8 @@ tailwind.config = {
   </main>
 
   <nav class="flex justify-center items-end pb-4 bg-surface-container-high border-t-2 border-primary-container">
-    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-5 -mt-8 shadow-[0_0_15px_rgba(220,0,0,0.5)] border-4 border-background">
-      <span class="material-symbols-outlined msym-fill" style="font-size:28px;">mic</span>
+    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 bg-primary-container text-on-primary-container rounded-full p-5 -mt-8 shadow-[0_0_10px_2px_rgba(220,0,0,0.9)]">
+      <span class="material-symbols-outlined fab-icon" style="font-size:28px;">mic</span>
     </button>
   </nav>
 
@@ -812,6 +812,7 @@ async function startRecording() {
     };
     mediaRecorder.start(250);
     micActive = true;
+    document.querySelectorAll('.fab-icon').forEach(el => el.classList.add('msym-fill'));
     showScreen('recording');
     recWaveInterval = setInterval(() => {
       document.querySelectorAll('#waveform-rec .waveform-bar').forEach(b => {
@@ -825,6 +826,7 @@ async function startRecording() {
 
 function stopRecording() {
   micActive = false;
+  document.querySelectorAll('.fab-icon').forEach(el => el.classList.remove('msym-fill'));
   clearInterval(recWaveInterval);
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
   showProcessing('Voice query');
