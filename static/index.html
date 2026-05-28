@@ -467,8 +467,8 @@ tailwind.config = {
       <section class="bg-surface-container border border-outline-variant p-margin-md">
         <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-margin-sm">STT / TTS</p>
         <div class="text-data-mono font-data-mono text-[10px] text-on-surface space-y-1">
-          <p>Watson STT · EN + IT</p>
-          <p>Watson TTS · Allison / Francesca</p>
+          <p id="diag-stt">Watson STT · EN-US</p>
+          <p id="diag-tts">Watson TTS · Allison</p>
         </div>
       </section>
     </div>
@@ -968,6 +968,10 @@ function setLang(lang) {
   }
   const sttEl = document.getElementById('stt-lang');
   if (sttEl) sttEl.textContent = lang === 'it' ? 'IT-IT' : 'EN-US';
+  const diagStt = document.getElementById('diag-stt');
+  if (diagStt) diagStt.textContent = lang === 'it' ? 'Watson STT · IT-IT' : 'Watson STT · EN-US';
+  const diagTts = document.getElementById('diag-tts');
+  if (diagTts) diagTts.textContent = lang === 'it' ? 'Watson TTS · Francesca' : `Watson TTS · ${currentVoice[0].toUpperCase()+currentVoice.slice(1)}`;
 }
 
 // ── Voice ─────────────────────────────────────────────────────────────────
@@ -981,6 +985,8 @@ function setVoice(btn, voice) {
   btn.classList.remove('text-on-surface-variant');
   const g = document.getElementById('gov-tts');
   if (g && currentLang === 'en') g.textContent = `Watson · ${voice[0].toUpperCase()+voice.slice(1)}`;
+  const diagTts = document.getElementById('diag-tts');
+  if (diagTts) diagTts.textContent = `Watson TTS · ${voice[0].toUpperCase()+voice.slice(1)}`;
 }
 
 // ── Governance bottom sheet ───────────────────────────────────────────────
