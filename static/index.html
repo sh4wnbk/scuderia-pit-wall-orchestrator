@@ -44,47 +44,26 @@
   }
   .animate-glow-lg { animation: pulse-red-lg 1.5s infinite; }
 
-  /* FAB — raised circular LIVE button */
-  .live-fab-btn {
-    margin-top: -22px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  .live-fab-disc {
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    background: #0d0403;
-    border: 1.5px solid #dc0000;
-    box-shadow:
-      0 0 0 3px rgba(220,0,0,0.08),
-      0 0 18px rgba(220,0,0,0.30),
-      0 6px 16px rgba(0,0,0,0.55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #dc0000;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-  }
-  .live-fab-btn:active .live-fab-disc {
-    transform: scale(0.93);
-    box-shadow:
-      0 0 0 2px rgba(220,0,0,0.05),
-      0 0 8px rgba(220,0,0,0.15),
-      0 2px 6px rgba(0,0,0,0.4),
-      inset 0 2px 5px rgba(0,0,0,0.5);
+  /* Global FAB */
+  #global-fab {
+    position: absolute;
+    bottom: 76px;
+    right: 16px;
+    z-index: 55;
   }
 
-  /* Nav tab tactile press */
-  nav button {
-    transition: transform 0.1s ease;
+  /* Nav tab tactile press — Stitch spec */
+  .nav-item-press {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
   }
-  nav button:active {
+  .nav-item-press:active {
     transform: scale(0.95);
+    box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.5);
+  }
+  .nav-item-active {
+    color: #ffb4a8;
+    transform: scale(0.95);
+    box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.5);
   }
 
   /* Synchronized swimming — 3 independent choreographies */
@@ -427,41 +406,22 @@ tailwind.config = {
 
   </main>
 
-  <nav class="flex justify-between items-center px-margin-lg py-margin-sm bg-surface-container-high border-t-2 border-primary-container">
-    <button onclick="showScreen('ready')" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
-      <span class="material-symbols-outlined">dashboard</span>
-      <span class="text-label-caps font-label-caps">DASH</span>
+  <nav class="flex justify-around items-stretch bg-surface-container-high border-t-2 border-primary-container h-20">
+    <button onclick="showScreen('ready')" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">grid_view</span>
+      <span class="text-label-caps font-label-caps text-[10px]">DASH</span>
     </button>
-    <button onclick="showDataScreen()" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
-      <span class="material-symbols-outlined">analytics</span>
-      <span class="text-label-caps font-label-caps">DATA</span>
+    <button onclick="showDataScreen()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">bar_chart_4_bars</span>
+      <span class="text-label-caps font-label-caps text-[10px]">DATA</span>
     </button>
-    <button onclick="toggleMic()" class="live-fab-btn text-on-surface-variant hover:text-primary">
-      <div class="live-fab-disc">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-          <path d="M7.76 7.76a6 6 0 0 0 0 8.49" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M16.24 7.76a6 6 0 0 1 0 8.49" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M4.93 4.93a10 10 0 0 0 0 14.14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <span class="text-label-caps font-label-caps text-[9px]">LIVE</span>
-    </button>
-    <button onclick="openSync()" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+    <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
       <span class="material-symbols-outlined">sync</span>
-      <span class="text-label-caps font-label-caps">SYNC</span>
+      <span class="text-label-caps font-label-caps text-[10px]">SYNC</span>
     </button>
-    <button onclick="toggleMic()" class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <rect x="9" y="2" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M12 17v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M9 21h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M17.5 8c.9 1 1.4 2.3 1.4 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <path d="M20 5.5c1.6 2 2.5 4.5 2.5 6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>
-      <span class="text-label-caps font-label-caps">VOICE</span>
+    <button onclick="toggleMic()" class="nav-item-press nav-item-active flex-1 flex flex-col items-center justify-center gap-1">
+      <span class="material-symbols-outlined">graphic_eq</span>
+      <span class="text-label-caps font-label-caps text-[10px]">VOICE</span>
     </button>
   </nav>
 
@@ -688,19 +648,22 @@ tailwind.config = {
     </div>
   </div>
 
-  <!-- Single FAB nav for response screen -->
-  <nav class="flex justify-center items-end pb-4 bg-surface-container-high border-t-2 border-primary-container">
-    <button onclick="showScreen('ready')" class="live-fab-btn text-on-surface-variant hover:text-primary">
-      <div class="live-fab-disc">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-          <path d="M7.76 7.76a6 6 0 0 0 0 8.49" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M16.24 7.76a6 6 0 0 1 0 8.49" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M4.93 4.93a10 10 0 0 0 0 14.14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <span class="text-label-caps font-label-caps text-[9px]">LIVE</span>
+  <nav class="flex justify-around items-stretch bg-surface-container-high border-t-2 border-primary-container h-20">
+    <button onclick="showScreen('ready')" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">grid_view</span>
+      <span class="text-label-caps font-label-caps text-[10px]">DASH</span>
+    </button>
+    <button onclick="showDataScreen()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">bar_chart_4_bars</span>
+      <span class="text-label-caps font-label-caps text-[10px]">DATA</span>
+    </button>
+    <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">sync</span>
+      <span class="text-label-caps font-label-caps text-[10px]">SYNC</span>
+    </button>
+    <button onclick="toggleMic()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">graphic_eq</span>
+      <span class="text-label-caps font-label-caps text-[10px]">VOICE</span>
     </button>
   </nav>
 
@@ -809,18 +772,22 @@ tailwind.config = {
     </div>
   </main>
 
-  <nav class="flex justify-center items-end pb-4 bg-surface-container-high border-t-2 border-primary-container">
-    <button onclick="showScreen('ready')" class="live-fab-btn text-on-surface-variant hover:text-primary">
-      <div class="live-fab-disc">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-          <path d="M7.76 7.76a6 6 0 0 0 0 8.49" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M16.24 7.76a6 6 0 0 1 0 8.49" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M4.93 4.93a10 10 0 0 0 0 14.14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <span class="text-label-caps font-label-caps text-[9px]">LIVE</span>
+  <nav class="flex justify-around items-stretch bg-surface-container-high border-t-2 border-primary-container h-20">
+    <button onclick="showScreen('ready')" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">grid_view</span>
+      <span class="text-label-caps font-label-caps text-[10px]">DASH</span>
+    </button>
+    <button onclick="showDataScreen()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">bar_chart_4_bars</span>
+      <span class="text-label-caps font-label-caps text-[10px]">DATA</span>
+    </button>
+    <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">sync</span>
+      <span class="text-label-caps font-label-caps text-[10px]">SYNC</span>
+    </button>
+    <button onclick="toggleMic()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">graphic_eq</span>
+      <span class="text-label-caps font-label-caps text-[10px]">VOICE</span>
     </button>
   </nav>
 
@@ -903,6 +870,15 @@ tailwind.config = {
     </button>
   </div>
   <div id="driver-list" class="overflow-y-auto" style="max-height:300px;"></div>
+</div>
+
+<!-- Global FAB — LIVE -->
+<div id="global-fab">
+  <button onclick="toggleMic()"
+    class="w-14 h-14 bg-primary-container text-white rounded-full flex items-center justify-center animate-glow active:scale-95 transition-transform"
+    style="box-shadow:0 0 20px rgba(220,0,0,0.4);">
+    <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">sensors</span>
+  </button>
 </div>
 
 </div><!-- /app-shell -->
