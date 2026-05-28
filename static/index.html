@@ -951,7 +951,11 @@ function setLang(lang) {
   const vSel = document.getElementById('voice-selector');
   if (vSel) {
     if (lang === 'it') {
-      vSel.innerHTML = '<span class="px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">FRANCESCA</span>';
+      vSel.innerHTML = `
+        <button onclick="setVoice(this,'francesca')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">FRANCESCA</button>
+        <span class="px-2 py-1 text-[10px] invisible">MICHAEL</span>
+        <span class="px-2 py-1 text-[10px] invisible">GEORGE</span>
+        <span class="px-2 py-1 text-[10px] invisible">EMMA</span>`;
     } else {
       vSel.innerHTML = `
         <button onclick="setVoice(this,'allison')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">ALLISON</button>
