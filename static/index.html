@@ -500,11 +500,11 @@ tailwind.config = {
     <div class="grid grid-cols-3 gap-gutter border border-outline-variant bg-outline-variant w-full max-w-lg">
       <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
         <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">YEAR</span>
-        <span class="text-data-mono font-data-mono text-on-surface text-xs">2026</span>
+        <span id="ready-year" class="text-data-mono font-data-mono text-on-surface text-xs">2026</span>
       </div>
       <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center border-x border-outline-variant">
         <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">RACE</span>
-        <span class="text-data-mono font-data-mono text-on-surface text-xs">MIAMI GP</span>
+        <span id="ready-race" class="text-data-mono font-data-mono text-on-surface text-xs">MIAMI GP</span>
       </div>
       <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
         <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">VOICE</span>
@@ -574,7 +574,7 @@ tailwind.config = {
       </div>
     </div>
     <div class="px-margin-md py-1 bg-surface-container-low border-t border-outline-variant flex items-center gap-2 overflow-hidden">
-      <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex-shrink-0">SESSION: MIAMI GP · LIVE</span>
+      <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex-shrink-0">SESSION: <span id="response-session-race">MIAMI GP</span> · LIVE</span>
       <span class="text-on-surface-variant text-[10px] flex-shrink-0">·</span>
       <span id="response-title" class="text-label-caps font-label-caps text-primary-container text-[10px] truncate uppercase">AWAITING RESPONSE</span>
     </div>
@@ -586,15 +586,15 @@ tailwind.config = {
     <div class="grid grid-cols-3 gap-gutter border border-outline-variant bg-outline-variant">
       <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
         <span class="text-label-caps font-label-caps text-on-surface-variant">YEAR</span>
-        <span class="text-data-mono font-data-mono text-on-surface">2026</span>
+        <span id="response-year" class="text-data-mono font-data-mono text-on-surface">2026</span>
       </div>
       <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center border-x border-outline-variant">
         <span class="text-label-caps font-label-caps text-on-surface-variant">RACE</span>
-        <span class="text-data-mono font-data-mono text-on-surface">MIAMI GP</span>
+        <span id="response-race" class="text-data-mono font-data-mono text-on-surface">MIAMI GP</span>
       </div>
       <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
         <span class="text-label-caps font-label-caps text-on-surface-variant">DRIVER</span>
-        <span class="text-data-mono font-data-mono text-primary-container">LECLERC</span>
+        <span id="response-driver" class="text-data-mono font-data-mono text-primary-container">LECLERC</span>
       </div>
     </div>
 
@@ -1383,9 +1383,12 @@ async function submitSync() {
       body: JSON.stringify({ year, race, driver })
     });
     if (res.ok) {
-      document.getElementById('ctx-year').textContent   = year;
-      document.getElementById('ctx-race').textContent   = race.toUpperCase();
-      document.getElementById('ctx-driver').textContent = document.getElementById('sync-driver-display').textContent;
+      const raceGP    = race.toUpperCase() + ' GP';
+      const driverName = document.getElementById('sync-driver-display').textContent;
+      // Update all context displays across every screen
+      ['ctx-year','ready-year','response-year'].forEach(id => document.getElementById(id).textContent = year);
+      ['ctx-race','ready-race','response-race','response-session-race'].forEach(id => document.getElementById(id).textContent = raceGP);
+      ['ctx-driver','response-driver'].forEach(id => document.getElementById(id).textContent = driverName);
       const status = document.getElementById('sync-status');
       status.classList.remove('hidden');
       setTimeout(() => { status.classList.add('hidden'); closeSync(); }, 1200);
