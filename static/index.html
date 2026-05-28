@@ -282,18 +282,24 @@ tailwind.config = {
 
   <main class="flex-1 flex flex-col p-margin-md gap-margin-md pb-4">
 
-    <!-- Context Row -->
-    <div class="grid grid-cols-3 gap-gutter border border-outline-variant bg-outline-variant">
-      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
+    <!-- Context Row — 2-row × 3-col grid: labels share row 1, values share row 2 -->
+    <div class="grid border border-outline-variant bg-outline-variant" style="grid-template-columns:1fr 1fr 1fr;column-gap:1px;row-gap:0;">
+      <div class="bg-surface-container px-margin-sm pt-margin-sm pb-1 flex items-center justify-center">
         <span class="text-label-caps font-label-caps text-on-surface-variant">YEAR</span>
+      </div>
+      <div class="bg-surface-container px-margin-sm pt-margin-sm pb-1 flex items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant">RACE</span>
+      </div>
+      <div class="bg-surface-container px-margin-sm pt-margin-sm pb-1 flex items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant">DRIVER</span>
+      </div>
+      <div class="bg-surface-container px-margin-sm pb-margin-sm pt-1 flex items-center justify-center">
         <span id="ctx-year" class="text-data-mono font-data-mono text-on-surface">2026</span>
       </div>
-      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center border-x border-outline-variant">
-        <span class="text-label-caps font-label-caps text-on-surface-variant">RACE</span>
+      <div class="bg-surface-container px-margin-sm pb-margin-sm pt-1 flex items-center justify-center">
         <span id="ctx-race" class="text-data-mono font-data-mono text-on-surface">MIAMI GP</span>
       </div>
-      <div class="bg-surface-container p-margin-sm flex flex-col items-center justify-center">
-        <span class="text-label-caps font-label-caps text-on-surface-variant">DRIVER</span>
+      <div class="bg-surface-container px-margin-sm pb-margin-sm pt-1 flex items-center justify-center">
         <span id="ctx-driver" class="text-data-mono font-data-mono text-primary-container">LECLERC</span>
       </div>
     </div>
