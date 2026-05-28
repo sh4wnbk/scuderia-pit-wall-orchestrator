@@ -353,18 +353,14 @@ tailwind.config = {
       <!-- Telemetry grid — 4 shared rows × 2 columns, baselines locked across center divider -->
       <section class="grid bg-outline-variant border border-outline-variant" style="grid-template-columns:1fr 1fr;gap:1px 1px;">
         <!-- ROW 1 — Headers -->
-        <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">tire_repair</span>
-            <span class="text-label-caps font-label-caps text-on-surface">TYRE</span>
-          </div>
+        <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">tire_repair</span>
+          <span class="text-label-caps font-label-caps text-on-surface">TYRE</span>
           <span id="tyre-compound" class="text-label-caps font-label-caps text-[10px] px-2 py-0.5 bg-surface-variant text-on-surface-variant leading-none">--</span>
         </div>
-        <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">speed</span>
-            <span class="text-label-caps font-label-caps text-on-surface whitespace-nowrap">LAST LAP</span>
-          </div>
+        <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">speed</span>
+          <span class="text-label-caps font-label-caps text-on-surface whitespace-nowrap">LAST LAP</span>
           <span id="lap-badge" class="text-label-caps font-label-caps text-[10px] px-2 py-0.5 bg-surface-variant text-on-surface-variant leading-none">--</span>
         </div>
         <!-- ROW 2 — Data row 1 -->
@@ -1307,7 +1303,15 @@ function updateTyreWidget(data) {
   if (posBar && data.position) posBar.style.width = Math.max(5, Math.round((21 - data.position) / 20 * 100)) + '%';
 
   const lapTime = document.getElementById('lap-time');
-  if (lapTime) lapTime.textContent = data.lap_time && data.lap_time !== 'N/A' ? data.lap_time : '--';
+  if (lapTime) {
+    const raw = data.lap_time;
+    if (!raw || raw === 'N/A') {
+      lapTime.textContent = '--';
+    } else {
+      const m = raw.match(/(\d{1,2}):(\d{2}\.\d{3})/);
+      lapTime.textContent = m ? `${parseInt(m[1])}:${m[2]}` : raw;
+    }
+  }
 
   const pace = document.getElementById('pace-trend');
   if (pace) {
