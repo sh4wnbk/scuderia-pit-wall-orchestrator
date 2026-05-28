@@ -951,7 +951,7 @@ function setLang(lang) {
   const vSel = document.getElementById('voice-selector');
   if (vSel) {
     if (lang === 'it') {
-      vSel.className = 'flex p-1 gap-1';
+      vSel.className = 'flex bg-surface-container border border-outline-variant p-1 gap-1';
       vSel.innerHTML = `
         <button onclick="setVoice(this,'francesca')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">FRANCESCA</button>
         <span class="px-2 py-1 text-label-caps font-label-caps text-[10px] invisible select-none" aria-hidden="true">MICHAEL</span>
