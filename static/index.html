@@ -366,10 +366,11 @@ tailwind.config = {
               <span id="tyre-age" class="text-data-mono font-data-mono text-on-surface">-- laps</span>
             </div>
             <div class="w-full bg-surface-variant h-1">
-              <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:#e0e0e0;"></div>
+              <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:linear-gradient(to right,#22c55e,#eab308,#dc0000);"></div>
             </div>
-            <div class="flex justify-end">
-              <span id="session-badge" class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">--</span>
+            <div class="flex justify-between">
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">INTERVAL</span>
+              <span id="interval-to-ahead" class="text-data-mono font-data-mono text-on-surface">--</span>
             </div>
           </div>
         </div>
@@ -383,12 +384,13 @@ tailwind.config = {
               <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">POSITION</span>
               <span id="race-position" class="text-data-mono font-data-mono text-on-surface">--</span>
             </div>
-            <div class="w-full bg-surface-variant h-1">
-              <div id="position-bar" class="bg-primary-container h-full transition-all duration-700" style="width:0%"></div>
+            <div class="flex justify-between">
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PIT STOPS</span>
+              <span id="pit-stops" class="text-data-mono font-data-mono text-on-surface">--</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">GAP TO LEAD</span>
-              <span id="gap-to-leader" class="text-data-mono font-data-mono text-on-surface">--</span>
+              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PACE</span>
+              <span id="pace-trend" class="text-data-mono font-data-mono text-on-surface">--</span>
             </div>
           </div>
         </div>
@@ -1304,11 +1306,25 @@ function updateTyreWidget(data) {
   const pos = document.getElementById('race-position');
   if (pos) pos.textContent = data.position ? `P${data.position}` : '--';
 
-  const posBar = document.getElementById('position-bar');
-  if (posBar) posBar.style.width = data.position ? Math.max(5, Math.round((21 - data.position) / 20 * 100)) + '%' : '0%';
+  const interval = document.getElementById('interval-to-ahead');
+  if (interval) interval.textContent = data.interval_to_ahead && data.interval_to_ahead !== 'N/A' ? data.interval_to_ahead : '--';
 
-  const gap = document.getElementById('gap-to-leader');
-  if (gap) gap.textContent = data.gap_to_leader || '--';
+  const pits = document.getElementById('pit-stops');
+  if (pits) pits.textContent = data.pit_stops != null ? data.pit_stops : '--';
+
+  const pace = document.getElementById('pace-trend');
+  if (pace) {
+    if (data.pace_delta_seconds == null) {
+      pace.textContent = '--';
+      pace.style.color = '';
+    } else {
+      const d = data.pace_delta_seconds;
+      const sign = d > 0 ? '▲' : '▼';
+      const abs = Math.abs(d).toFixed(2);
+      pace.textContent = `${sign} ${abs}s`;
+      pace.style.color = d > 0.3 ? '#dc0000' : d < -0.1 ? '#22c55e' : '#f1c100';
+    }
+  }
 }
 
 function fetchTelemetry() {

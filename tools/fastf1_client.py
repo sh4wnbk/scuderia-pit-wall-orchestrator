@@ -58,7 +58,7 @@ class FastF1Client:
                 return None
 
             latest = driver_laps.iloc[-1]
-            return self._to_model(latest, session, driver_code)
+            return self._to_model(latest, driver_laps, session, driver_code)
 
         except Exception as e:
             print(f"[FastF1Client] Failed to fetch telemetry: {e}")
@@ -94,11 +94,28 @@ class FastF1Client:
             laps = session.laps.pick_driver(driver_code)
             if laps.empty:
                 return None
-            return self._to_model(laps.iloc[-1], session, driver_code)
+            return self._to_model(laps.iloc[-1], laps, session, driver_code)
         except Exception:
             return None
 
-    def _to_model(self, lap, session, driver_code: str) -> LiveTelemetry:
+    def _pace_delta(self, laps, latest_lap) -> Optional[float]:
+        """Last lap time minus average of prior 3 laps, in seconds. Positive = slower."""
+        try:
+            timed = laps[laps["LapTime"].notna()]
+            idx = timed.index.get_loc(latest_lap.name)
+            if idx < 1:
+                return None
+            last = latest_lap["LapTime"].total_seconds()
+            prior = timed.iloc[max(0, idx - 3):idx]["LapTime"].apply(
+                lambda t: t.total_seconds()
+            )
+            if prior.empty:
+                return None
+            return round(last - prior.mean(), 3)
+        except Exception:
+            return None
+
+    def _to_model(self, lap, driver_laps, session, driver_code: str) -> LiveTelemetry:
         def safe_str(val, default="N/A") -> str:
             try:
                 return str(val) if pd.notna(val) else default
@@ -117,6 +134,8 @@ class FastF1Client:
         except Exception:
             driver_name = driver_code
 
+        stint = safe_int(lap.get("Stint"), default=1)
+
         return LiveTelemetry(
             driver_code=driver_code,
             driver_name=driver_name,
@@ -126,6 +145,9 @@ class FastF1Client:
             tyre_age_laps=safe_int(lap.get("TyreLife")),
             position=safe_int(lap.get("Position")),
             gap_to_leader=safe_str(lap.get("GapToLeader")),
+            interval_to_ahead=safe_str(lap.get("IntervalToPositionAhead")),
+            pit_stops=max(0, stint - 1),
+            pace_delta_seconds=self._pace_delta(driver_laps, lap),
             sector_1=safe_str(lap.get("Sector1Time")),
             sector_2=safe_str(lap.get("Sector2Time")),
             sector_3=safe_str(lap.get("Sector3Time")),

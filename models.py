@@ -61,6 +61,9 @@ class LiveTelemetry:
     tyre_age_laps: int
     position: int
     gap_to_leader: str
+    interval_to_ahead: str          # gap to car immediately ahead
+    pit_stops: int                  # stops completed (stint - 1)
+    pace_delta_seconds: Optional[float]   # last lap vs avg of prior 3 laps (positive = slower)
     sector_1: str
     sector_2: str
     sector_3: str
@@ -68,11 +71,13 @@ class LiveTelemetry:
     race_year: int
 
     def to_context_string(self) -> str:
+        pace = f"{self.pace_delta_seconds:+.2f}s" if self.pace_delta_seconds is not None else "N/A"
         return (
             f"Driver: {self.driver_name} | Lap: {self.lap_number} | "
             f"Lap Time: {self.lap_time_str} | Tyre: {self.tyre_compound} "
             f"({self.tyre_age_laps} laps old) | Position: P{self.position} | "
-            f"Gap to leader: {self.gap_to_leader} | "
+            f"Interval to ahead: {self.interval_to_ahead} | "
+            f"Pit stops: {self.pit_stops} | Pace delta: {pace} | "
             f"Sectors: {self.sector_1} / {self.sector_2} / {self.sector_3}"
         )
 
