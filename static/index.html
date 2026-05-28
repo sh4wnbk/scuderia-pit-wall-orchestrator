@@ -350,51 +350,51 @@ tailwind.config = {
 
     <!-- Bottom modules -->
     <div class="space-y-margin-md">
-      <!-- Tyre + Brake -->
-      <section class="grid grid-cols-2 gap-gutter bg-outline-variant border border-outline-variant">
-        <div class="bg-surface-container p-margin-md flex flex-col gap-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">tire_repair</span>
-              <span class="text-label-caps font-label-caps text-on-surface">TYRE</span>
-            </div>
-            <span id="tyre-compound" class="text-label-caps font-label-caps text-[10px] px-2 py-0.5 bg-surface-variant text-on-surface-variant">--</span>
+      <!-- Telemetry grid — 4 shared rows × 2 columns, baselines locked across center divider -->
+      <section class="grid bg-outline-variant border border-outline-variant" style="grid-template-columns:1fr 1fr;gap:1px 1px;">
+        <!-- ROW 1 — Headers -->
+        <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">tire_repair</span>
+            <span class="text-label-caps font-label-caps text-on-surface">TYRE</span>
           </div>
-          <div class="space-y-1">
-            <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">AGE</span>
-              <span id="tyre-age" class="text-data-mono font-data-mono text-on-surface">-- laps</span>
-            </div>
-            <div class="w-full bg-surface-variant h-1">
-              <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:linear-gradient(to right,#22c55e,#eab308,#dc0000);"></div>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">INTERVAL</span>
-              <span id="interval-to-ahead" class="text-data-mono font-data-mono text-on-surface">--</span>
-            </div>
+          <span id="tyre-compound" class="text-label-caps font-label-caps text-[10px] px-2 py-0.5 bg-surface-variant text-on-surface-variant leading-none">--</span>
+        </div>
+        <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">speed</span>
+            <span class="text-label-caps font-label-caps text-on-surface">LAST LAP</span>
+          </div>
+          <span id="lap-badge" class="text-label-caps font-label-caps text-[10px] px-2 py-0.5 bg-surface-variant text-on-surface-variant leading-none">--</span>
+        </div>
+        <!-- ROW 2 — Data row 1 -->
+        <div class="bg-surface-container px-margin-md py-2 flex justify-between items-baseline">
+          <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">AGE</span>
+          <span id="tyre-age" class="text-data-mono font-data-mono text-on-surface">-- laps</span>
+        </div>
+        <div class="bg-surface-container px-margin-md py-2 flex justify-between items-baseline">
+          <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">POSITION</span>
+          <span id="race-position" class="text-data-mono font-data-mono text-on-surface">--</span>
+        </div>
+        <!-- ROW 3 — Progress bars (continuous horizon line) -->
+        <div class="bg-surface-container px-margin-md py-2 flex items-center">
+          <div class="w-full bg-surface-variant h-1">
+            <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:linear-gradient(to right,#22c55e,#eab308,#dc0000);"></div>
           </div>
         </div>
-        <div class="bg-surface-container p-margin-md flex flex-col gap-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">speed</span>
-              <span class="text-label-caps font-label-caps text-on-surface">LAST LAP</span>
-            </div>
-            <span id="lap-badge" class="text-label-caps font-label-caps text-[10px] px-2 py-0.5 bg-surface-variant text-on-surface-variant">--</span>
+        <div class="bg-surface-container px-margin-md py-2 flex items-center">
+          <div class="w-full bg-surface-variant h-1">
+            <div id="position-bar" class="h-full bg-primary-container transition-all duration-700" style="width:0%;"></div>
           </div>
-          <div class="space-y-1">
-            <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">POSITION</span>
-              <span id="race-position" class="text-data-mono font-data-mono text-on-surface">--</span>
-            </div>
-            <div class="w-full bg-surface-variant h-1">
-              <div id="position-bar" class="h-full bg-primary-container transition-all duration-700" style="width:0%;"></div>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PACE</span>
-              <span id="pace-trend" class="text-data-mono font-data-mono text-on-surface">--</span>
-            </div>
-          </div>
+        </div>
+        <!-- ROW 4 — Data row 2 -->
+        <div class="bg-surface-container px-margin-md pt-2 pb-margin-md flex justify-between items-baseline">
+          <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">INTERVAL</span>
+          <span id="interval-to-ahead" class="text-data-mono font-data-mono text-on-surface">--</span>
+        </div>
+        <div class="bg-surface-container px-margin-md pt-2 pb-margin-md flex justify-between items-baseline">
+          <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PACE</span>
+          <span id="pace-trend" class="text-data-mono font-data-mono text-on-surface">--</span>
         </div>
       </section>
     </div>
