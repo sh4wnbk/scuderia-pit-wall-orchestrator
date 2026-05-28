@@ -936,7 +936,19 @@ function setLang(lang) {
     b.classList.toggle('text-on-surface-variant', !active);
   });
   const vSel = document.getElementById('voice-selector');
-  if (vSel) vSel.style.display = lang === 'it' ? 'none' : '';
+  if (vSel) {
+    if (lang === 'it') {
+      vSel.innerHTML = '<span class="px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">FRANCESCA</span>';
+    } else {
+      vSel.innerHTML = `
+        <button onclick="setVoice(this,'allison')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">ALLISON</button>
+        <button onclick="setVoice(this,'michael')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] text-on-surface-variant">MICHAEL</button>
+        <button onclick="setVoice(this,'george')"  class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] text-on-surface-variant">GEORGE</button>
+        <button onclick="setVoice(this,'emma')"    class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] text-on-surface-variant">EMMA</button>`;
+      const active = vSel.querySelector(`[onclick*="${currentVoice}"]`);
+      if (active) { active.classList.add('bg-primary-container','text-white'); active.classList.remove('text-on-surface-variant'); }
+    }
+  }
   const sttEl = document.getElementById('stt-lang');
   if (sttEl) sttEl.textContent = lang === 'it' ? 'IT-IT' : 'EN-US';
 }
