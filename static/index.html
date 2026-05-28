@@ -375,18 +375,20 @@ tailwind.config = {
           </div>
         </div>
         <div class="bg-surface-container p-margin-md flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">speed</span>
-            <span class="text-label-caps font-label-caps text-on-surface">LAST LAP</span>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary-container" style="font-size:18px;">speed</span>
+              <span class="text-label-caps font-label-caps text-on-surface">LAST LAP</span>
+            </div>
+            <span id="lap-badge" class="text-label-caps font-label-caps text-[10px] px-2 py-0.5 bg-surface-variant text-on-surface-variant">--</span>
           </div>
           <div class="space-y-1">
             <div class="flex justify-between">
               <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">POSITION</span>
               <span id="race-position" class="text-data-mono font-data-mono text-on-surface">--</span>
             </div>
-            <div class="flex justify-between">
-              <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PIT STOPS</span>
-              <span id="pit-stops" class="text-data-mono font-data-mono text-on-surface">--</span>
+            <div class="w-full bg-surface-variant h-1">
+              <div id="position-bar" class="h-full bg-primary-container transition-all duration-700" style="width:0%;"></div>
             </div>
             <div class="flex justify-between">
               <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PACE</span>
@@ -1293,24 +1295,19 @@ function updateTyreWidget(data) {
   if (ageEl) ageEl.textContent = age ? `${age} laps` : '--';
 
   const bar = document.getElementById('tyre-bar');
-  if (bar) { bar.style.width = pct + '%'; bar.style.background = color; }
+  if (bar) bar.style.width = pct + '%';
 
-  const sessionEl = document.getElementById('session-badge');
-  if (sessionEl) {
-    const SESSION_LABELS = { R:'RACE', Q:'QUALI', FP1:'FP1', FP2:'FP2', FP3:'FP3' };
-    const sLabel = SESSION_LABELS[data.session_type] || data.session_type || '--';
-    const lap = data.lap_number ? ` · LAP ${data.lap_number}` : '';
-    sessionEl.textContent = sLabel + lap;
-  }
+  const lapBadge = document.getElementById('lap-badge');
+  if (lapBadge) lapBadge.textContent = data.lap_number ? `LAP ${data.lap_number}` : '--';
 
   const pos = document.getElementById('race-position');
   if (pos) pos.textContent = data.position ? `P${data.position}` : '--';
 
+  const posBar = document.getElementById('position-bar');
+  if (posBar && data.position) posBar.style.width = Math.max(5, Math.round((21 - data.position) / 20 * 100)) + '%';
+
   const interval = document.getElementById('interval-to-ahead');
   if (interval) interval.textContent = data.interval_to_ahead && data.interval_to_ahead !== 'N/A' ? data.interval_to_ahead : '--';
-
-  const pits = document.getElementById('pit-stops');
-  if (pits) pits.textContent = data.pit_stops != null ? data.pit_stops : '--';
 
   const pace = document.getElementById('pace-trend');
   if (pace) {
