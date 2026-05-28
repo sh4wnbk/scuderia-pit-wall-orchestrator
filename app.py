@@ -147,6 +147,34 @@ _telemetry_cache: dict[str, tuple[datetime, dict]] = {}
 _TELEMETRY_TTL_SECONDS = 60
 _SESSION_PRIORITY = ["R", "Q", "FP3", "FP2", "FP1"]
 
+# UI race names → FastF1 event names (FastF1 uses its own naming convention)
+_FASTF1_RACE_NAME_MAP: dict[str, str] = {
+    "Imola":         "Emilia Romagna",
+    "Great Britain": "British",
+    "United States": "United States",
+    "Las Vegas":     "Las Vegas",
+    "Saudi Arabia":  "Saudi Arabian",
+    "Abu Dhabi":     "Abu Dhabi",
+    "Bahrain":       "Bahrain",
+    "Australia":     "Australian",
+    "Japan":         "Japanese",
+    "China":         "Chinese",
+    "Miami":         "Miami",
+    "Monaco":        "Monaco",
+    "Spain":         "Spanish",
+    "Canada":        "Canadian",
+    "Austria":       "Austrian",
+    "Belgium":       "Belgian",
+    "Hungary":       "Hungarian",
+    "Netherlands":   "Dutch",
+    "Italy":         "Italian",
+    "Azerbaijan":    "Azerbaijan",
+    "Singapore":     "Singapore",
+    "Mexico":        "Mexico City",
+    "Brazil":        "São Paulo",
+    "Qatar":         "Qatar",
+}
+
 
 @app.get("/telemetry")
 def get_telemetry() -> dict:
@@ -166,10 +194,12 @@ def get_telemetry() -> dict:
         if (now - cached_at) < timedelta(seconds=_TELEMETRY_TTL_SECONDS):
             return cached_data
 
+    f1_race = _FASTF1_RACE_NAME_MAP.get(race, race)
+
     telemetry = None
     session_type_used = None
     for st in _SESSION_PRIORITY:
-        t = orchestrator._f1.get_driver_telemetry(year, race, st, driver)
+        t = orchestrator._f1.get_driver_telemetry(year, f1_race, st, driver)
         if t is not None:
             telemetry = t
             session_type_used = st
