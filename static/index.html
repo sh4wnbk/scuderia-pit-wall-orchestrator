@@ -305,7 +305,7 @@ tailwind.config = {
     </div>
 
     <!-- Language + Voice -->
-    <div class="flex items-center gap-2">
+    <div class="flex justify-between items-center gap-2">
       <div class="flex bg-surface-container border border-outline-variant p-1">
         <button onclick="setLang('en')" id="btn-en" class="lang-btn px-3 py-1 text-label-caps font-label-caps bg-primary-container text-white">EN</button>
         <button onclick="setLang('it')" id="btn-it" class="lang-btn px-3 py-1 text-label-caps font-label-caps text-on-surface-variant hover:text-on-surface">IT</button>
@@ -951,8 +951,14 @@ function setLang(lang) {
   const vSel = document.getElementById('voice-selector');
   if (vSel) {
     if (lang === 'it') {
-      vSel.innerHTML = `<button onclick="setVoice(this,'francesca')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">FRANCESCA</button>`;
+      vSel.className = 'flex p-1 gap-1';
+      vSel.innerHTML = `
+        <button onclick="setVoice(this,'francesca')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">FRANCESCA</button>
+        <span class="px-2 py-1 text-label-caps font-label-caps text-[10px] invisible select-none" aria-hidden="true">MICHAEL</span>
+        <span class="px-2 py-1 text-label-caps font-label-caps text-[10px] invisible select-none" aria-hidden="true">GEORGE</span>
+        <span class="px-2 py-1 text-label-caps font-label-caps text-[10px] invisible select-none" aria-hidden="true">EMMA</span>`;
     } else {
+      vSel.className = 'flex bg-surface-container border border-outline-variant p-1 gap-1';
       vSel.innerHTML = `
         <button onclick="setVoice(this,'allison')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] bg-primary-container text-white">ALLISON</button>
         <button onclick="setVoice(this,'michael')" class="voice-btn px-2 py-1 text-label-caps font-label-caps text-[10px] text-on-surface-variant">MICHAEL</button>
