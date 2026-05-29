@@ -2,7 +2,8 @@
 
 **Date:** May 26, 2026, 8:44 PM EDT  
 **Task:** Analyze workspace and generate high-level architectural overview  
-**Status:** ✅ COMPLETED
+**Status:** ✅ COMPLETED  
+**Updated:** 2026-05-29 — deployment section corrected; Cloud Run is live, Code Engine remains blocked. See `docs/10_architectural_overview.md` for current state.
 
 ---
 
@@ -186,7 +187,7 @@ Wrong answers never reach the fan; trust preserved at 250ms latency cost.
 Strong typing prevents integration bugs; clear component boundaries.
 
 ### Why Stateless Design?
-Horizontal scalability for production deployment on IBM Cloud Code Engine.
+Horizontal scalability for production deployment on Google Cloud Run (IBM Code Engine blocked in shared hackathon account — see `docs/10_architectural_overview.md` §6).
 
 ---
 

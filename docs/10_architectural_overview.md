@@ -1,6 +1,6 @@
 # Scuderia Pit-Wall Fan Orchestrator — Architectural Overview
 
-**Generated:** 2026-05-27 (updated 2026-05-28)  
+**Generated:** 2026-05-27 (updated 2026-05-29)  
 **Purpose:** High-level architectural analysis of the current workspace
 
 ---
@@ -344,7 +344,7 @@ push → main → GitHub Actions
 **Stateless Design:**
 - Each request is independent
 - No session state between calls
-- Horizontal scaling via Code Engine autoscaling
+- Horizontal scaling via Cloud Run autoscaling (1–3 instances)
 
 **Bottlenecks:**
 1. **Granite inference** — ~1000ms per call (2 calls per request: classification + reasoning)
@@ -456,6 +456,6 @@ The Scuderia Pit-Wall Fan Orchestrator is a **governance-first agentic system** 
 - Watson Speech-to-Text for pit radio transcription
 - Watson Text-to-Speech for audio overlay
 - watsonx.governance for audit trail and explainability
-- IBM Cloud Code Engine for serverless deployment
+- Google Cloud Run for serverless deployment (IBM Code Engine blocked in shared hackathon account)
 
 This architecture is production-ready for the 2026 F1 season.
