@@ -308,40 +308,68 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Central Mic -->
-    <div class="flex-1 flex flex-col items-center justify-center py-margin-lg">
-      <div class="relative group cursor-pointer" onclick="toggleMic()">
-        <div class="w-32 h-32 rounded-full bg-primary-container flex items-center justify-center animate-glow relative z-10 active:scale-95 transition-transform duration-100">
-          <span class="material-symbols-outlined text-white msym-fill" style="font-size:48px;">mic</span>
-        </div>
-        <div class="absolute -inset-4 border-2 border-dashed border-outline-variant rounded-full opacity-20"></div>
-      </div>
-      <div class="mt-8 text-center w-full">
-        <div class="flex justify-center items-end h-8 mb-2" id="waveform">
+    <!-- Prompt zone — replaces central mic -->
+    <div class="flex-1 flex flex-col gap-2 py-2">
+
+      <!-- Status bar -->
+      <div class="text-center pb-1">
+        <div class="flex justify-center items-end h-6 mb-1" id="waveform">
+          <div class="waveform-bar" style="height:6px;"></div>
           <div class="waveform-bar" style="height:10px;"></div>
-          <div class="waveform-bar" style="height:14px;"></div>
-          <div class="waveform-bar" style="height:8px;"></div>
-          <div class="waveform-bar" style="height:18px;"></div>
+          <div class="waveform-bar" style="height:5px;"></div>
           <div class="waveform-bar" style="height:12px;"></div>
-          <div class="waveform-bar" style="height:22px;"></div>
-          <div class="waveform-bar" style="height:16px;"></div>
-          <div class="waveform-bar" style="height:10px;"></div>
+          <div class="waveform-bar" style="height:7px;"></div>
+          <div class="waveform-bar" style="height:14px;"></div>
+          <div class="waveform-bar" style="height:9px;"></div>
+          <div class="waveform-bar" style="height:6px;"></div>
         </div>
-        <h2 class="text-headline-lg font-headline-lg text-on-surface tracking-widest">AWAITING COMMAND</h2>
-        <p class="text-label-caps font-label-caps text-on-surface-variant mt-1 flex items-center justify-center gap-2">
-          <span class="inline-block w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
-          Scuderia AI · watsonx Active
+        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex items-center justify-center gap-2">
+          <span id="prompt-source-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-on-surface-variant opacity-60"></span>
+          <span id="prompt-source-label">SCUDERIA AI · WATSONX ACTIVE</span>
         </p>
       </div>
+
+      <!-- Prompt cards — cards 0+1 stable, card 2 rotates -->
+      <div class="flex flex-col gap-2 flex-1 justify-center">
+
+        <div id="prompt-card-0" onclick="selectPrompt(0)"
+          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] transition-all duration-150 group">
+          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+          <p class="prompt-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
+        </div>
+
+        <div id="prompt-card-1" onclick="selectPrompt(1)"
+          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] transition-all duration-150 group">
+          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+          <p class="prompt-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
+        </div>
+
+        <div id="prompt-card-2" onclick="selectPrompt(2)"
+          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] group"
+          style="transition:opacity 0.25s ease,transform 0.25s ease,border-color 0.15s,background-color 0.15s;">
+          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+          <p class="prompt-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
+          <span class="absolute right-3 bottom-2 inline-block w-1 h-1 rounded-full bg-outline-variant opacity-60"></span>
+        </div>
+
+      </div>
+
       <!-- Text input -->
-      <div class="w-full max-w-lg mt-6 flex gap-2">
-        <input id="text-input" type="text" placeholder="Type your question..."
+      <div class="w-full flex gap-2 mt-1">
+        <input id="text-input" type="text" placeholder="Or type your question..."
           class="flex-1 bg-surface-container border border-outline-variant text-on-surface text-sm font-label-caps px-3 py-2 outline-none focus:border-primary-container placeholder:text-on-surface-variant"
           onkeydown="if(event.key==='Enter') submitText()"/>
         <button onclick="submitText()" class="bg-primary-container text-white px-3 py-2 hover:bg-inverse-primary transition-colors">
           <span class="material-symbols-outlined msym-fill" style="font-size:20px;">send</span>
         </button>
       </div>
+
     </div>
 
     <!-- Bottom modules -->
@@ -402,9 +430,9 @@ tailwind.config = {
       <span class="material-symbols-outlined">bar_chart_4_bars</span>
       <span class="text-label-caps font-label-caps text-[10px]">AUDIT</span>
     </button>
-    <button onclick="toggleMic()" class="nav-item-press flex-1 flex items-center justify-center text-white">
+    <button onclick="refreshPrompts()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Refresh suggestions">
       <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center animate-glow active:scale-95 transition-transform" style="box-shadow:0 0 20px rgba(220,0,0,0.4);">
-        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">sensors</span>
+        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">auto_awesome</span>
       </div>
     </button>
     <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
@@ -649,9 +677,9 @@ tailwind.config = {
       <span class="material-symbols-outlined">bar_chart_4_bars</span>
       <span class="text-label-caps font-label-caps text-[10px]">AUDIT</span>
     </button>
-    <button onclick="toggleMic()" class="nav-item-press flex-1 flex items-center justify-center text-white">
+    <button onclick="refreshPrompts()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Refresh suggestions">
       <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center animate-glow active:scale-95 transition-transform" style="box-shadow:0 0 20px rgba(220,0,0,0.4);">
-        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">sensors</span>
+        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">auto_awesome</span>
       </div>
     </button>
     <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
@@ -778,9 +806,9 @@ tailwind.config = {
       <span class="material-symbols-outlined">bar_chart_4_bars</span>
       <span class="text-label-caps font-label-caps text-[10px]">AUDIT</span>
     </button>
-    <button onclick="toggleMic()" class="nav-item-press flex-1 flex items-center justify-center text-white">
+    <button onclick="refreshPrompts()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Refresh suggestions">
       <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center animate-glow active:scale-95 transition-transform" style="box-shadow:0 0 20px rgba(220,0,0,0.4);">
-        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">sensors</span>
+        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">auto_awesome</span>
       </div>
     </button>
     <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
@@ -1335,12 +1363,184 @@ function updateTyreWidget(data) {
 function fetchTelemetry() {
   fetch('/telemetry')
     .then(r => r.json())
-    .then(data => { updateTyreWidget(data); })
+    .then(data => {
+      updateTyreWidget(data);
+      updatePromptCards(data);
+    })
     .catch(err => console.warn('[Pit-Wall] telemetry:', err));
+}
+
+// ── Contextual Prompt Cards ───────────────────────────────────────────────────
+let _prompts       = ['', '', ''];
+let _promptPool    = [];
+let _rotateIdx     = 0;
+let _rotateTimer   = null;
+let _promptSource  = 'none';
+
+const _TYRE_LIFE = { SOFT:25, MEDIUM:35, HARD:50, INTERMEDIATE:40, WET:40 };
+
+function _generatePrompts(telem) {
+  if (!telem || !telem.available) {
+    return [
+      "What are Ferrari's key strategic advantages under the 2026 regulations?",
+      "How does the MGU-K harvest phase affect Leclerc's pace on straights?",
+      "What historical pit stop patterns favour Ferrari at this circuit?",
+      "How does the 2026 active aero Z-Mode vs X-Mode trade-off work?",
+      "What makes the 2026 power unit rules different from previous seasons?"
+    ];
+  }
+
+  const all = [];
+  const name      = telem.driver_name || 'Leclerc';
+  const first     = name.split(' ').slice(-1)[0];
+  const compound  = (telem.tyre_compound || 'HARD').toUpperCase();
+  const age       = telem.tyre_age_laps  || 0;
+  const pos       = telem.position       || 0;
+  const lap       = telem.lap_number     || 0;
+  const pits      = telem.pit_stops      || 0;
+  const pace      = telem.pace_delta_seconds;
+  const interval  = telem.interval_to_ahead || '';
+  const intNum    = parseFloat((interval || '').replace('+', '').replace('s', ''));
+
+  // Tyre-triggered
+  const life    = _TYRE_LIFE[compound] || 40;
+  const agePct  = Math.round((age / life) * 100);
+  if (agePct >= 80)
+    all.push(`${first}'s ${compound}s are ${age} laps old — is the cliff degradation starting?`);
+  else if (agePct >= 60)
+    all.push(`${first} is ${age} laps into the ${compound} — what's the optimal box window?`);
+  else if (pits === 0 && lap > 20)
+    all.push(`${first} hasn't pitted yet at lap ${lap} — is a one-stopper on the cards?`);
+  else
+    all.push(`What's the ${compound} tyre strategy outlook for ${first} this stint?`);
+
+  // Gap / position-triggered
+  if (!isNaN(intNum) && intNum < 1.0)
+    all.push(`${first} is ${interval} behind — can he make the pass stick before the next corner?`);
+  else if (!isNaN(intNum) && intNum < 3.0)
+    all.push(`${first} is ${interval} off the car ahead — undercut or hold track position?`);
+  else if (pos > 0)
+    all.push(`What does ${first} need to attack from P${pos} over the next five laps?`);
+  else
+    all.push(`What's the best strategic path forward for ${first} right now?`);
+
+  // Pace-triggered
+  if (pace != null) {
+    if (pace > 0.5)
+      all.push(`${first} is ${Math.abs(pace).toFixed(2)}s off his recent pace — tyre drop or traffic?`);
+    else if (pace < -0.3)
+      all.push(`${first} just found ${Math.abs(pace).toFixed(2)}s — what triggered the pace gain?`);
+    else
+      all.push(`Is ${first}'s lap ${lap} pace sustainable through to the next pit stop?`);
+  } else {
+    all.push(`Can Ferrari execute an undercut from P${pos} with ${pits + 1} stop${pits !== 0 ? 's' : ''} total?`);
+  }
+
+  // Rotation extras
+  all.push(`How does ${first}'s tyre age compare to the cars immediately around him?`);
+  if (pos > 5)
+    all.push(`What would a perfect strategy recovery look like for ${first} from P${pos}?`);
+  all.push(`What does the 2026 MGU-K deployment rule mean for ${first}'s current situation?`);
+
+  return all;
+}
+
+function updatePromptCards(telem) {
+  _promptSource = telem && telem.available ? 'live' : 'historical';
+  _promptPool   = _generatePrompts(telem);
+  _prompts[0]   = _promptPool[0] || '';
+  _prompts[1]   = _promptPool[1] || '';
+  _prompts[2]   = _promptPool[2] || '';
+  _rotateIdx    = 0;
+  _renderCards();
+  _updateSourceDot();
+  if (_rotateTimer) clearInterval(_rotateTimer);
+  // 20–30s random interval to avoid mechanical feel
+  const ms = 20000 + Math.floor(Math.random() * 10000);
+  _rotateTimer = setInterval(_rotateCard, ms);
+}
+
+function _rotateCard() {
+  const pool = _promptPool.slice(2);
+  if (pool.length < 2) return;
+  _rotateIdx = (_rotateIdx + 1) % pool.length;
+  const card = document.getElementById('prompt-card-2');
+  if (!card) return;
+  // Fade + slight slide out
+  card.style.opacity   = '0';
+  card.style.transform = 'translateX(6px)';
+  setTimeout(() => {
+    _prompts[2] = pool[_rotateIdx];
+    _renderCard(2);
+    card.style.transform = 'translateX(-6px)';
+    requestAnimationFrame(() => {
+      card.style.opacity   = '1';
+      card.style.transform = 'translateX(0)';
+    });
+  }, 250);
+}
+
+function _renderCards() {
+  for (let i = 0; i < 3; i++) _renderCard(i);
+}
+
+function _renderCard(i) {
+  const card = document.getElementById(`prompt-card-${i}`);
+  if (!card) return;
+  const el = card.querySelector('.prompt-text');
+  if (el) el.textContent = _prompts[i] || 'Loading race data...';
+}
+
+function _updateSourceDot() {
+  const dot   = document.getElementById('prompt-source-dot');
+  const label = document.getElementById('prompt-source-label');
+  if (!dot || !label) return;
+  if (_promptSource === 'live') {
+    dot.style.backgroundColor = '#22c55e';
+    dot.style.opacity = '1';
+    label.textContent = 'LIVE DATA · WATSONX ACTIVE';
+  } else if (_promptSource === 'historical') {
+    dot.style.backgroundColor = '#f1c100';
+    dot.style.opacity = '1';
+    label.textContent = 'SESSION DATA · WATSONX ACTIVE';
+  } else {
+    dot.style.backgroundColor = '#6b7280';
+    dot.style.opacity = '0.6';
+    label.textContent = 'SCUDERIA AI · WATSONX ACTIVE';
+  }
+}
+
+function selectPrompt(i) {
+  const text = _prompts[i];
+  if (!text || text === 'Loading race data...') return;
+  const input = document.getElementById('text-input');
+  input.value = text;
+  // Briefly highlight the tapped card
+  const card = document.getElementById(`prompt-card-${i}`);
+  if (card) {
+    card.style.borderColor       = '#dc0000';
+    card.style.backgroundColor   = '#3a2521';
+  }
+  // Show the text for ~900ms then auto-submit
+  setTimeout(() => {
+    if (card) { card.style.borderColor = ''; card.style.backgroundColor = ''; }
+    submitText();
+  }, 900);
+}
+
+function refreshPrompts() {
+  showScreen('ready');
+  fetch('/telemetry')
+    .then(r => r.json())
+    .then(data => { updateTyreWidget(data); updatePromptCards(data); })
+    .catch(() => updatePromptCards(null));
 }
 
 // ── Startup ───────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
+  // Seed default prompts immediately while telemetry loads
+  updatePromptCards(null);
+
   fetch('/race-context', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

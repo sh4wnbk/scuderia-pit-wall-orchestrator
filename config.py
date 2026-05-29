@@ -77,6 +77,11 @@ class Config:
     # ── FastF1 cache ──────────────────────────────────────────────────────────
     fastf1_cache_path: str = "./fastf1_cache"
 
+    # ── Live timing ───────────────────────────────────────────────────────────
+    # When True, opens a FastF1 SignalR WebSocket to the F1 live timing feed.
+    # Only meaningful during active race weekends; falls back to historical otherwise.
+    use_live_timing: bool = os.getenv("USE_LIVE_TIMING", "false").lower() == "true"
+
 
 # Module-level singleton — imported everywhere
 config = Config()

@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from config import config
 from main import PitWallOrchestrator
 
 
@@ -44,14 +45,22 @@ app = FastAPI(
 )
 
 orchestrator = PitWallOrchestrator()
+_live_collector = None
 
 
 @app.on_event("startup")
 def configure_initial_race_context() -> None:
+    global _live_collector
     year = int(os.getenv("RACE_YEAR", "2026"))
     race = os.getenv("RACE_NAME", "Miami")
     driver = os.getenv("RACE_DRIVER", "LEC")
     orchestrator.set_race_context(year=year, race=race, driver=driver)
+
+    if config.use_live_timing:
+        from tools.fastf1_client import LiveTimingCollector
+        _live_collector = LiveTimingCollector()
+        _live_collector.start(year=year, race=race)
+        orchestrator._f1.live_collector = _live_collector
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -141,6 +150,25 @@ def process(payload: ProcessRequest) -> ProcessResponse:
 @app.get("/audit")
 def audit_log() -> list[dict]:
     return orchestrator.get_audit_log()
+
+
+@app.get("/timing/status")
+def timing_status() -> dict:
+    """
+    Reports whether the live timing WebSocket is active or historical mode is in use.
+    Live mode only connects during active F1 race weekends.
+    """
+    if not config.use_live_timing:
+        return {
+            "mode": "historical",
+            "connected": False,
+            "last_update": None,
+            "drivers_tracked": [],
+            "note": "Set USE_LIVE_TIMING=true to enable live mode",
+        }
+    if _live_collector is None:
+        return {"mode": "live", "connected": False, "last_update": None, "drivers_tracked": []}
+    return _live_collector.get_status()
 
 
 # ── Telemetry ─────────────────────────────────────────────────────────────────
