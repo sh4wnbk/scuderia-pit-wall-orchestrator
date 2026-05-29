@@ -24,7 +24,7 @@ This is the **Synthesis Gap**.
 
 The Scuderia Pit-Wall Fan Orchestrator is a multi-agent AI companion powered by **IBM watsonx** that:
 
-- Ingests 1.1M live telemetry data points per second via **FastF1**
+- Ingests lap-summary telemetry via **FastF1** — position, lap time, sector splits, tyre compound and age, gap to leader
 - Transcribes and translates unstructured pit-wall radio in real time via **IBM Watson Speech-to-Text**
 - Cross-references both against the **FIA 2026 Technical Regulations** using RAG (Retrieval-Augmented Generation)
 - Delivers plain-English tactical narratives via text and **IBM Watson Text-to-Speech** audio overlay
