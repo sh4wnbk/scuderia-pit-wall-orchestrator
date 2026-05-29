@@ -59,7 +59,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", include_in_schema=False)
 def serve_ui():
-    return FileResponse("static/index.html")
+    response = FileResponse("static/index.html")
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
 
 
 @app.get("/service-worker.js", include_in_schema=False)

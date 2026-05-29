@@ -1,6 +1,6 @@
 # Scuderia Pit-Wall Fan Orchestrator — Architectural Overview
 
-**Generated:** 2026-05-27 (updated 2026-05-27)  
+**Generated:** 2026-05-27 (updated 2026-05-28)  
 **Purpose:** High-level architectural analysis of the current workspace
 
 ---
@@ -21,7 +21,8 @@ The system exposes three primary entry points:
    - Endpoint: `POST /race-context` — Configure race session
    - Endpoint: `GET /audit` — Retrieve governance audit log
    - Endpoint: `GET /health` — Service health check
-   - Used for: IBM Cloud Code Engine deployment, web UI integration
+   - Endpoint: `GET /telemetry` — Fetch live driver telemetry from FastF1 (60 s TTL cache, falls back R → Q → FP3 → FP2 → FP1)
+   - Used for: Google Cloud Run deployment, Firebase PWA frontend
 
 3. **`static/index.html`** — Progressive Web App UI
    - Provides: Browser-based fan interface
@@ -315,40 +316,28 @@ python main.py                    # Run MVP demo
 uvicorn app:app --reload          # Run FastAPI locally
 ```
 
-### IBM Cloud Code Engine (CI/CD via GitHub Actions)
-```bash
-# .github/workflows/deploy-code-engine.yml
-# Push to main → build → push to ICR → ibmcloud ce application update
-docker build -t us.icr.io/scuderia-pit-wall/pit-wall-orchestrator .
-ibmcloud ce application update \
-  --name pit-wall-orchestrator \
-  --image us.icr.io/scuderia-pit-wall/pit-wall-orchestrator:<SHA> \
-  --port 8080
+### Google Cloud Run — Active CI/CD (`.github/workflows/deploy-cloudrun.yml`)
+
+Every push to `main` triggers the full pipeline automatically:
+
+```
+push → main → GitHub Actions
+  1. Authenticate to GCP (Workload Identity Federation)
+  2. Inject git SHA into service-worker.js (cache-bust)
+  3. docker build → push to GCP Artifact Registry (us-central1)
+  4. gcloud run deploy pit-wall-orchestrator (2 GiB, 1 CPU, 1–3 instances)
 ```
 
-**Status (2026-05-27):** Project creation blocked in shared hackathon account. Awaiting admin.
+**Active URLs:**
+- Backend: `https://pit-wall-orchestrator-l5k23f3kpa-uc.a.run.app` (Cloud Run, `us-central1`)
+- Frontend: `https://tifosi-muretto.web.app` (Firebase Hosting — ~5 min CI deploy per push)
 
 **Secrets Management:**
-- All 13 IBM credentials stored as GitHub Actions secrets
-- `config.py` reads from environment variables at runtime
+- 7 IBM Watson/watsonx credentials + 2 GCP service account keys stored as GitHub Actions secrets
+- `config.py` reads from environment variables at runtime; supports `<NAME>_FILE` mounts for Code Engine compatibility
 - `chroma_db/` (777 RAG chunks) bundled in Docker image — no re-indexing in production
 
-### Google Cloud Run (Active Fallback)
-```bash
-# deploy_cloudrun.sh — reads credentials from .env, pushes to GCP Artifact Registry
-IMAGE="us-central1-docker.pkg.dev/<project>/pit-wall/pit-wall-orchestrator:latest"
-gcloud run deploy pit-wall-orchestrator \
-  --image "$IMAGE" \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 2Gi --cpu 1 \
-  --min-instances 1 --max-instances 3 \
-  --port 8080
-```
-
-**Status (2026-05-27):** `deploy_cloudrun.sh` present in workspace. Service URL pre-baked in script:  
-`https://pit-wall-orchestrator-l5k23f3kpa-uc.a.run.app`  
-IBM Watson/watsonx credentials work from any hosting provider — hackathon requires IBM *tools*, not IBM *hosting*.
+**Note:** IBM Code Engine project creation is blocked in the shared hackathon account. Cloud Run is the production target. The hackathon requires IBM *tools* (Granite, Watson STT/TTS, Docling), not IBM *hosting* — all IBM services are fully wired regardless of hosting provider.
 
 ### Scalability Considerations
 
@@ -422,7 +411,7 @@ IBM Watson/watsonx credentials work from any hosting provider — hackathon requ
 - [ ] Add explainability layer (why did the Overseer reject this narrative?)
 
 ### Fan Experience
-- [ ] Multi-language support (Italian, Spanish, German)
+- [ ] Language expansion: Spanish, German, Portuguese (Italian `it-IT` already live via Francesca V3 + Watson STT `it-IT_BroadbandModel`)
 - [ ] Push notifications for critical race events (pit stops, safety cars)
 - [ ] Personalized strategy preferences (aggressive vs conservative)
 - [ ] Social sharing with traceability links (cite your sources)

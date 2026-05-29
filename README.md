@@ -181,13 +181,13 @@ WATSON_TTS_URL=your_url_here
 python main.py
 ```
 
-## IBM Cloud Migration
+## Deployment
 
-This repository now includes an IBM Cloud deployable API wrapper:
+The service is containerised and deployed via GitHub Actions to **Google Cloud Run** on every push to `main` (~5 min build):
 
-- `app.py` (FastAPI service entrypoint)
-- `Dockerfile` and `.dockerignore`
-- `docs/08_ibm_cloud_migration.md` (step-by-step runbook for IBM Code Engine)
+- **Backend:** Cloud Run — `us-central1`, 2 GiB, 1 CPU, 1–3 auto-scaled instances
+- **Frontend:** Firebase Hosting — `https://tifosi-muretto.web.app`
+- **CI/CD:** `.github/workflows/deploy-cloudrun.yml` (GCP Workload Identity Federation)
 
 Run the API locally:
 
@@ -201,10 +201,11 @@ Then validate:
 curl http://localhost:8080/health
 curl -X POST http://localhost:8080/process \
   -H "Content-Type: application/json" \
-  -d '{"text_query":"Why did Leclerc lift on the straight?"}'
+  -d '{"text_query":"Why did Leclerc lift on the straight?","language":"en","voice":"allison"}'
+curl http://localhost:8080/telemetry
 ```
 
-For IBM Cloud deployment, follow the full runbook:
+For IBM Cloud Code Engine deployment details:
 
 - [`docs/08_ibm_cloud_migration.md`](./docs/08_ibm_cloud_migration.md)
 - [`docs/09_code_engine_cicd_and_secrets.md`](./docs/09_code_engine_cicd_and_secrets.md)

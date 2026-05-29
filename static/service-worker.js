@@ -22,7 +22,9 @@ const PRECACHE_ASSETS = [
 const API_ROUTES = [
   '/process',
   '/health',
-  '/audit'
+  '/audit',
+  '/telemetry',
+  '/race-context',
 ];
 
 // ── INSTALL ──────────────────────────────────────
