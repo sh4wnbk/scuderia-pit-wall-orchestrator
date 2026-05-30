@@ -174,13 +174,13 @@ def timing_status() -> dict:
 # ── Telemetry ─────────────────────────────────────────────────────────────────
 
 def _fmt_interval(val, sign: str = "+") -> Optional[str]:
-    """Convert a FastF1 interval (timedelta or NaT) to '+1.2s' / '-0.8s'."""
+    """Convert a FastF1 gap value (timedelta or NaT) to '+1.2s' / '-0.8s'."""
     try:
         import pandas as pd
         if pd.isna(val):
             return None
         secs = val.total_seconds() if hasattr(val, "total_seconds") else float(str(val).strip().lstrip("+"))
-        return f"{sign}{secs:.1f}s"
+        return f"{sign}{abs(secs):.1f}s"
     except Exception:
         return None
 
@@ -293,12 +293,17 @@ def get_telemetry() -> dict:
         )
         our_pos = telemetry.position or 0
         if our_pos > 0:
-            our_row   = latest_per[latest_per["Driver"] == driver]
-            ahead_row = latest_per[latest_per["Position"] == our_pos - 1]
+            our_row    = latest_per[latest_per["Driver"] == driver]
+            ahead_row  = latest_per[latest_per["Position"] == our_pos - 1]
             behind_row = latest_per[latest_per["Position"] == our_pos + 1]
-            if not ahead_row.empty and our_pos > 1 and not our_row.empty:
+            our_t      = our_row.iloc[0].get("Time") if not our_row.empty else None
+            our_lap_n  = our_row.iloc[0].get("LapNumber") if not our_row.empty else None
+            if not ahead_row.empty and our_pos > 1:
                 a = ahead_row.iloc[0]
-                gap = _fmt_interval(our_row.iloc[0].get("IntervalToPositionAhead"), "+")
+                gap = None
+                if a.get("LapNumber") == our_lap_n:
+                    # gap = session-time difference at lap end (positive = we finished later = we're behind)
+                    gap = _fmt_interval(a.get("Time") - our_t if our_t is not None else None, "+")
                 rivals["ahead"] = {
                     "driver": str(a["Driver"]),
                     "gap": gap or "N/A",
@@ -306,7 +311,9 @@ def get_telemetry() -> dict:
                 }
             if not behind_row.empty:
                 b = behind_row.iloc[0]
-                gap = _fmt_interval(b.get("IntervalToPositionAhead"), "-")
+                gap = None
+                if b.get("LapNumber") == our_lap_n:
+                    gap = _fmt_interval(b.get("Time") - our_t if our_t is not None else None, "-")
                 rivals["behind"] = {
                     "driver": str(b["Driver"]),
                     "gap": gap or "N/A",
