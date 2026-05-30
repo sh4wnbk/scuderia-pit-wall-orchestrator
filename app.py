@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import os
+import random
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -52,7 +53,7 @@ _live_collector = None
 def configure_initial_race_context() -> None:
     global _live_collector
     year = int(os.getenv("RACE_YEAR", "2026"))
-    race = os.getenv("RACE_NAME", "Miami")
+    race = os.getenv("RACE_NAME") or random.choice(list(_FASTF1_RACE_NAME_MAP.keys()))
     driver = os.getenv("RACE_DRIVER", "LEC")
     orchestrator.set_race_context(year=year, race=race, driver=driver)
 
