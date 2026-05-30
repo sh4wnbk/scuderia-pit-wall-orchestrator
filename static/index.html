@@ -24,6 +24,29 @@
   .scuderia-bracket-bl { border-bottom: 2px solid #dc0000; border-left: 2px solid #dc0000; width: 8px; height: 8px; position: absolute; bottom: -1px; left: -1px; }
   .scuderia-bracket-br { border-bottom: 2px solid #dc0000; border-right: 2px solid #dc0000; width: 8px; height: 8px; position: absolute; bottom: -1px; right: -1px; }
 
+  /* Spotter event chips */
+  .spotter-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    background: #2e1a17;
+    border: 1px solid #5e3f3a;
+    color: #ffdad5;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, background-color 0.15s ease, opacity 0.25s ease, transform 0.25s ease;
+  }
+  .spotter-chip:hover { border-color: #dc0000; background: #3a2521; }
+  .spotter-chip.chip-active { border-color: #dc0000; background: #3a2521; }
+  #chip-row::-webkit-scrollbar { display: none; }
+
   .bg-grid {
     background-image: linear-gradient(to right, #1a0907 1px, transparent 1px),
                       linear-gradient(to bottom, #1a0907 1px, transparent 1px);
@@ -308,60 +331,63 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Prompt zone — replaces central mic -->
-    <div class="flex-1 flex flex-col gap-2 py-2">
-
-      <!-- Status bar -->
-      <div class="text-center pb-1">
-        <div class="flex justify-center items-end h-6 mb-1" id="waveform">
-          <div class="waveform-bar" style="height:6px;"></div>
-          <div class="waveform-bar" style="height:10px;"></div>
-          <div class="waveform-bar" style="height:5px;"></div>
-          <div class="waveform-bar" style="height:12px;"></div>
-          <div class="waveform-bar" style="height:7px;"></div>
-          <div class="waveform-bar" style="height:14px;"></div>
-          <div class="waveform-bar" style="height:9px;"></div>
-          <div class="waveform-bar" style="height:6px;"></div>
-        </div>
-        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex items-center justify-center gap-2">
-          <span id="prompt-source-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-on-surface-variant opacity-60"></span>
-          <span id="prompt-source-label">SCUDERIA AI · WATSONX ACTIVE</span>
-        </p>
+    <!-- Telemetry grid — primary content -->
+    <section class="grid bg-outline-variant border border-outline-variant" style="grid-template-columns:1fr 1fr;gap:1px 1px;">
+      <!-- ROW 1 — Headers -->
+      <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">tire_repair</span>
+        <span class="text-label-caps font-label-caps text-on-surface">TYRE</span>
+        <span id="tyre-compound" class="ml-auto text-label-caps font-label-caps text-[10px] px-2 py-0.5 text-on-surface-variant leading-none border border-outline-variant">--</span>
       </div>
-
-      <!-- Prompt cards — cards 0+1 stable, card 2 rotates -->
-      <div class="flex flex-col gap-2 flex-1 justify-center">
-
-        <div id="prompt-card-0" onclick="selectPrompt(0)"
-          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] transition-all duration-150 group">
-          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
-          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-          <p class="prompt-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
-        </div>
-
-        <div id="prompt-card-1" onclick="selectPrompt(1)"
-          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] transition-all duration-150 group">
-          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
-          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-          <p class="prompt-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
-        </div>
-
-        <div id="prompt-card-2" onclick="selectPrompt(2)"
-          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] group"
-          style="transition:opacity 0.25s ease,transform 0.25s ease,border-color 0.15s,background-color 0.15s;">
-          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
-          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-          <p class="prompt-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
-          <span class="absolute right-3 bottom-2 inline-block w-1 h-1 rounded-full bg-outline-variant opacity-60"></span>
-        </div>
-
+      <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">speed</span>
+        <span class="text-label-caps font-label-caps text-on-surface whitespace-nowrap">LAST LAP</span>
+        <span id="lap-badge" class="ml-auto text-label-caps font-label-caps text-[10px] px-2 py-0.5 text-on-surface-variant leading-none border border-outline-variant whitespace-nowrap">--</span>
       </div>
+      <!-- ROW 2 — Data row 1 -->
+      <div class="bg-surface-container px-margin-md py-2 flex justify-between items-baseline">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">AGE</span>
+        <span id="tyre-age" class="text-data-mono font-data-mono text-on-surface">-- laps</span>
+      </div>
+      <div class="bg-surface-container px-margin-md py-2 flex justify-between items-baseline">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">POSITION</span>
+        <span id="race-position" class="text-data-mono font-data-mono text-on-surface">--</span>
+      </div>
+      <!-- ROW 3 — Progress bars -->
+      <div class="bg-surface-container px-margin-md py-2 flex items-center">
+        <div class="w-full bg-surface-variant h-1">
+          <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:linear-gradient(to right,#22c55e,#eab308,#dc0000);"></div>
+        </div>
+      </div>
+      <div class="bg-surface-container px-margin-md py-2 flex items-center">
+        <div class="w-full bg-surface-variant h-1">
+          <div id="position-bar" class="h-full bg-primary-container transition-all duration-700" style="width:0%;"></div>
+        </div>
+      </div>
+      <!-- ROW 4 — Data row 2 -->
+      <div class="bg-surface-container px-margin-md pt-2 pb-margin-md flex justify-between items-baseline">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">TIME</span>
+        <span id="lap-time" class="text-data-mono font-data-mono text-on-surface">--</span>
+      </div>
+      <div class="bg-surface-container px-margin-md pt-2 pb-margin-md flex justify-between items-baseline">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PACE</span>
+        <span id="pace-trend" class="text-data-mono font-data-mono text-on-surface">--</span>
+      </div>
+    </section>
+
+    <!-- Spotter zone — source indicator + event chips + input -->
+    <div class="flex flex-col gap-2 flex-1 justify-end">
+
+      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex items-center gap-2">
+        <span id="prompt-source-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-on-surface-variant opacity-60"></span>
+        <span id="prompt-source-label">SPOTTER · WATSONX ACTIVE</span>
+      </p>
+
+      <!-- Spotter chips — horizontal scrollable, event-driven -->
+      <div id="chip-row" class="flex gap-2 overflow-x-auto pb-1" style="scrollbar-width:none;-ms-overflow-style:none;"></div>
 
       <!-- Text input -->
-      <div class="w-full flex gap-2 mt-1">
+      <div class="w-full flex gap-2">
         <input id="text-input" type="text" placeholder="Or type your question..."
           class="flex-1 bg-surface-container border border-outline-variant text-on-surface text-sm font-label-caps px-3 py-2 outline-none focus:border-primary-container placeholder:text-on-surface-variant"
           onkeydown="if(event.key==='Enter') submitText()"/>
@@ -370,53 +396,6 @@ tailwind.config = {
         </button>
       </div>
 
-    </div>
-
-    <!-- Bottom modules -->
-    <div class="space-y-margin-md">
-      <!-- Telemetry grid — 4 shared rows × 2 columns, baselines locked across center divider -->
-      <section class="grid bg-outline-variant border border-outline-variant" style="grid-template-columns:1fr 1fr;gap:1px 1px;">
-        <!-- ROW 1 — Headers -->
-        <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">tire_repair</span>
-          <span class="text-label-caps font-label-caps text-on-surface">TYRE</span>
-          <span id="tyre-compound" class="ml-auto text-label-caps font-label-caps text-[10px] px-2 py-0.5 text-on-surface-variant leading-none border border-outline-variant">--</span>
-        </div>
-        <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">speed</span>
-          <span class="text-label-caps font-label-caps text-on-surface whitespace-nowrap">LAST LAP</span>
-          <span id="lap-badge" class="ml-auto text-label-caps font-label-caps text-[10px] px-2 py-0.5 text-on-surface-variant leading-none border border-outline-variant whitespace-nowrap">--</span>
-        </div>
-        <!-- ROW 2 — Data row 1 -->
-        <div class="bg-surface-container px-margin-md py-2 flex justify-between items-baseline">
-          <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">AGE</span>
-          <span id="tyre-age" class="text-data-mono font-data-mono text-on-surface">-- laps</span>
-        </div>
-        <div class="bg-surface-container px-margin-md py-2 flex justify-between items-baseline">
-          <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">POSITION</span>
-          <span id="race-position" class="text-data-mono font-data-mono text-on-surface">--</span>
-        </div>
-        <!-- ROW 3 — Progress bars (continuous horizon line) -->
-        <div class="bg-surface-container px-margin-md py-2 flex items-center">
-          <div class="w-full bg-surface-variant h-1">
-            <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:linear-gradient(to right,#22c55e,#eab308,#dc0000);"></div>
-          </div>
-        </div>
-        <div class="bg-surface-container px-margin-md py-2 flex items-center">
-          <div class="w-full bg-surface-variant h-1">
-            <div id="position-bar" class="h-full bg-primary-container transition-all duration-700" style="width:0%;"></div>
-          </div>
-        </div>
-        <!-- ROW 4 — Data row 2 -->
-        <div class="bg-surface-container px-margin-md pt-2 pb-margin-md flex justify-between items-baseline">
-          <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">TIME</span>
-          <span id="lap-time" class="text-data-mono font-data-mono text-on-surface">--</span>
-        </div>
-        <div class="bg-surface-container px-margin-md pt-2 pb-margin-md flex justify-between items-baseline">
-          <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PACE</span>
-          <span id="pace-trend" class="text-data-mono font-data-mono text-on-surface">--</span>
-        </div>
-      </section>
     </div>
 
   </main>
@@ -1365,166 +1344,163 @@ function fetchTelemetry() {
     .then(r => r.json())
     .then(data => {
       updateTyreWidget(data);
-      updatePromptCards(data);
+      updateSpotter(data);
     })
     .catch(err => console.warn('[Pit-Wall] telemetry:', err));
 }
 
-// ── Contextual Prompt Cards ───────────────────────────────────────────────────
-let _prompts       = ['', '', ''];
-let _promptPool    = [];
-let _poolOffset    = 0;
-let _rotateIdx     = 0;
-let _rotateTimer   = null;
-let _promptSource  = 'none';
+// ── Spotter Agent — event-driven chips ───────────────────────────────────────
+let _spotterEvents = [];
+let _spotterSource = 'none';
 
 const _TYRE_LIFE = { SOFT:25, MEDIUM:35, HARD:50, INTERMEDIATE:40, WET:40 };
 
-function _generatePrompts(telem) {
+function _detectEvents(telem) {
   if (!telem || !telem.available) {
     return [
-      "What are Ferrari's key strategic advantages under the 2026 regulations?",
-      "How does the MGU-K harvest phase affect Leclerc's pace on straights?",
-      "What historical pit stop patterns favour Ferrari at this circuit?",
-      "How does the 2026 active aero Z-Mode vs X-Mode trade-off work?",
-      "What makes the 2026 power unit rules different from previous seasons?"
+      { key:'reg-mgu',  label:'2026 MGU-K rules?',  query:'How does the 2026 MGU-K deployment rule change overtaking strategy on high-speed straights?' },
+      { key:'reg-aero', label:'Z-Mode vs X-Mode?',  query:'What is the strategic trade-off between Z-Mode and X-Mode under the 2026 active aerodynamics regulations?' },
+      { key:'reg-tyre', label:'2026 tyre regs?',    query:'What do the 2026 technical regulations say about tyre usage and mandatory compound rules in a race?' },
     ];
   }
 
-  const all = [];
-  const name      = telem.driver_name || 'Leclerc';
-  const first     = name.split(' ').slice(-1)[0];
-  const compound  = (telem.tyre_compound || 'HARD').toUpperCase();
-  const age       = telem.tyre_age_laps  || 0;
-  const pos       = telem.position       || 0;
-  const lap       = telem.lap_number     || 0;
-  const pits      = telem.pit_stops      || 0;
-  const pace      = telem.pace_delta_seconds;
-  const interval  = telem.interval_to_ahead || '';
-  const intNum    = parseFloat((interval || '').replace('+', '').replace('s', ''));
+  const events  = [];
+  const name     = telem.driver_name || 'Leclerc';
+  const first    = name.split(' ').pop();
+  const compound = (telem.tyre_compound || 'HARD').toUpperCase();
+  const age      = telem.tyre_age_laps  || 0;
+  const life     = _TYRE_LIFE[compound] || 40;
+  const agePct   = Math.round((age / life) * 100);
+  const lap      = telem.lap_number     || 0;
+  const pits     = telem.pit_stops      || 0;
+  const pace     = telem.pace_delta_seconds;
+  const interval = telem.interval_to_ahead || '';
+  const intNum   = parseFloat((interval || '').replace('+','').replace('s',''));
+  const pos      = telem.position || 0;
 
-  // Tyre-triggered
-  const life    = _TYRE_LIFE[compound] || 40;
-  const agePct  = Math.round((age / life) * 100);
+  // Tyre event
   if (agePct >= 80)
-    all.push(`${first}'s ${compound}s are ${age} laps old — is the cliff degradation starting?`);
-  else if (agePct >= 60)
-    all.push(`${first} is ${age} laps into the ${compound} — what's the optimal box window?`);
+    events.push({ key:'tyre-cliff', label:`${compound}s past the cliff?`,
+      query:`${first}'s ${compound} tyres are ${age} laps old — past the degradation cliff. Is the drop-off visible in sector times and should Ferrari box immediately?` });
+  else if (agePct >= 65)
+    events.push({ key:'tyre-window', label:`Time to box ${first}?`,
+      query:`${first} is ${age} laps into the ${compound} at ${agePct}% of expected life. What's the optimal pit window given current track position?` });
   else if (pits === 0 && lap > 20)
-    all.push(`${first} hasn't pitted yet at lap ${lap} — is a one-stopper on the cards?`);
-  else
-    all.push(`What's the ${compound} tyre strategy outlook for ${first} this stint?`);
+    events.push({ key:'one-stop', label:'Going for the one-stop?',
+      query:`${first} has not pitted at lap ${lap}. Is a one-stop strategy viable from here, and what tyre life target does it require?` });
 
-  // Gap / position-triggered
+  // Gap / attack event
   if (!isNaN(intNum) && intNum < 1.0)
-    all.push(`${first} is ${interval} behind — can he make the pass stick before the next corner?`);
-  else if (!isNaN(intNum) && intNum < 3.0)
-    all.push(`${first} is ${interval} off the car ahead — undercut or hold track position?`);
+    events.push({ key:'drs', label:'DRS window — attack?',
+      query:`${first} is ${interval} behind the car ahead — inside DRS range. Should Ferrari push for the overtake now or hold for the pit sequence?` });
+  else if (!isNaN(intNum) && intNum < 2.5)
+    events.push({ key:'undercut', label:`Undercut from ${interval}?`,
+      query:`${first} is ${interval} behind. Does an undercut work at this gap, or is holding track position and managing tyres the stronger call?` });
   else if (pos > 0)
-    all.push(`What does ${first} need to attack from P${pos} over the next five laps?`);
-  else
-    all.push(`What's the best strategic path forward for ${first} right now?`);
+    events.push({ key:'position', label:`P${pos} — what's the call?`,
+      query:`${first} is running P${pos} at lap ${lap}. What strategic options are open over the next five laps — push, manage, or cover?` });
 
-  // Pace-triggered
-  if (pace != null) {
-    if (pace > 0.5)
-      all.push(`${first} is ${Math.abs(pace).toFixed(2)}s off his recent pace — tyre drop or traffic?`);
-    else if (pace < -0.3)
-      all.push(`${first} just found ${Math.abs(pace).toFixed(2)}s — what triggered the pace gain?`);
-    else
-      all.push(`Is ${first}'s lap ${lap} pace sustainable through to the next pit stop?`);
-  } else {
-    all.push(`Can Ferrari execute an undercut from P${pos} with ${pits + 1} stop${pits !== 0 ? 's' : ''} total?`);
+  // Pace event
+  if (pace != null && pace > 0.5)
+    events.push({ key:'pace-drop', label:`${Math.abs(pace).toFixed(1)}s pace drop — why?`,
+      query:`${first} dropped ${Math.abs(pace).toFixed(2)}s this lap vs recent pace. Tyre drop-off, lockup, or traffic? What should the team prioritise?` });
+  else if (pace != null && pace < -0.4)
+    events.push({ key:'pace-gain', label:`${first} on a charge`,
+      query:`${first} found ${Math.abs(pace).toFixed(2)}s this lap. What's driving the improvement — tyre phase, clear air, or fuel load? Is it sustainable?` });
+
+  // Stubs — wired post-submission when data is available
+  // _detectCompetitorPit(telem)  → needs multi-driver pit_stops delta
+  // _detectVSC(telem)            → needs track_status from SignalR / session
+  // _detectWeather(telem)        → needs weather=True in FastF1 session.load()
+
+  return events;
+}
+
+function _makeChip(ev, slideIn) {
+  const btn = document.createElement('button');
+  btn.dataset.chipKey = ev.key;
+  btn.dataset.query   = ev.query;
+  btn.className = 'spotter-chip';
+  btn.onclick = () => selectChip(btn);
+  ['tl','tr','bl','br'].forEach(pos => {
+    const d = document.createElement('div');
+    d.className = `scuderia-bracket-${pos}`;
+    btn.appendChild(d);
+  });
+  const span = document.createElement('span');
+  span.textContent = ev.label;
+  btn.appendChild(span);
+  if (slideIn) {
+    btn.style.opacity   = '0';
+    btn.style.transform = 'translateX(14px)';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      btn.style.opacity   = '1';
+      btn.style.transform = 'translateX(0)';
+    }));
   }
-
-  // Rotation extras
-  all.push(`How does ${first}'s tyre age compare to the cars immediately around him?`);
-  if (pos > 5)
-    all.push(`What would a perfect strategy recovery look like for ${first} from P${pos}?`);
-  all.push(`What does the 2026 MGU-K deployment rule mean for ${first}'s current situation?`);
-
-  return all;
+  return btn;
 }
 
-function updatePromptCards(telem) {
-  _promptSource = telem && telem.available ? 'live' : 'historical';
-  _promptPool   = _generatePrompts(telem);
-  const n = _promptPool.length;
-  _prompts[0]   = _promptPool[_poolOffset % n]       || '';
-  _prompts[1]   = _promptPool[(_poolOffset + 1) % n] || '';
-  _prompts[2]   = _promptPool[(_poolOffset + 2) % n] || '';
-  _poolOffset   = (_poolOffset + 3) % n;
-  _rotateIdx    = 0;
-  _renderCards();
+function _renderChips(events, animate) {
+  const row = document.getElementById('chip-row');
+  if (!row) return;
+  const prevKeys = new Set(_spotterEvents.map(e => e.key));
+  const newKeys  = new Set(events.map(e => e.key));
+  _spotterEvents = events;
+  if (!animate) {
+    row.innerHTML = '';
+    events.forEach(ev => row.appendChild(_makeChip(ev, false)));
+    return;
+  }
+  // Remove stale chips
+  row.querySelectorAll('[data-chip-key]').forEach(el => {
+    if (!newKeys.has(el.dataset.chipKey)) {
+      el.style.opacity   = '0';
+      el.style.transform = 'translateX(-8px)';
+      setTimeout(() => el.remove(), 260);
+    }
+  });
+  // Slide in new chips
+  events.forEach(ev => {
+    if (!prevKeys.has(ev.key)) row.appendChild(_makeChip(ev, true));
+  });
+}
+
+function updateSpotter(telem) {
+  _spotterSource = telem && telem.available ? 'live' : 'historical';
+  const events   = _detectEvents(telem);
+  const isFirst  = _spotterEvents.length === 0;
+  _renderChips(events, !isFirst);
   _updateSourceDot();
-  if (_rotateTimer) clearInterval(_rotateTimer);
-  // 20–30s random interval to avoid mechanical feel
-  const ms = 20000 + Math.floor(Math.random() * 10000);
-  _rotateTimer = setInterval(_rotateCard, ms);
-}
-
-function _rotateCard() {
-  if (_promptPool.length < 2) return;
-  _rotateIdx = (_rotateIdx + 1) % _promptPool.length;
-  const card = document.getElementById('prompt-card-2');
-  if (!card) return;
-  card.style.opacity   = '0';
-  card.style.transform = 'translateX(6px)';
-  setTimeout(() => {
-    _prompts[2] = _promptPool[_rotateIdx];
-    _renderCard(2);
-    card.style.transform = 'translateX(-6px)';
-    requestAnimationFrame(() => {
-      card.style.opacity   = '1';
-      card.style.transform = 'translateX(0)';
-    });
-  }, 250);
-}
-
-function _renderCards() {
-  for (let i = 0; i < 3; i++) _renderCard(i);
-}
-
-function _renderCard(i) {
-  const card = document.getElementById(`prompt-card-${i}`);
-  if (!card) return;
-  const el = card.querySelector('.prompt-text');
-  if (el) el.textContent = _prompts[i] || 'Loading race data...';
 }
 
 function _updateSourceDot() {
   const dot   = document.getElementById('prompt-source-dot');
   const label = document.getElementById('prompt-source-label');
   if (!dot || !label) return;
-  if (_promptSource === 'live') {
+  if (_spotterSource === 'live') {
     dot.style.backgroundColor = '#22c55e';
     dot.style.opacity = '1';
-    label.textContent = 'LIVE DATA · WATSONX ACTIVE';
-  } else if (_promptSource === 'historical') {
+    label.textContent = 'SPOTTER · LIVE DATA';
+  } else if (_spotterSource === 'historical') {
     dot.style.backgroundColor = '#f1c100';
     dot.style.opacity = '1';
-    label.textContent = 'SESSION DATA · WATSONX ACTIVE';
+    label.textContent = 'SPOTTER · SESSION DATA';
   } else {
     dot.style.backgroundColor = '#6b7280';
     dot.style.opacity = '0.6';
-    label.textContent = 'SCUDERIA AI · WATSONX ACTIVE';
+    label.textContent = 'SPOTTER · WATSONX ACTIVE';
   }
 }
 
-function selectPrompt(i) {
-  const text = _prompts[i];
-  if (!text || text === 'Loading race data...') return;
+function selectChip(el) {
+  const query = el.dataset.query;
+  if (!query) return;
   const input = document.getElementById('text-input');
-  input.value = text;
-  // Briefly highlight the tapped card
-  const card = document.getElementById(`prompt-card-${i}`);
-  if (card) {
-    card.style.borderColor       = '#dc0000';
-    card.style.backgroundColor   = '#3a2521';
-  }
-  // Show the text for ~900ms then auto-submit
+  input.value = query;
+  el.classList.add('chip-active');
   setTimeout(() => {
-    if (card) { card.style.borderColor = ''; card.style.backgroundColor = ''; }
+    el.classList.remove('chip-active');
     submitText();
   }, 900);
 }
@@ -1533,14 +1509,14 @@ function refreshPrompts() {
   showScreen('ready');
   fetch('/telemetry')
     .then(r => r.json())
-    .then(data => { updateTyreWidget(data); updatePromptCards(data); })
-    .catch(() => updatePromptCards(null));
+    .then(data => { updateTyreWidget(data); updateSpotter(data); })
+    .catch(() => updateSpotter(null));
 }
 
 // ── Startup ───────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
-  // Seed default prompts immediately while telemetry loads
-  updatePromptCards(null);
+  // Seed default chips immediately while telemetry loads
+  updateSpotter(null);
 
   fetch('/race-context', {
     method: 'POST',
