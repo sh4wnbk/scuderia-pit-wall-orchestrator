@@ -1731,6 +1731,8 @@ async function submitSync() {
       ['ctx-year','ready-year','response-year'].forEach(id => document.getElementById(id).textContent = year);
       ['ctx-race','ready-race','response-race','response-session-race'].forEach(id => document.getElementById(id).textContent = raceGP);
       ['ctx-driver','response-driver'].forEach(id => document.getElementById(id).textContent = driverName);
+      fetchTelemetry();
+      fetchPrompts();
       const status = document.getElementById('sync-status');
       status.classList.remove('hidden');
       setTimeout(() => { status.classList.add('hidden'); closeSync(); }, 1200);
