@@ -24,30 +24,7 @@
   .scuderia-bracket-bl { border-bottom: 2px solid #dc0000; border-left: 2px solid #dc0000; width: 8px; height: 8px; position: absolute; bottom: -1px; left: -1px; }
   .scuderia-bracket-br { border-bottom: 2px solid #dc0000; border-right: 2px solid #dc0000; width: 8px; height: 8px; position: absolute; bottom: -1px; right: -1px; }
 
-  /* Spotter event chips */
-  .spotter-chip {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    background: #2e1a17;
-    border: 1px solid #5e3f3a;
-    color: #ffdad5;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 7px 14px;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: border-color 0.15s ease, background-color 0.15s ease, opacity 0.25s ease, transform 0.25s ease;
-  }
-  .spotter-chip:hover { border-color: #dc0000; background: #3a2521; }
-  .spotter-chip.chip-active { border-color: #dc0000; background: #3a2521; }
-  #chip-row::-webkit-scrollbar { display: none; }
-
-  .bg-grid {
+.bg-grid {
     background-image: linear-gradient(to right, #1a0907 1px, transparent 1px),
                       linear-gradient(to bottom, #1a0907 1px, transparent 1px);
     background-size: 40px 40px;
@@ -375,16 +352,43 @@ tailwind.config = {
       </div>
     </section>
 
-    <!-- Spotter zone — source indicator + event chips + input -->
-    <div class="flex flex-col gap-2">
+    <!-- Spotter zone — source indicator + event cards + input -->
+    <div class="flex-1 flex flex-col gap-2 py-2">
 
       <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex items-center gap-2">
         <span id="prompt-source-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-on-surface-variant opacity-60"></span>
         <span id="prompt-source-label">SPOTTER · WATSONX ACTIVE</span>
       </p>
 
-      <!-- Spotter chips — horizontal scrollable, event-driven -->
-      <div id="chip-row" class="flex gap-2 overflow-x-auto pb-1" style="scrollbar-width:none;-ms-overflow-style:none;"></div>
+      <!-- Spotter cards — cards 0+1 stable, card 2 rotates through event pool -->
+      <div class="flex flex-col gap-2 flex-1 justify-center">
+
+        <div id="spotter-card-0" onclick="selectCard(0)"
+          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] transition-all duration-150 group">
+          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+          <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
+        </div>
+
+        <div id="spotter-card-1" onclick="selectCard(1)"
+          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] transition-all duration-150 group">
+          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+          <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
+        </div>
+
+        <div id="spotter-card-2" onclick="selectCard(2)"
+          class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] group"
+          style="transition:opacity 0.25s ease,transform 0.25s ease,border-color 0.15s,background-color 0.15s;">
+          <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+          <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+          <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
+        </div>
+
+      </div>
 
       <!-- Text input -->
       <div class="w-full flex gap-2">
@@ -1420,62 +1424,52 @@ function _detectEvents(telem) {
   return events;
 }
 
-function _makeChip(ev, slideIn) {
-  const btn = document.createElement('button');
-  btn.dataset.chipKey = ev.key;
-  btn.dataset.query   = ev.query;
-  btn.className = 'spotter-chip';
-  btn.onclick = () => selectChip(btn);
-  ['tl','tr','bl','br'].forEach(pos => {
-    const d = document.createElement('div');
-    d.className = `scuderia-bracket-${pos}`;
-    btn.appendChild(d);
-  });
-  const span = document.createElement('span');
-  span.textContent = ev.label;
-  btn.appendChild(span);
-  if (slideIn) {
-    btn.style.opacity   = '0';
-    btn.style.transform = 'translateX(14px)';
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      btn.style.opacity   = '1';
-      btn.style.transform = 'translateX(0)';
-    }));
-  }
-  return btn;
+let _cards       = ['', '', ''];
+let _spotterPool = [];
+let _rotateIdx   = 2;
+let _rotateTimer = null;
+
+function _renderCard(i) {
+  const card = document.getElementById(`spotter-card-${i}`);
+  if (!card) return;
+  const el = card.querySelector('.card-text');
+  if (el) el.textContent = _cards[i] || 'Loading race data...';
 }
 
-function _renderChips(events, animate) {
-  const row = document.getElementById('chip-row');
-  if (!row) return;
-  const prevKeys = new Set(_spotterEvents.map(e => e.key));
-  const newKeys  = new Set(events.map(e => e.key));
-  _spotterEvents = events;
-  if (!animate) {
-    row.innerHTML = '';
-    events.forEach(ev => row.appendChild(_makeChip(ev, false)));
-    return;
-  }
-  // Remove stale chips
-  row.querySelectorAll('[data-chip-key]').forEach(el => {
-    if (!newKeys.has(el.dataset.chipKey)) {
-      el.style.opacity   = '0';
-      el.style.transform = 'translateX(-8px)';
-      setTimeout(() => el.remove(), 260);
-    }
-  });
-  // Slide in new chips
-  events.forEach(ev => {
-    if (!prevKeys.has(ev.key)) row.appendChild(_makeChip(ev, true));
-  });
+function _renderAllCards() {
+  _renderCard(0); _renderCard(1); _renderCard(2);
+}
+
+function _rotateCard2() {
+  if (_spotterPool.length < 2) return;
+  _rotateIdx = (_rotateIdx + 1) % _spotterPool.length;
+  const card = document.getElementById('spotter-card-2');
+  if (!card) return;
+  card.style.opacity   = '0';
+  card.style.transform = 'translateX(6px)';
+  setTimeout(() => {
+    _cards[2] = _spotterPool[_rotateIdx]?.query || '';
+    _renderCard(2);
+    card.style.transform = 'translateX(-6px)';
+    requestAnimationFrame(() => {
+      card.style.opacity   = '1';
+      card.style.transform = 'translateX(0)';
+    });
+  }, 250);
 }
 
 function updateSpotter(telem) {
   _spotterSource = telem && telem.available ? 'live' : 'historical';
-  const events   = _detectEvents(telem);
-  const isFirst  = _spotterEvents.length === 0;
-  _renderChips(events, !isFirst);
+  _spotterPool   = _detectEvents(telem);
+  _cards[0]      = _spotterPool[0]?.query || '';
+  _cards[1]      = _spotterPool[1]?.query || '';
+  _cards[2]      = _spotterPool[2]?.query || '';
+  _rotateIdx     = 2;
+  _renderAllCards();
   _updateSourceDot();
+  if (_rotateTimer) clearInterval(_rotateTimer);
+  const ms = 20000 + Math.floor(Math.random() * 10000);
+  _rotateTimer = setInterval(_rotateCard2, ms);
 }
 
 function _updateSourceDot() {
@@ -1497,14 +1491,15 @@ function _updateSourceDot() {
   }
 }
 
-function selectChip(el) {
-  const query = el.dataset.query;
-  if (!query) return;
+function selectCard(i) {
+  const query = _cards[i];
+  if (!query || query === 'Loading race data...') return;
   const input = document.getElementById('text-input');
   input.value = query;
-  el.classList.add('chip-active');
+  const card = document.getElementById(`spotter-card-${i}`);
+  if (card) { card.style.borderColor = '#dc0000'; card.style.backgroundColor = '#3a2521'; }
   setTimeout(() => {
-    el.classList.remove('chip-active');
+    if (card) { card.style.borderColor = ''; card.style.backgroundColor = ''; }
     submitText();
   }, 900);
 }
