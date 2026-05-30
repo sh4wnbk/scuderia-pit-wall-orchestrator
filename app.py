@@ -372,16 +372,16 @@ def get_telemetry() -> dict:
         our_pos = telemetry.position or 0
         if our_pos > 0:
             our_row    = latest_per[latest_per["Driver"] == driver]
-            ahead_row  = latest_per[latest_per["Position"] == our_pos - 1]
-            behind_row = latest_per[latest_per["Position"] == our_pos + 1]
             our_t      = our_row.iloc[0].get("Time") if not our_row.empty else None
             our_lap_n  = our_row.iloc[0].get("LapNumber") if not our_row.empty else None
+            # Filter to same-lap only — retired drivers keep their last recorded position,
+            # which collides with finishers at the same position number.
+            same_lap   = latest_per[latest_per["LapNumber"] == our_lap_n] if our_lap_n is not None else latest_per
+            ahead_row  = same_lap[same_lap["Position"] == our_pos - 1]
+            behind_row = same_lap[same_lap["Position"] == our_pos + 1]
             if not ahead_row.empty and our_pos > 1:
                 a = ahead_row.iloc[0]
-                gap = None
-                if a.get("LapNumber") == our_lap_n:
-                    # gap = session-time difference at lap end (positive = we finished later = we're behind)
-                    gap = _fmt_interval(a.get("Time") - our_t if our_t is not None else None, "+")
+                gap = _fmt_interval(a.get("Time") - our_t if our_t is not None else None, "+")
                 rivals["ahead"] = {
                     "driver": str(a["Driver"]),
                     "gap": gap or "N/A",
@@ -389,9 +389,7 @@ def get_telemetry() -> dict:
                 }
             if not behind_row.empty:
                 b = behind_row.iloc[0]
-                gap = None
-                if b.get("LapNumber") == our_lap_n:
-                    gap = _fmt_interval(b.get("Time") - our_t if our_t is not None else None, "-")
+                gap = _fmt_interval(b.get("Time") - our_t if our_t is not None else None, "-")
                 rivals["behind"] = {
                     "driver": str(b["Driver"]),
                     "gap": gap or "N/A",
@@ -411,23 +409,25 @@ _PROMPTS_TTL_SECONDS = 30
 
 
 @app.get("/prompts")
-def get_prompts(current_lap: Optional[int] = None) -> dict:
+def get_prompts(current_lap: Optional[int] = None, lang: str = "en") -> dict:
     """
     Generate contextual race intel prompts from multi-lap analysis.
     Analyzes pace trends, tyre age, race control events, and nearby pit stops
-    over a 10-lap window. Cached for 30 seconds.
-    Pass current_lap to anchor the window for replay (e.g. ?current_lap=6).
+    over a 10-lap window. Cached for 30 seconds per (lap, lang) pair.
+    ?current_lap=N  — anchor window for replay
+    ?lang=it        — return Italian prompt text (trigger labels always English)
     """
     import fastf1
     from tools.prompt_engine import generate_prompts
 
     if current_lap is not None and current_lap <= 0:
         current_lap = None
+    lang = lang if lang in ("en", "it") else "en"
 
     strat = orchestrator._strat_agent
     year, race, driver = strat._race_year, strat._race_name, strat._driver
 
-    cache_key = f"{year}:{race}:{driver}:{current_lap or 'latest'}:prompts"
+    cache_key = f"{year}:{race}:{driver}:{current_lap or 'latest'}:{lang}:prompts"
     now = datetime.utcnow()
 
     if cache_key in _prompts_cache:
@@ -451,7 +451,7 @@ def get_prompts(current_lap: Optional[int] = None) -> dict:
     if session is None:
         return {"available": False, "prompts": [], "source": "none", "driver": driver}
 
-    prompts = generate_prompts(session, driver, current_lap=current_lap)
+    prompts = generate_prompts(session, driver, current_lap=current_lap, lang=lang)
 
     result = {
         "available": True,

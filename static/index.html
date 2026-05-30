@@ -1017,6 +1017,7 @@ function setLang(lang) {
   if (diagStt) diagStt.textContent = lang === 'it' ? 'Watson STT · IT-IT' : 'Watson STT · EN-US';
   const diagTts = document.getElementById('diag-tts');
   if (diagTts) diagTts.textContent = lang === 'it' ? 'Watson TTS · Francesca' : `Watson TTS · ${currentVoice[0].toUpperCase()+currentVoice.slice(1)}`;
+  fetchPrompts();
 }
 
 // ── Voice ─────────────────────────────────────────────────────────────────
@@ -1418,7 +1419,11 @@ function fetchTelemetry() {
 
 function fetchPrompts() {
   const lap = _lastTelem?.lap_number || null;
-  const url = lap ? `/prompts?current_lap=${lap}` : '/prompts';
+  const params = new URLSearchParams();
+  if (lap) params.set('current_lap', lap);
+  if (currentLang === 'it') params.set('lang', 'it');
+  const qs = params.toString();
+  const url = qs ? `/prompts?${qs}` : '/prompts';
   fetch(url)
     .then(r => r.json())
     .then(data => {

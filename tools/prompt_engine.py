@@ -24,10 +24,17 @@ COMPOUND_LIFE  = {"SOFT": 25, "MEDIUM": 35, "HARD": 50, "INTERMEDIATE": 40, "WET
 LAP_WINDOW = 10
 
 
-def generate_prompts(session, driver_code: str, current_lap: Optional[int] = None) -> list[dict]:
+def _t(en: str, it: str, lang: str) -> str:
+    return it if lang == "it" else en
+
+
+def generate_prompts(
+    session, driver_code: str, current_lap: Optional[int] = None, lang: str = "en"
+) -> list[dict]:
     """
     Returns up to 6 {text, trigger} dicts ordered by priority.
     Falls back to regulation prompts when no session data is available.
+    lang: "en" | "it" — governs prompt text only; trigger labels are always English.
     """
     try:
         try:
@@ -35,16 +42,16 @@ def generate_prompts(session, driver_code: str, current_lap: Optional[int] = Non
         except AttributeError:
             driver_laps = session.laps[session.laps["Driver"] == driver_code]
     except Exception:
-        return _fallback()
+        return _fallback(lang)
 
     if driver_laps.empty:
-        return _fallback()
+        return _fallback(lang)
 
     driver_laps = driver_laps.sort_values("LapNumber")
-    if current_lap is not None:
+    if current_lap:
         driver_laps = driver_laps[driver_laps["LapNumber"] <= current_lap]
         if driver_laps.empty:
-            return _fallback()
+            return _fallback(lang)
     latest  = driver_laps.iloc[-1]
     window  = driver_laps.tail(LAP_WINDOW)
 
@@ -60,10 +67,10 @@ def generate_prompts(session, driver_code: str, current_lap: Optional[int] = Non
     prompts: list[dict] = []
 
     # 1. Race control events
-    prompts.extend(_race_control_events(session, lap_num, first))
+    prompts.extend(_race_control_events(session, lap_num, first, lang))
 
     # 2. Nearby pit stops
-    prompts.extend(_nearby_pit_events(session, driver_code, position, lap_num, first))
+    prompts.extend(_nearby_pit_events(session, driver_code, position, lap_num, first, lang))
 
     # 3. Tyre cliff
     cliff   = COMPOUND_CLIFF.get(compound, 35)
@@ -71,29 +78,41 @@ def generate_prompts(session, driver_code: str, current_lap: Optional[int] = Non
     age_pct = round((tyre_age / life) * 100) if life else 0
     if tyre_age >= cliff:
         prompts.append({
-            "text":    f"{first}'s {compound}s are {tyre_age} laps in — is the cliff starting?",
+            "text": _t(
+                f"{first}'s {compound}s are {tyre_age} laps in — is the cliff starting?",
+                f"Le {compound} di {first} sono a {tyre_age} giri — il cliff è iniziato?",
+                lang,
+            ),
             "trigger": f"{L}TYRE AGE",
         })
     elif age_pct >= 65:
         prompts.append({
-            "text":    f"{compound}s at {age_pct}% — what's the box window from here?",
+            "text": _t(
+                f"{compound}s at {age_pct}% — what's the box window from here?",
+                f"{compound} all'{age_pct}% — qual è la finestra box da adesso?",
+                lang,
+            ),
             "trigger": f"{L}TYRE AGE",
         })
 
     # 4. Pace trend
-    pace_p = _pace_trend(window, first, L)
+    pace_p = _pace_trend(window, first, L, lang)
     if pace_p:
         prompts.append(pace_p)
 
     # 5. Position trend
-    pos_p = _position_trend(window, first, position, L)
+    pos_p = _position_trend(window, first, position, L, lang)
     if pos_p:
         prompts.append(pos_p)
 
     # 6. One-stop gamble (fill if short on prompts)
     if len(prompts) < 3 and (stint - 1) == 0 and lap_num > 20:
         prompts.append({
-            "text":    f"Still no stop at lap {lap_num} — going for the one-stop?",
+            "text": _t(
+                f"Still no stop at lap {lap_num} — going for the one-stop?",
+                f"Ancora nessun pit stop al giro {lap_num} — si punta alla sosta unica?",
+                lang,
+            ),
             "trigger": f"{L}NO STOP YET",
         })
 
@@ -101,19 +120,35 @@ def generate_prompts(session, driver_code: str, current_lap: Optional[int] = Non
     existing = {p["text"] for p in prompts}
     _fills = [
         {
-            "text":    f"P{position} — what moves are available over the next 5 laps?",
+            "text": _t(
+                f"P{position} — what moves are available over the next 5 laps?",
+                f"P{position} — che mosse ha {first} nei prossimi 5 giri?",
+                lang,
+            ),
             "trigger": f"{L}P{position}" if position else None,
         } if position else None,
         {
-            "text":    f"{first} on stint {stint} — any surprise strategy still on the table?",
+            "text": _t(
+                f"{first} on stint {stint} — any surprise strategy still on the table?",
+                f"{first} allo stint {stint} — c'è ancora una strategia a sorpresa sul tavolo?",
+                lang,
+            ),
             "trigger": f"{L}STINT {stint}",
         } if stint else None,
         {
-            "text":    f"{compound} management — can {first} hold position without a late stop?",
+            "text": _t(
+                f"{compound} management — can {first} hold position without a late stop?",
+                f"Gestione {compound} — {first} può tenere la posizione senza una sosta tardiva?",
+                lang,
+            ),
             "trigger": f"{L}TYRE MGMT",
         } if compound else None,
         {
-            "text":    f"What does the pitwall tell {first} at this stage of the race?",
+            "text": _t(
+                f"What does the pitwall tell {first} at this stage of the race?",
+                f"Cosa dice il pitwall a {first} in questa fase della gara?",
+                lang,
+            ),
             "trigger": f"{L}PIT WALL",
         },
     ]
@@ -129,7 +164,7 @@ def generate_prompts(session, driver_code: str, current_lap: Optional[int] = Non
 
 # ── Detectors ─────────────────────────────────────────────────────────────────
 
-def _race_control_events(session, current_lap: int, first: str) -> list[dict]:
+def _race_control_events(session, current_lap: int, first: str, lang: str = "en") -> list[dict]:
     prompts: list[dict] = []
     try:
         rc = getattr(session, "race_control_messages", None)
@@ -147,27 +182,47 @@ def _race_control_events(session, current_lap: int, first: str) -> list[dict]:
 
             if "VIRTUAL SAFETY CAR" in msg:
                 prompts.append({
-                    "text":    "VSC deployed — does a cheap stop compromise the strategy?",
+                    "text": _t(
+                        "VSC deployed — does a cheap stop compromise the strategy?",
+                        "Virtual Safety Car in pista — uno stop economico compromette la strategia?",
+                        lang,
+                    ),
                     "trigger": f"LAP {m_lap} · VSC",
                 })
             elif "SAFETY CAR DEPLOYED" in msg:
                 prompts.append({
-                    "text":    "Safety car out — should Ferrari pit this lap?",
+                    "text": _t(
+                        "Safety car out — should Ferrari pit this lap?",
+                        "Safety car in pista — Ferrari chiama ai box questo giro?",
+                        lang,
+                    ),
                     "trigger": f"LAP {m_lap} · SAFETY CAR",
                 })
             elif "SAFETY CAR IN THIS LAP" in msg:
                 prompts.append({
-                    "text":    "Safety car ending — is a late undercut still possible?",
+                    "text": _t(
+                        "Safety car ending — is a late undercut still possible?",
+                        "Safety car rientra — è ancora possibile un undercut tardivo?",
+                        lang,
+                    ),
                     "trigger": f"LAP {m_lap} · SC ENDING",
                 })
             elif "DRS ENABLED" in msg:
                 prompts.append({
-                    "text":    "DRS enabled — attack window opens now",
+                    "text": _t(
+                        "DRS enabled — attack window opens now",
+                        "DRS aperto — la finestra d'attacco si apre adesso",
+                        lang,
+                    ),
                     "trigger": f"LAP {m_lap} · DRS ENABLED",
                 })
             elif "DRIVE THROUGH PENALTY" in msg and "SERVED" not in msg:
                 prompts.append({
-                    "text":    f"Penalty issued — does this change the battle around {first}?",
+                    "text": _t(
+                        f"Penalty issued — does this change the battle around {first}?",
+                        f"Penalità comminata — cambia qualcosa nella battaglia intorno a {first}?",
+                        lang,
+                    ),
                     "trigger": f"LAP {m_lap} · PENALTY",
                 })
     except Exception:
@@ -176,7 +231,7 @@ def _race_control_events(session, current_lap: int, first: str) -> list[dict]:
 
 
 def _nearby_pit_events(
-    session, driver_code: str, our_pos: int, current_lap: int, first: str
+    session, driver_code: str, our_pos: int, current_lap: int, first: str, lang: str = "en"
 ) -> list[dict]:
     prompts: list[dict] = []
     try:
@@ -201,12 +256,20 @@ def _nearby_pit_events(
             ahead = bool(our_pos and p_pos and p_pos < our_pos)
             if ahead:
                 prompts.append({
-                    "text":    f"{drv} pitted from ahead — does {first} inherit the position or cover?",
+                    "text": _t(
+                        f"{drv} pitted from ahead — does {first} inherit the position or cover?",
+                        f"{drv} rientra da davanti — {first} eredita la posizione o copre?",
+                        lang,
+                    ),
                     "trigger": f"LAP {p_lap} · {drv} PIT",
                 })
             else:
                 prompts.append({
-                    "text":    f"{drv} pitted from behind — undercut threat or gap building?",
+                    "text": _t(
+                        f"{drv} pitted from behind — undercut threat or gap building?",
+                        f"{drv} rientra da dietro — minaccia undercut o gap in crescita?",
+                        lang,
+                    ),
                     "trigger": f"LAP {p_lap} · {drv} PIT",
                 })
             if len(prompts) >= 2:
@@ -216,7 +279,7 @@ def _nearby_pit_events(
     return prompts
 
 
-def _pace_trend(window: pd.DataFrame, first: str, L: str) -> Optional[dict]:
+def _pace_trend(window: pd.DataFrame, first: str, L: str, lang: str = "en") -> Optional[dict]:
     try:
         timed = window[window["LapTime"].notna()]
         if len(timed) < 4:
@@ -229,12 +292,20 @@ def _pace_trend(window: pd.DataFrame, first: str, L: str) -> Optional[dict]:
         slope = (late - early) / max(1, len(times) - 1)
         if slope > 0.3:
             return {
-                "text":    f"{first}'s lap times are dropping {slope:.1f}s/lap — managing or struggling?",
+                "text": _t(
+                    f"{first}'s lap times are dropping {slope:.1f}s/lap — managing or struggling?",
+                    f"I tempi di {first} calano di {slope:.1f}s/giro — gestione o problema reale?",
+                    lang,
+                ),
                 "trigger": f"{L}PACE TREND",
             }
         if slope < -0.25:
             return {
-                "text":    f"{first} improving {abs(slope):.1f}s/lap — what's driving the gain?",
+                "text": _t(
+                    f"{first} improving {abs(slope):.1f}s/lap — what's driving the gain?",
+                    f"{first} migliora di {abs(slope):.1f}s/giro — cosa sta guidando il recupero?",
+                    lang,
+                ),
                 "trigger": f"{L}PACE TREND",
             }
     except Exception:
@@ -243,7 +314,7 @@ def _pace_trend(window: pd.DataFrame, first: str, L: str) -> Optional[dict]:
 
 
 def _position_trend(
-    window: pd.DataFrame, first: str, current_pos: int, L: str
+    window: pd.DataFrame, first: str, current_pos: int, L: str, lang: str = "en"
 ) -> Optional[dict]:
     try:
         positions = window["Position"].dropna()
@@ -254,12 +325,20 @@ def _position_trend(
         delta     = first_pos - last_pos  # positive = gained places
         if delta >= 2:
             return {
-                "text":    f"{first} gained {delta} places in {len(positions)} laps — is this pace sustainable?",
+                "text": _t(
+                    f"{first} gained {delta} places in {len(positions)} laps — is this pace sustainable?",
+                    f"{first} ha guadagnato {delta} posizioni in {len(positions)} giri — il ritmo regge?",
+                    lang,
+                ),
                 "trigger": f"{L}POSITIONS GAINED",
             }
         if delta <= -2:
             return {
-                "text":    f"{first} dropped {abs(delta)} places — tyre drop-off or traffic?",
+                "text": _t(
+                    f"{first} dropped {abs(delta)} places — tyre drop-off or traffic?",
+                    f"{first} ha perso {abs(delta)} posizioni — degrado gomme o traffico?",
+                    lang,
+                ),
                 "trigger": f"{L}POSITIONS LOST",
             }
     except Exception:
@@ -277,7 +356,13 @@ def _driver_name(session, driver_code: str) -> str:
         return driver_code
 
 
-def _fallback() -> list[dict]:
+def _fallback(lang: str = "en") -> list[dict]:
+    if lang == "it":
+        return [
+            {"text": "Ferrari sulle reg 2026 — qual è il vantaggio dell'MGU-K sui rettilinei?", "trigger": None},
+            {"text": "Z-Mode vs X-Mode — quando cambia la Ferrari durante la gara?",             "trigger": None},
+            {"text": "Reg gomme 2026 — quante mescole deve usare la Ferrari?",                  "trigger": None},
+        ]
     return [
         {"text": "Ferrari on 2026 regs — what's the MGU-K advantage on straights?", "trigger": None},
         {"text": "Z-Mode vs X-Mode — when does Ferrari switch during the race?",     "trigger": None},
