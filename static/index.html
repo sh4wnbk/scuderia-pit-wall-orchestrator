@@ -1373,6 +1373,7 @@ function fetchTelemetry() {
 // ── Contextual Prompt Cards ───────────────────────────────────────────────────
 let _prompts       = ['', '', ''];
 let _promptPool    = [];
+let _poolOffset    = 0;
 let _rotateIdx     = 0;
 let _rotateTimer   = null;
 let _promptSource  = 'none';
@@ -1448,9 +1449,11 @@ function _generatePrompts(telem) {
 function updatePromptCards(telem) {
   _promptSource = telem && telem.available ? 'live' : 'historical';
   _promptPool   = _generatePrompts(telem);
-  _prompts[0]   = _promptPool[0] || '';
-  _prompts[1]   = _promptPool[1] || '';
-  _prompts[2]   = _promptPool[2] || '';
+  const n = _promptPool.length;
+  _prompts[0]   = _promptPool[_poolOffset % n]       || '';
+  _prompts[1]   = _promptPool[(_poolOffset + 1) % n] || '';
+  _prompts[2]   = _promptPool[(_poolOffset + 2) % n] || '';
+  _poolOffset   = (_poolOffset + 3) % n;
   _rotateIdx    = 0;
   _renderCards();
   _updateSourceDot();
@@ -1461,16 +1464,14 @@ function updatePromptCards(telem) {
 }
 
 function _rotateCard() {
-  const pool = _promptPool.slice(2);
-  if (pool.length < 2) return;
-  _rotateIdx = (_rotateIdx + 1) % pool.length;
+  if (_promptPool.length < 2) return;
+  _rotateIdx = (_rotateIdx + 1) % _promptPool.length;
   const card = document.getElementById('prompt-card-2');
   if (!card) return;
-  // Fade + slight slide out
   card.style.opacity   = '0';
   card.style.transform = 'translateX(6px)';
   setTimeout(() => {
-    _prompts[2] = pool[_rotateIdx];
+    _prompts[2] = _promptPool[_rotateIdx];
     _renderCard(2);
     card.style.transform = 'translateX(-6px)';
     requestAnimationFrame(() => {
