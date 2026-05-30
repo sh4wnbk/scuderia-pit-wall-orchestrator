@@ -1017,7 +1017,7 @@ function setLang(lang) {
   if (diagStt) diagStt.textContent = lang === 'it' ? 'Watson STT · IT-IT' : 'Watson STT · EN-US';
   const diagTts = document.getElementById('diag-tts');
   if (diagTts) diagTts.textContent = lang === 'it' ? 'Watson TTS · Francesca' : `Watson TTS · ${currentVoice[0].toUpperCase()+currentVoice.slice(1)}`;
-  fetchPrompts();
+  fetchPrompts(true);
 }
 
 // ── Voice ─────────────────────────────────────────────────────────────────
@@ -1417,7 +1417,7 @@ function fetchTelemetry() {
     .catch(err => console.warn('[Pit-Wall] telemetry:', err));
 }
 
-function fetchPrompts() {
+function fetchPrompts(force = false) {
   const lap = _lastTelem?.lap_number || null;
   const params = new URLSearchParams();
   if (lap) params.set('current_lap', lap);
@@ -1431,8 +1431,7 @@ function fetchPrompts() {
       _spotterSource = data.source || 'historical';
       _spotterPool   = data.prompts;
       _updateSourceDot();
-      if (_queue.length === 0) {
-        // First seed — use _nextEvent so all three cards are distinct
+      if (_queue.length === 0 || force) {
         _queue = []; _poolCursor = 0;
         for (let i = 0; i < 3; i++) _queue.push(_nextEvent() || { text: '', trigger: null });
         _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
