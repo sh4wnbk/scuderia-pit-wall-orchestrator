@@ -287,6 +287,9 @@ def get_prompts(current_lap: Optional[int] = None) -> dict:
     import fastf1
     from tools.prompt_engine import generate_prompts
 
+    if current_lap is not None and current_lap <= 0:
+        current_lap = None
+
     strat = orchestrator._strat_agent
     year, race, driver = strat._race_year, strat._race_name, strat._driver
 
