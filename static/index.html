@@ -930,6 +930,7 @@ let recWaveInterval = null;
 let ttsWaveInterval = null;
 let lastQuery       = '';
 let syncDriverCode  = 'LEC';
+let syncRaceName    = 'Miami'; // original case — display uses toUpperCase() but backend needs title case
 
 const RACES_2026 = [
   'Bahrain','Saudi Arabia','Australia','Japan','China','Miami',
@@ -1682,6 +1683,8 @@ document.addEventListener('mouseleave', () => { spotlight.style.background = '';
 // ── SYNC ──────────────────────────────────────────────────────
 function openSync() {
   const year = parseInt(document.getElementById('ctx-year').textContent.trim()) || 2026;
+  const ctxRace = document.getElementById('ctx-race').textContent.trim().replace(/ GP$/, '');
+  syncRaceName = ctxRace; // may be uppercase from ctx-race; backend normalizes with .title()
   document.getElementById('sync-year-display').textContent   = year;
   document.getElementById('sync-race-display').textContent   = document.getElementById('ctx-race').textContent.trim();
   document.getElementById('sync-driver-display').textContent = document.getElementById('ctx-driver').textContent.trim();
@@ -1733,6 +1736,7 @@ function closeSheet(type) {
 }
 
 function selectRace(race) {
+  syncRaceName = race;
   document.getElementById('sync-race-display').textContent = race.toUpperCase() + ' GP';
   closeSheet('race');
 }
@@ -1745,7 +1749,7 @@ function selectDriver(name, code) {
 
 async function submitSync() {
   const year   = parseInt(document.getElementById('sync-year-display').textContent) || 2026;
-  const race   = document.getElementById('sync-race-display').textContent.trim().replace(/ GP$/, '');
+  const race   = syncRaceName || document.getElementById('sync-race-display').textContent.trim().replace(/ GP$/, '');
   const driver = syncDriverCode;
   if (!race || !driver) return;
   try {

@@ -90,15 +90,17 @@ def healthcheck() -> dict:
 
 @app.post("/race-context")
 def set_race_context(payload: RaceContextRequest) -> dict:
+    # Normalize race name — SYNC panel sends uppercase display text (e.g. "MIAMI")
+    race = payload.race.strip().title()
     orchestrator.set_race_context(
         year=payload.year,
-        race=payload.race,
+        race=race,
         driver=payload.driver,
     )
     return {
         "status": "updated",
         "year": payload.year,
-        "race": payload.race,
+        "race": race,
         "driver": payload.driver,
     }
 
