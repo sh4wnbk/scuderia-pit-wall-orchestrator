@@ -945,8 +945,8 @@ const DRIVERS_2026 = [
 ];
 
 // Year-aware roster + schedule caches (pre-seeded with 2026 hardcoded data)
-let _scheduleCache = { 2026: RACES_2026 };
-let _driversCache  = { 2026: DRIVERS_2026 };
+let _scheduleCache = {};                      // always fetch from FastF1
+let _driversCache  = { 2026: DRIVERS_2026 }; // drivers curated; schedule is not
 
 async function _prefetchYear(year) {
   const needSched  = !_scheduleCache[year];
