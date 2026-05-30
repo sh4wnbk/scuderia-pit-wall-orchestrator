@@ -171,6 +171,62 @@ def timing_status() -> dict:
     return _live_collector.get_status()
 
 
+# ── Schedule + Drivers ────────────────────────────────────────────────────────
+
+@app.get("/schedule")
+def get_schedule(year: int = 2026) -> dict:
+    """Return the F1 race calendar for a given year, names normalised to app format."""
+    if year in _schedule_cache:
+        return _schedule_cache[year]
+    try:
+        import fastf1
+        sched = fastf1.get_event_schedule(year, include_testing=False)
+        races = []
+        for _, ev in sched.iterrows():
+            ff1_short = str(ev.get("EventName", "")).replace(" Grand Prix", "").strip()
+            races.append(_FF1_TO_APP.get(ff1_short, ff1_short))
+        result = {"year": year, "races": races}
+    except Exception as e:
+        result = {"year": year, "races": [], "error": str(e)}
+    _schedule_cache[year] = result
+    return result
+
+
+@app.get("/drivers")
+def get_drivers(year: int = 2026) -> dict:
+    """Return the driver roster for a given year. Curated for 2023–2026, FastF1 fallback otherwise."""
+    if year in _drivers_cache:
+        return _drivers_cache[year]
+    if year in _DRIVERS_BY_YEAR:
+        result = {"year": year, "drivers": _DRIVERS_BY_YEAR[year]}
+        _drivers_cache[year] = result
+        return result
+    # FastF1 fallback — load first available race session to read results
+    try:
+        import fastf1
+        sched = fastf1.get_event_schedule(year, include_testing=False)
+        drivers: list[dict] = []
+        for _, ev in sched.iterrows():
+            try:
+                s = fastf1.get_session(year, str(ev.get("EventName", "")), "R")
+                s.load(telemetry=False, weather=False, messages=False)
+                if not s.results.empty:
+                    drivers = [
+                        {"name": str(r["Abbreviation"]), "code": str(r["Abbreviation"]),
+                         "team": str(r.get("TeamName", ""))}
+                        for _, r in s.results.iterrows()
+                        if str(r.get("Abbreviation", ""))
+                    ]
+                    break
+            except Exception:
+                continue
+        result = {"year": year, "drivers": drivers}
+    except Exception as e:
+        result = {"year": year, "drivers": [], "error": str(e)}
+    _drivers_cache[year] = result
+    return result
+
+
 # ── Telemetry ─────────────────────────────────────────────────────────────────
 
 def _fmt_interval(val, sign: str = "+") -> Optional[str]:
@@ -216,6 +272,25 @@ _FASTF1_RACE_NAME_MAP: dict[str, str] = {
     "Brazil":        "São Paulo",
     "Qatar":         "Qatar",
 }
+
+# Reverse map: FastF1 short name → app name (for schedule parsing)
+_FF1_TO_APP: dict[str, str] = {v: k for k, v in _FASTF1_RACE_NAME_MAP.items()}
+
+# Ferrari driver roster by year — instant lookup for demo years
+_DRIVERS_BY_YEAR: dict[int, list[dict]] = {
+    2026: [{"name": "LECLERC", "code": "LEC", "team": "Ferrari"},
+           {"name": "HAMILTON", "code": "HAM", "team": "Ferrari"}],
+    2025: [{"name": "LECLERC", "code": "LEC", "team": "Ferrari"},
+           {"name": "SAINZ",   "code": "SAI", "team": "Ferrari"}],
+    2024: [{"name": "LECLERC", "code": "LEC", "team": "Ferrari"},
+           {"name": "HAMILTON", "code": "HAM", "team": "Mercedes"},
+           {"name": "SAINZ",   "code": "SAI", "team": "Ferrari"}],
+    2023: [{"name": "LECLERC", "code": "LEC", "team": "Ferrari"},
+           {"name": "SAINZ",   "code": "SAI", "team": "Ferrari"}],
+}
+
+_schedule_cache: dict[int, dict] = {}
+_drivers_cache:  dict[int, dict] = {}
 
 
 @app.get("/telemetry")

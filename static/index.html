@@ -943,6 +943,22 @@ const DRIVERS_2026 = [
   {name:'LECLERC',    code:'LEC', team:'Ferrari'},
   {name:'HAMILTON',   code:'HAM', team:'Ferrari'},
 ];
+
+// Year-aware roster + schedule caches (pre-seeded with 2026 hardcoded data)
+let _scheduleCache = { 2026: RACES_2026 };
+let _driversCache  = { 2026: DRIVERS_2026 };
+
+async function _prefetchYear(year) {
+  const needSched  = !_scheduleCache[year];
+  const needDrivers = !_driversCache[year];
+  if (!needSched && !needDrivers) return;
+  const [sched, drvs] = await Promise.all([
+    needSched   ? fetch(`/schedule?year=${year}`).then(r => r.json()).catch(() => null) : null,
+    needDrivers ? fetch(`/drivers?year=${year}`).then(r => r.json()).catch(() => null)  : null,
+  ]);
+  if (sched?.races?.length)   _scheduleCache[year] = sched.races;
+  if (drvs?.drivers?.length)  _driversCache[year]  = drvs.drivers;
+}
 // ── Utility functions ─────────────────────────────────────────────────────
 function formatSource(raw) {
   const s = raw.replace(/_/g, ' ').replace(/^Source:\s*/i, '').replace(/\s*—.*$/, '').trim();
@@ -1665,11 +1681,13 @@ document.addEventListener('mouseleave', () => { spotlight.style.background = '';
 
 // ── SYNC ──────────────────────────────────────────────────────
 function openSync() {
-  document.getElementById('sync-year-display').textContent   = document.getElementById('ctx-year').textContent.trim();
+  const year = parseInt(document.getElementById('ctx-year').textContent.trim()) || 2026;
+  document.getElementById('sync-year-display').textContent   = year;
   document.getElementById('sync-race-display').textContent   = document.getElementById('ctx-race').textContent.trim();
   document.getElementById('sync-driver-display').textContent = document.getElementById('ctx-driver').textContent.trim();
   document.getElementById('sync-status').classList.add('hidden');
   document.getElementById('syncPanel').classList.add('open');
+  _prefetchYear(year); // warm cache so sheets open instantly
 }
 
 function closeSync() {
@@ -1678,22 +1696,34 @@ function closeSync() {
 
 function adjustYear(delta) {
   const el = document.getElementById('sync-year-display');
-  el.textContent = parseInt(el.textContent) + delta;
+  const newYear = Math.max(2018, Math.min(2026, parseInt(el.textContent) + delta));
+  if (newYear === parseInt(el.textContent)) return;
+  el.textContent = newYear;
+  // Reset selections — they may not exist in the new year's calendar
+  document.getElementById('sync-race-display').textContent   = 'SELECT';
+  document.getElementById('sync-driver-display').textContent = 'SELECT';
+  syncDriverCode = '';
+  _prefetchYear(newYear);
 }
 
 function openSheet(type) {
+  const year = parseInt(document.getElementById('sync-year-display').textContent) || 2026;
   if (type === 'race') {
-    document.getElementById('race-list').innerHTML = RACES_2026.map(r =>
+    const races = _scheduleCache[year] || ['Loading…'];
+    document.getElementById('race-list').innerHTML = races.map(r =>
       `<button onclick="selectRace('${r}')" class="w-full text-left px-margin-md py-3 text-label-caps font-label-caps text-on-surface hover:bg-surface-container-high hover:text-primary-container border-b border-outline-variant transition-colors">${r.toUpperCase()} GP</button>`
     ).join('');
     document.getElementById('raceSheet').classList.add('open');
   } else {
-    document.getElementById('driver-list').innerHTML = DRIVERS_2026.map(d =>
-      `<button onclick="selectDriver('${d.name}','${d.code}')" class="w-full text-left px-margin-md py-3 border-b border-outline-variant hover:bg-surface-container-high transition-colors flex justify-between items-center">
-        <span class="text-label-caps font-label-caps text-on-surface">${d.name}</span>
-        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">${d.team}</span>
-      </button>`
-    ).join('');
+    const drivers = _driversCache[year] || [];
+    document.getElementById('driver-list').innerHTML = drivers.length
+      ? drivers.map(d =>
+          `<button onclick="selectDriver('${d.name}','${d.code}')" class="w-full text-left px-margin-md py-3 border-b border-outline-variant hover:bg-surface-container-high transition-colors flex justify-between items-center">
+            <span class="text-label-caps font-label-caps text-on-surface">${d.name}</span>
+            <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">${d.team}</span>
+          </button>`
+        ).join('')
+      : `<p class="px-margin-md py-3 text-label-caps font-label-caps text-on-surface-variant text-[10px]">Loading drivers…</p>`;
     document.getElementById('driverSheet').classList.add('open');
   }
 }
