@@ -355,9 +355,19 @@ tailwind.config = {
     <!-- Spotter zone — source indicator + event cards + input -->
     <div class="flex-1 flex flex-col gap-2 py-2">
 
-      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex items-center gap-2">
+      <div class="flex justify-center items-end h-5 mb-0.5" id="waveform">
+        <div class="waveform-bar" style="height:6px;"></div>
+        <div class="waveform-bar" style="height:10px;"></div>
+        <div class="waveform-bar" style="height:5px;"></div>
+        <div class="waveform-bar" style="height:12px;"></div>
+        <div class="waveform-bar" style="height:7px;"></div>
+        <div class="waveform-bar" style="height:14px;"></div>
+        <div class="waveform-bar" style="height:9px;"></div>
+        <div class="waveform-bar" style="height:6px;"></div>
+      </div>
+      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex items-center justify-center gap-2">
         <span id="prompt-source-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-on-surface-variant opacity-60"></span>
-        <span id="prompt-source-label">SPOTTER · WATSONX ACTIVE</span>
+        <span id="prompt-source-label">RACE INTEL · WATSONX ACTIVE</span>
       </p>
 
       <!-- Spotter cards — cards 0+1 stable, card 2 rotates through event pool -->
@@ -1366,9 +1376,9 @@ const _TYRE_LIFE = { SOFT:25, MEDIUM:35, HARD:50, INTERMEDIATE:40, WET:40 };
 function _detectEvents(telem) {
   if (!telem || !telem.available) {
     return [
-      { key:'reg-mgu',  label:'2026 MGU-K rules?',  query:'How does the 2026 MGU-K deployment rule change overtaking strategy on high-speed straights?' },
-      { key:'reg-aero', label:'Z-Mode vs X-Mode?',  query:'What is the strategic trade-off between Z-Mode and X-Mode under the 2026 active aerodynamics regulations?' },
-      { key:'reg-tyre', label:'2026 tyre regs?',    query:'What do the 2026 technical regulations say about tyre usage and mandatory compound rules in a race?' },
+      { key:'reg-mgu',  text:"Ferrari on 2026 regs — what's the MGU-K advantage on straights?" },
+      { key:'reg-aero', text:'Z-Mode vs X-Mode — when does Ferrari switch during the race?' },
+      { key:'reg-tyre', text:'2026 tyre rules — how many compounds must Ferrari use?' },
     ];
   }
 
@@ -1388,33 +1398,35 @@ function _detectEvents(telem) {
 
   // Tyre event
   if (agePct >= 80)
-    events.push({ key:'tyre-cliff', label:`${compound}s past the cliff?`,
-      query:`${first}'s ${compound} tyres are ${age} laps old — past the degradation cliff. Is the drop-off visible in sector times and should Ferrari box immediately?` });
+    events.push({ key:'tyre-cliff',
+      text:`${first}'s ${compound}s are ${age} laps in — is the cliff starting?` });
   else if (agePct >= 65)
-    events.push({ key:'tyre-window', label:`Time to box ${first}?`,
-      query:`${first} is ${age} laps into the ${compound} at ${agePct}% of expected life. What's the optimal pit window given current track position?` });
+    events.push({ key:'tyre-window',
+      text:`${compound}s at ${agePct}% — what's the box window from here?` });
   else if (pits === 0 && lap > 20)
-    events.push({ key:'one-stop', label:'Going for the one-stop?',
-      query:`${first} has not pitted at lap ${lap}. Is a one-stop strategy viable from here, and what tyre life target does it require?` });
+    events.push({ key:'one-stop',
+      text:`Still no stop at lap ${lap} — going for the one-stop?` });
 
   // Gap / attack event
   if (!isNaN(intNum) && intNum < 1.0)
-    events.push({ key:'drs', label:'DRS window — attack?',
-      query:`${first} is ${interval} behind the car ahead — inside DRS range. Should Ferrari push for the overtake now or hold for the pit sequence?` });
+    events.push({ key:'drs',
+      text:`DRS range — attack now or hold for the pit window?` });
   else if (!isNaN(intNum) && intNum < 2.5)
-    events.push({ key:'undercut', label:`Undercut from ${interval}?`,
-      query:`${first} is ${interval} behind. Does an undercut work at this gap, or is holding track position and managing tyres the stronger call?` });
+    events.push({ key:'undercut',
+      text:`+${interval} behind — does an undercut work here?` });
   else if (pos > 0)
-    events.push({ key:'position', label:`P${pos} — what's the call?`,
-      query:`${first} is running P${pos} at lap ${lap}. What strategic options are open over the next five laps — push, manage, or cover?` });
+    events.push({ key:'position',
+      text:`P${pos} — what moves are available over the next 5 laps?` });
 
   // Pace event
-  if (pace != null && pace > 0.5)
-    events.push({ key:'pace-drop', label:`${Math.abs(pace).toFixed(1)}s pace drop — why?`,
-      query:`${first} dropped ${Math.abs(pace).toFixed(2)}s this lap vs recent pace. Tyre drop-off, lockup, or traffic? What should the team prioritise?` });
-  else if (pace != null && pace < -0.4)
-    events.push({ key:'pace-gain', label:`${first} on a charge`,
-      query:`${first} found ${Math.abs(pace).toFixed(2)}s this lap. What's driving the improvement — tyre phase, clear air, or fuel load? Is it sustainable?` });
+  if (pace != null && Math.abs(pace) <= 10) {
+    if (pace > 0.5)
+      events.push({ key:'pace-drop',
+        text:`${first} dropped ${Math.abs(pace).toFixed(1)}s — tyre drop or traffic?` });
+    else if (pace < -0.4)
+      events.push({ key:'pace-gain',
+        text:`${first} found ${Math.abs(pace).toFixed(1)}s — what triggered the improvement?` });
+  }
 
   // Stubs — wired post-submission when data is available
   // _detectCompetitorPit(telem)  → needs multi-driver pit_stops delta
@@ -1448,7 +1460,7 @@ function _rotateCard2() {
   card.style.opacity   = '0';
   card.style.transform = 'translateX(6px)';
   setTimeout(() => {
-    _cards[2] = _spotterPool[_rotateIdx]?.query || '';
+    _cards[2] = _spotterPool[_rotateIdx]?.text || '';
     _renderCard(2);
     card.style.transform = 'translateX(-6px)';
     requestAnimationFrame(() => {
@@ -1461,9 +1473,9 @@ function _rotateCard2() {
 function updateSpotter(telem) {
   _spotterSource = telem && telem.available ? 'live' : 'historical';
   _spotterPool   = _detectEvents(telem);
-  _cards[0]      = _spotterPool[0]?.query || '';
-  _cards[1]      = _spotterPool[1]?.query || '';
-  _cards[2]      = _spotterPool[2]?.query || '';
+  _cards[0]      = _spotterPool[0]?.text || '';
+  _cards[1]      = _spotterPool[1]?.text || '';
+  _cards[2]      = _spotterPool[2]?.text || '';
   _rotateIdx     = 2;
   _renderAllCards();
   _updateSourceDot();
@@ -1479,15 +1491,15 @@ function _updateSourceDot() {
   if (_spotterSource === 'live') {
     dot.style.backgroundColor = '#22c55e';
     dot.style.opacity = '1';
-    label.textContent = 'SPOTTER · LIVE DATA';
+    label.textContent = 'RACE INTEL · LIVE DATA';
   } else if (_spotterSource === 'historical') {
     dot.style.backgroundColor = '#f1c100';
     dot.style.opacity = '1';
-    label.textContent = 'SPOTTER · SESSION DATA';
+    label.textContent = 'RACE INTEL · SESSION DATA';
   } else {
     dot.style.backgroundColor = '#6b7280';
     dot.style.opacity = '0.6';
-    label.textContent = 'SPOTTER · WATSONX ACTIVE';
+    label.textContent = 'RACE INTEL · WATSONX ACTIVE';
   }
 }
 
