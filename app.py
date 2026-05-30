@@ -268,3 +268,60 @@ def get_telemetry() -> dict:
 
     _telemetry_cache[cache_key] = (now, result)
     return result
+
+
+# ── Prompts ───────────────────────────────────────────────────────────────────
+
+_prompts_cache: dict[str, tuple[datetime, dict]] = {}
+_PROMPTS_TTL_SECONDS = 30
+
+
+@app.get("/prompts")
+def get_prompts() -> dict:
+    """
+    Generate contextual race intel prompts from multi-lap analysis.
+    Analyzes pace trends, tyre age, race control events, and nearby pit stops
+    over a 10-lap window. Cached for 30 seconds.
+    """
+    import fastf1
+    from tools.prompt_engine import generate_prompts
+
+    strat = orchestrator._strat_agent
+    year, race, driver = strat._race_year, strat._race_name, strat._driver
+
+    cache_key = f"{year}:{race}:{driver}:prompts"
+    now = datetime.utcnow()
+
+    if cache_key in _prompts_cache:
+        cached_at, cached_data = _prompts_cache[cache_key]
+        if (now - cached_at) < timedelta(seconds=_PROMPTS_TTL_SECONDS):
+            return cached_data
+
+    f1_race = _FASTF1_RACE_NAME_MAP.get(race, race)
+
+    session = None
+    for st in _SESSION_PRIORITY:
+        try:
+            s = fastf1.get_session(year, f1_race, st)
+            s.load(telemetry=False, weather=False, messages=True)
+            if not s.laps.empty:
+                session = s
+                break
+        except Exception:
+            continue
+
+    if session is None:
+        return {"available": False, "prompts": [], "source": "none", "driver": driver}
+
+    prompts = generate_prompts(session, driver)
+
+    result = {
+        "available": True,
+        "prompts":   prompts,
+        "source":    "historical",
+        "driver":    driver,
+        "race":      race,
+        "year":      year,
+    }
+    _prompts_cache[cache_key] = (now, result)
+    return result

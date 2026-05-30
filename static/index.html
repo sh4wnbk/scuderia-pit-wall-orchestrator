@@ -1371,9 +1371,31 @@ function fetchTelemetry() {
     .then(r => r.json())
     .then(data => {
       updateTyreWidget(data);
-      updateSpotter(data);
+      // Seed client-side fallback if /prompts hasn't populated queue yet
+      if (_queue.length === 0) updateSpotter(data);
     })
     .catch(err => console.warn('[Pit-Wall] telemetry:', err));
+}
+
+function fetchPrompts() {
+  fetch('/prompts')
+    .then(r => r.json())
+    .then(data => {
+      if (!data.available || !data.prompts?.length) return;
+      _spotterSource = data.source || 'historical';
+      _spotterPool   = data.prompts;
+      _updateSourceDot();
+      if (_queue.length === 0) {
+        // First seed from server
+        const n = _spotterPool.length;
+        _queue = [0, 1, 2].map(i => _spotterPool[i % n] || { text: '', trigger: null });
+        _poolCursor = Math.min(3, n) % Math.max(1, n);
+        _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
+      }
+      if (_shiftTimer) clearInterval(_shiftTimer);
+      _shiftTimer = setInterval(_shiftQueue, 30000);
+    })
+    .catch(() => {}); // silent — client-side detection is the fallback
 }
 
 // ── Spotter Agent — event-driven chips ───────────────────────────────────────
@@ -1572,10 +1594,11 @@ function selectCard(i) {
 
 function refreshPrompts() {
   showScreen('ready');
-  fetch('/telemetry')
-    .then(r => r.json())
-    .then(data => { updateTyreWidget(data); updateSpotter(data); })
-    .catch(() => updateSpotter(null));
+  fetch('/telemetry').then(r => r.json()).then(data => {
+    updateTyreWidget(data);
+    if (_queue.length === 0) updateSpotter(data);
+  }).catch(() => {});
+  fetchPrompts();
 }
 
 // ── Startup ───────────────────────────────────────────────────────────────
@@ -1596,7 +1619,9 @@ window.addEventListener('load', () => {
         document.getElementById('ctx-driver').textContent = data.driver === 'LEC' ? 'LECLERC' : data.driver;
       }
       fetchTelemetry();
+      fetchPrompts();
       setInterval(fetchTelemetry, 60000);
+      setInterval(fetchPrompts, 60000);
     })
     .catch(err => console.error('[Pit-Wall] race context:', err));
 });
