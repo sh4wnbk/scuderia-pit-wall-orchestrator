@@ -205,12 +205,32 @@ curl -X POST http://localhost:8080/process \
 curl http://localhost:8080/telemetry
 ```
 
+### FastF1 session cache
+
+Telemetry and prompt cards require FastF1 race session data. The Docker image ships with pre-bundled sessions — these races load immediately on cold start with no API calls:
+
+| Race | Year | Notes |
+|---|---|---|
+| Miami GP | 2026 | Default — pinned in Cloud Run env |
+| Canadian GP | 2026 | Current season, LEC + HAM Ferrari |
+| Italian GP (Monza) | 2024 | Race control messages included |
+| Azerbaijan GP | 2024 | Late-race position chaos |
+| Bahrain GP | 2022, 2024 | SYNC coverage |
+
+**Switching to any other race** via the SYNC panel triggers a live download from the FastF1 API at request time (~20–60 seconds). This is unreliable in the Cloud Run environment — the first request may return empty data. To pre-bundle an additional race, fetch it locally and commit the session pkl files (~1–2 MB per race):
+
+```python
+import fastf1
+fastf1.Cache.enable_cache('./fastf1_cache')
+fastf1.get_session(2024, 'Monaco', 'R').load(telemetry=False, weather=False, messages=True)
+```
+
+Then `git add fastf1_cache/... && git commit && git push`.
+
 For IBM Cloud Code Engine deployment details:
 
 - [`docs/08_ibm_cloud_migration.md`](./docs/08_ibm_cloud_migration.md)
 - [`docs/09_code_engine_cicd_and_secrets.md`](./docs/09_code_engine_cicd_and_secrets.md)
-
-The demo indexes a sample FIA regulation document, sets race context to Bahrain 2024 tracking Leclerc, and processes the query: *"Why did Leclerc just lift on the straight? Is the MGU-K failing?"*
 
 ---
 
