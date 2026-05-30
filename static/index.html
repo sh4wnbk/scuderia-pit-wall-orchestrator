@@ -377,7 +377,10 @@ tailwind.config = {
           class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] transition-all duration-150 group">
           <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
           <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-          <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <div class="pr-6">
+            <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug">Loading race data...</p>
+            <p class="card-trigger font-label-caps text-on-surface-variant mt-1" style="font-size:9px;letter-spacing:0.06em;display:none;"></p>
+          </div>
           <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
         </div>
 
@@ -385,7 +388,10 @@ tailwind.config = {
           class="bg-surface-container border border-outline-variant px-margin-md py-3 relative cursor-pointer hover:border-primary-container hover:bg-surface-container-high active:scale-[0.98] transition-all duration-150 group">
           <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
           <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-          <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <div class="pr-6">
+            <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug">Loading race data...</p>
+            <p class="card-trigger font-label-caps text-on-surface-variant mt-1" style="font-size:9px;letter-spacing:0.06em;display:none;"></p>
+          </div>
           <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
         </div>
 
@@ -394,7 +400,10 @@ tailwind.config = {
           style="transition:opacity 0.25s ease,transform 0.25s ease,border-color 0.15s,background-color 0.15s;">
           <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
           <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-          <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug pr-6">Loading race data...</p>
+          <div class="pr-6">
+            <p class="card-text text-body-sm font-body-sm text-on-surface leading-snug">Loading race data...</p>
+            <p class="card-trigger font-label-caps text-on-surface-variant mt-1" style="font-size:9px;letter-spacing:0.06em;display:none;"></p>
+          </div>
           <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline group-hover:text-primary-container transition-colors" style="font-size:16px;">chevron_right</span>
         </div>
 
@@ -1376,9 +1385,9 @@ const _TYRE_LIFE = { SOFT:25, MEDIUM:35, HARD:50, INTERMEDIATE:40, WET:40 };
 function _detectEvents(telem) {
   if (!telem || !telem.available) {
     return [
-      { key:'reg-mgu',  text:"Ferrari on 2026 regs — what's the MGU-K advantage on straights?" },
-      { key:'reg-aero', text:'Z-Mode vs X-Mode — when does Ferrari switch during the race?' },
-      { key:'reg-tyre', text:'2026 tyre rules — how many compounds must Ferrari use?' },
+      { key:'reg-mgu',  trigger: null, text:"Ferrari on 2026 regs — what's the MGU-K advantage on straights?" },
+      { key:'reg-aero', trigger: null, text:'Z-Mode vs X-Mode — when does Ferrari switch during the race?' },
+      { key:'reg-tyre', trigger: null, text:'2026 tyre rules — how many compounds must Ferrari use?' },
     ];
   }
 
@@ -1395,93 +1404,138 @@ function _detectEvents(telem) {
   const interval = telem.interval_to_ahead || '';
   const intNum   = parseFloat((interval || '').replace('+','').replace('s',''));
   const pos      = telem.position || 0;
+  const L        = lap ? `LAP ${lap} · ` : '';
 
   // Tyre event
   if (agePct >= 80)
-    events.push({ key:'tyre-cliff',
+    events.push({ key:'tyre-cliff', trigger:`${L}TYRE AGE`,
       text:`${first}'s ${compound}s are ${age} laps in — is the cliff starting?` });
   else if (agePct >= 65)
-    events.push({ key:'tyre-window',
+    events.push({ key:'tyre-window', trigger:`${L}TYRE AGE`,
       text:`${compound}s at ${agePct}% — what's the box window from here?` });
   else if (pits === 0 && lap > 20)
-    events.push({ key:'one-stop',
+    events.push({ key:'one-stop', trigger:`${L}NO STOP YET`,
       text:`Still no stop at lap ${lap} — going for the one-stop?` });
 
   // Gap / attack event
   if (!isNaN(intNum) && intNum < 1.0)
-    events.push({ key:'drs',
+    events.push({ key:'drs', trigger:`${L}GAP TO AHEAD`,
       text:`DRS range — attack now or hold for the pit window?` });
   else if (!isNaN(intNum) && intNum < 2.5)
-    events.push({ key:'undercut',
+    events.push({ key:'undercut', trigger:`${L}GAP ${interval}`,
       text:`+${interval} behind — does an undercut work here?` });
   else if (pos > 0)
-    events.push({ key:'position',
+    events.push({ key:'position', trigger:`${L}P${pos}`,
       text:`P${pos} — what moves are available over the next 5 laps?` });
 
   // Pace event
   if (pace != null && Math.abs(pace) <= 10) {
     if (pace > 0.5)
-      events.push({ key:'pace-drop',
+      events.push({ key:'pace-drop', trigger:`${L}SECTOR PACE`,
         text:`${first} dropped ${Math.abs(pace).toFixed(1)}s — tyre drop or traffic?` });
     else if (pace < -0.4)
-      events.push({ key:'pace-gain',
+      events.push({ key:'pace-gain', trigger:`${L}SECTOR PACE`,
         text:`${first} found ${Math.abs(pace).toFixed(1)}s — what triggered the improvement?` });
   }
 
   // Stubs — wired post-submission when data is available
-  // _detectCompetitorPit(telem)  → needs multi-driver pit_stops delta
-  // _detectVSC(telem)            → needs track_status from SignalR / session
-  // _detectWeather(telem)        → needs weather=True in FastF1 session.load()
+  // _detectCompetitorPit(telem)  → needs multi-driver pit_stops delta  → trigger: `LAP ${lap} · HAM PIT`
+  // _detectVSC(telem)            → needs track_status from SignalR     → trigger: `LAP ${lap} · VSC DEPLOYED`
+  // _detectWeather(telem)        → needs weather=True in FastF1 load   → trigger: `LAP ${lap} · TRACK TEMP`
 
   return events;
 }
 
-let _cards       = ['', '', ''];
-let _spotterPool = [];
-let _rotateIdx   = 2;
-let _rotateTimer = null;
+let _queue       = [];   // [{text, trigger}] — 3 items when seeded
+let _spotterPool = [];   // events from latest telemetry
+let _poolCursor  = 0;    // next index to pull from pool
+let _shiftTimer  = null;
 
-function _renderCard(i) {
+function _nextEvent() {
+  if (!_spotterPool.length) return null;
+  const shown = new Set(_queue.map(q => q.text));
+  for (let i = 0; i < _spotterPool.length; i++) {
+    const candidate = _spotterPool[(_poolCursor + i) % _spotterPool.length];
+    if (!shown.has(candidate.text)) {
+      _poolCursor = (_poolCursor + i + 1) % _spotterPool.length;
+      return candidate;
+    }
+  }
+  // All events already shown — advance and return next anyway
+  const ev = _spotterPool[_poolCursor % _spotterPool.length];
+  _poolCursor = (_poolCursor + 1) % _spotterPool.length;
+  return ev;
+}
+
+function _renderCardContent(i) {
   const card = document.getElementById(`spotter-card-${i}`);
   if (!card) return;
-  const el = card.querySelector('.card-text');
-  if (el) el.textContent = _cards[i] || 'Loading race data...';
+  const ev     = _queue[i] || {};
+  const textEl = card.querySelector('.card-text');
+  const trigEl = card.querySelector('.card-trigger');
+  if (textEl) textEl.textContent = ev.text || 'Loading race data...';
+  if (trigEl) {
+    if (ev.trigger) { trigEl.textContent = ev.trigger; trigEl.style.display = ''; }
+    else { trigEl.style.display = 'none'; }
+  }
 }
 
-function _renderAllCards() {
-  _renderCard(0); _renderCard(1); _renderCard(2);
-}
+function _shiftQueue() {
+  const next = _nextEvent();
+  if (!next) return; // no new prompt — hold
 
-function _rotateCard2() {
-  if (_spotterPool.length < 2) return;
-  _rotateIdx = (_rotateIdx + 1) % _spotterPool.length;
-  const card = document.getElementById('spotter-card-2');
-  if (!card) return;
-  card.style.opacity   = '0';
-  card.style.transform = 'translateX(6px)';
+  const c0 = document.getElementById('spotter-card-0');
+  const c1 = document.getElementById('spotter-card-1');
+  const c2 = document.getElementById('spotter-card-2');
+  if (!c0 || !c1 || !c2) return;
+
+  // Phase 1: all cards nudge upward, card 0 fades out
+  c0.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+  c0.style.opacity = '0'; c0.style.transform = 'translateY(-8px)';
+  c1.style.transition = 'transform 0.25s ease'; c1.style.transform = 'translateY(-4px)';
+  c2.style.transition = 'transform 0.25s ease'; c2.style.transform = 'translateY(-2px)';
+
   setTimeout(() => {
-    _cards[2] = _spotterPool[_rotateIdx]?.text || '';
-    _renderCard(2);
-    card.style.transform = 'translateX(-6px)';
+    _queue.shift();
+    _queue.push(next);
+
+    // Instantly reset transforms and update content
+    [c0, c1, c2].forEach(c => { c.style.transition = 'none'; c.style.transform = 'none'; });
+    c0.style.opacity = '0';
+    _renderCardContent(0);
+    _renderCardContent(1);
+
+    // Prepare card 2 for slide-in from below
+    c2.style.opacity = '0'; c2.style.transform = 'translateY(10px)';
+    _renderCardContent(2);
+
+    // Phase 2: fade card 0 back in, slide card 2 up
     requestAnimationFrame(() => {
-      card.style.opacity   = '1';
-      card.style.transform = 'translateX(0)';
+      c0.style.transition = 'opacity 0.3s ease';
+      c0.style.opacity = '1';
+      setTimeout(() => {
+        c2.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        c2.style.opacity = '1'; c2.style.transform = 'translateY(0)';
+      }, 80);
     });
-  }, 250);
+  }, 280);
 }
 
 function updateSpotter(telem) {
   _spotterSource = telem && telem.available ? 'live' : 'historical';
   _spotterPool   = _detectEvents(telem);
-  _cards[0]      = _spotterPool[0]?.text || '';
-  _cards[1]      = _spotterPool[1]?.text || '';
-  _cards[2]      = _spotterPool[2]?.text || '';
-  _rotateIdx     = 2;
-  _renderAllCards();
   _updateSourceDot();
-  if (_rotateTimer) clearInterval(_rotateTimer);
-  const ms = 20000 + Math.floor(Math.random() * 10000);
-  _rotateTimer = setInterval(_rotateCard2, ms);
+
+  if (_queue.length === 0) {
+    // First call — seed queue immediately
+    const seed = _spotterPool.slice();
+    _queue = [0, 1, 2].map(i => seed[i % seed.length] || { text: '', trigger: null });
+    _poolCursor = Math.min(3, _spotterPool.length) % Math.max(1, _spotterPool.length);
+    _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
+  }
+  // Pool refreshed — timer picks up new events on next shift
+  if (_shiftTimer) clearInterval(_shiftTimer);
+  _shiftTimer = setInterval(_shiftQueue, 30000);
 }
 
 function _updateSourceDot() {
@@ -1504,10 +1558,10 @@ function _updateSourceDot() {
 }
 
 function selectCard(i) {
-  const query = _cards[i];
-  if (!query || query === 'Loading race data...') return;
+  const ev = _queue[i];
+  if (!ev || !ev.text || ev.text === 'Loading race data...') return;
   const input = document.getElementById('text-input');
-  input.value = query;
+  input.value = ev.text;
   const card = document.getElementById(`spotter-card-${i}`);
   if (card) { card.style.borderColor = '#dc0000'; card.style.backgroundColor = '#3a2521'; }
   setTimeout(() => {
