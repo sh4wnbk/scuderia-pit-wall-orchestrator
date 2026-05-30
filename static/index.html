@@ -308,47 +308,57 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Telemetry grid — primary content -->
-    <section class="grid bg-outline-variant border border-outline-variant" style="grid-template-columns:1fr 1fr;gap:1px 1px;">
-      <!-- ROW 1 — Headers -->
-      <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">tire_repair</span>
-        <span class="text-label-caps font-label-caps text-on-surface">TYRE</span>
-        <span id="tyre-compound" class="ml-auto text-label-caps font-label-caps text-[10px] px-2 py-0.5 text-on-surface-variant leading-none border border-outline-variant">--</span>
-      </div>
-      <div class="bg-surface-container px-margin-md pt-margin-md pb-2 flex items-center gap-2">
-        <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">speed</span>
-        <span class="text-label-caps font-label-caps text-on-surface whitespace-nowrap">LAST LAP</span>
+    <!-- RACE SNAPSHOT -->
+    <section class="bg-surface-container border border-outline-variant">
+      <!-- Header -->
+      <div class="px-margin-md pt-margin-md pb-2 flex items-center gap-2 border-b border-outline-variant" style="border-color:var(--md-sys-color-outline-variant,#444)">
+        <span class="material-symbols-outlined text-primary-container shrink-0" style="font-size:18px;">monitoring</span>
+        <span class="text-label-caps font-label-caps text-on-surface">RACE SNAPSHOT</span>
         <span id="lap-badge" class="ml-auto text-label-caps font-label-caps text-[10px] px-2 py-0.5 text-on-surface-variant leading-none border border-outline-variant whitespace-nowrap">--</span>
       </div>
-      <!-- ROW 2 — Data row 1 -->
-      <div class="bg-surface-container px-margin-md py-2 flex justify-between items-baseline">
-        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">AGE</span>
-        <span id="tyre-age" class="text-data-mono font-data-mono text-on-surface">-- laps</span>
-      </div>
-      <div class="bg-surface-container px-margin-md py-2 flex justify-between items-baseline">
-        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">POSITION</span>
-        <span id="race-position" class="text-data-mono font-data-mono text-on-surface">--</span>
-      </div>
-      <!-- ROW 3 — Progress bars -->
-      <div class="bg-surface-container px-margin-md py-2 flex items-center">
-        <div class="w-full bg-surface-variant h-1">
-          <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:linear-gradient(to right,#22c55e,#eab308,#dc0000);"></div>
+      <!-- Two columns -->
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:1px;background:var(--md-sys-color-outline-variant,#444);">
+        <!-- Left — LEC stats -->
+        <div class="bg-surface-container px-margin-md py-2 flex flex-col gap-1.5">
+          <div class="flex justify-between items-center">
+            <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">TYRE</span>
+            <span id="tyre-compound" class="text-label-caps font-label-caps text-[10px] px-1.5 py-0.5 leading-none border border-outline-variant">--</span>
+          </div>
+          <div class="flex justify-between items-baseline">
+            <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">AGE</span>
+            <span id="tyre-age" class="text-data-mono font-data-mono text-on-surface text-xs">--</span>
+          </div>
+          <div class="w-full bg-surface-variant" style="height:2px;">
+            <div id="tyre-bar" class="h-full transition-all duration-700" style="width:0%;background:linear-gradient(to right,#22c55e,#eab308,#dc0000);"></div>
+          </div>
+          <div class="flex justify-between items-baseline">
+            <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">TIME</span>
+            <span id="lap-time" class="text-data-mono font-data-mono text-on-surface text-xs">--</span>
+          </div>
+          <div class="flex justify-between items-baseline">
+            <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PACE</span>
+            <span id="pace-trend" class="text-data-mono font-data-mono text-on-surface text-xs">--</span>
+          </div>
         </div>
-      </div>
-      <div class="bg-surface-container px-margin-md py-2 flex items-center">
-        <div class="w-full bg-surface-variant h-1">
-          <div id="position-bar" class="h-full bg-primary-container transition-all duration-700" style="width:0%;"></div>
+        <!-- Right — rivals -->
+        <div class="bg-surface-container px-margin-md py-2 flex flex-col justify-between">
+          <div>
+            <div class="text-label-caps font-label-caps text-[9px] mb-1" style="color:#888">▲ AHEAD</div>
+            <div class="flex justify-between items-baseline">
+              <span id="rival-ahead-driver" class="text-data-mono font-data-mono text-on-surface text-xs font-semibold">--</span>
+              <span id="rival-ahead-gap" class="text-data-mono font-data-mono text-xs" style="color:#dc0000">--</span>
+            </div>
+            <div id="rival-ahead-tyre" class="text-label-caps font-label-caps text-[9px] mt-0.5" style="color:#888">--</div>
+          </div>
+          <div class="h-px my-1" style="background:var(--md-sys-color-outline-variant,#444)"></div>
+          <div>
+            <div class="text-label-caps font-label-caps text-[9px] mb-1" style="color:#888">▼ BEHIND</div>
+            <div class="flex justify-between items-baseline">
+              <span id="rival-behind-driver" class="text-data-mono font-data-mono text-on-surface text-xs font-semibold">--</span>
+              <span id="rival-behind-gap" class="text-data-mono font-data-mono text-xs" style="color:#22c55e">--</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <!-- ROW 4 — Data row 2 -->
-      <div class="bg-surface-container px-margin-md pt-2 pb-margin-md flex justify-between items-baseline">
-        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">TIME</span>
-        <span id="lap-time" class="text-data-mono font-data-mono text-on-surface">--</span>
-      </div>
-      <div class="bg-surface-container px-margin-md pt-2 pb-margin-md flex justify-between items-baseline">
-        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">PACE</span>
-        <span id="pace-trend" class="text-data-mono font-data-mono text-on-surface">--</span>
       </div>
     </section>
 
@@ -1319,7 +1329,7 @@ function updateTyreWidget(data) {
   const color    = COMPOUND_COLORS[compound] || '#e0e0e0';
 
   const el = document.getElementById('tyre-compound');
-  if (el) { el.textContent = compound || '--'; el.style.color = color; el.style.borderColor = color; el.style.border = `1px solid ${color}`; }
+  if (el) { el.textContent = compound || '--'; el.style.color = color; el.style.border = `1px solid ${color}`; }
 
   const ageEl = document.getElementById('tyre-age');
   if (ageEl) ageEl.textContent = age ? `${age} laps` : '--';
@@ -1329,12 +1339,6 @@ function updateTyreWidget(data) {
 
   const lapBadge = document.getElementById('lap-badge');
   if (lapBadge) lapBadge.textContent = data.lap_number ? `LAP ${data.lap_number}` : '--';
-
-  const pos = document.getElementById('race-position');
-  if (pos) pos.textContent = data.position ? `P${data.position}` : '--';
-
-  const posBar = document.getElementById('position-bar');
-  if (posBar && data.position) posBar.style.width = Math.max(5, Math.round((21 - data.position) / 20 * 100)) + '%';
 
   const lapTime = document.getElementById('lap-time');
   if (lapTime) {
@@ -1359,11 +1363,26 @@ function updateTyreWidget(data) {
         pace.style.color = '';
       } else {
         const sign = d > 0 ? '▲' : '▼';
-        pace.textContent = `${sign} ${Math.abs(d).toFixed(2)}s`;
+        pace.textContent = `${sign} ${Math.abs(d).toFixed(1)}s`;
         pace.style.color = d > 0.3 ? '#dc0000' : d < -0.1 ? '#22c55e' : '#f1c100';
       }
     }
   }
+
+  // Rivals
+  const rivals = data.rivals || {};
+  const ahead  = rivals.ahead  || {};
+  const behind = rivals.behind || {};
+  const aDriver = document.getElementById('rival-ahead-driver');
+  const aGap    = document.getElementById('rival-ahead-gap');
+  const aTyre   = document.getElementById('rival-ahead-tyre');
+  const bDriver = document.getElementById('rival-behind-driver');
+  const bGap    = document.getElementById('rival-behind-gap');
+  if (aDriver) aDriver.textContent = ahead.driver || '--';
+  if (aGap)    aGap.textContent    = ahead.gap    || '--';
+  if (aTyre)   aTyre.textContent   = ahead.tyre   || '--';
+  if (bDriver) bDriver.textContent = behind.driver || '--';
+  if (bGap)    bGap.textContent    = behind.gap   || '--';
 }
 
 let _lastTelem = null;
@@ -1391,10 +1410,9 @@ function fetchPrompts() {
       _spotterPool   = data.prompts;
       _updateSourceDot();
       if (_queue.length === 0) {
-        // First seed from server
-        const n = _spotterPool.length;
-        _queue = [0, 1, 2].map(i => _spotterPool[i % n] || { text: '', trigger: null });
-        _poolCursor = Math.min(3, n) % Math.max(1, n);
+        // First seed — use _nextEvent so all three cards are distinct
+        _queue = []; _poolCursor = 0;
+        for (let i = 0; i < 3; i++) _queue.push(_nextEvent() || { text: '', trigger: null });
         _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
       }
       if (_shiftTimer) clearInterval(_shiftTimer);
@@ -1554,10 +1572,9 @@ function updateSpotter(telem) {
   _updateSourceDot();
 
   if (_queue.length === 0) {
-    // First call — seed queue immediately
-    const seed = _spotterPool.slice();
-    _queue = [0, 1, 2].map(i => seed[i % seed.length] || { text: '', trigger: null });
-    _poolCursor = Math.min(3, _spotterPool.length) % Math.max(1, _spotterPool.length);
+    // First call — use _nextEvent so all three cards are distinct
+    _queue = []; _poolCursor = 0;
+    for (let i = 0; i < 3; i++) _queue.push(_nextEvent() || { text: '', trigger: null });
     _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
   }
   // Pool refreshed — timer picks up new events on next shift

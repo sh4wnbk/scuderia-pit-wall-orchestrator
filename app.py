@@ -173,6 +173,18 @@ def timing_status() -> dict:
 
 # ── Telemetry ─────────────────────────────────────────────────────────────────
 
+def _fmt_interval(val, sign: str = "+") -> Optional[str]:
+    """Convert a FastF1 interval (timedelta or NaT) to '+1.2s' / '-0.8s'."""
+    try:
+        import pandas as pd
+        if pd.isna(val):
+            return None
+        secs = val.total_seconds() if hasattr(val, "total_seconds") else float(str(val).strip().lstrip("+"))
+        return f"{sign}{secs:.1f}s"
+    except Exception:
+        return None
+
+
 _telemetry_cache: dict[str, tuple[datetime, dict]] = {}
 _TELEMETRY_TTL_SECONDS = 60
 _SESSION_PRIORITY = ["R", "Q", "FP3", "FP2", "FP1"]
@@ -265,6 +277,43 @@ def get_telemetry() -> dict:
         "race_year": telemetry.race_year,
         "fetched_at": now.isoformat(),
     }
+
+    # Rivals — P-1 ahead and P+1 behind, from FastF1 disk cache (no network call)
+    rivals: dict = {}
+    try:
+        import fastf1 as _ff1
+        rv_session = _ff1.get_session(year, f1_race, session_type_used)
+        rv_session.load(telemetry=False, weather=False, messages=False)
+        all_laps = rv_session.laps
+        latest_per = (
+            all_laps.sort_values("LapNumber")
+            .groupby("Driver", sort=False)
+            .last()
+            .reset_index()
+        )
+        our_pos = telemetry.position or 0
+        if our_pos > 0:
+            our_row   = latest_per[latest_per["Driver"] == driver]
+            ahead_row = latest_per[latest_per["Position"] == our_pos - 1]
+            behind_row = latest_per[latest_per["Position"] == our_pos + 1]
+            if not ahead_row.empty and our_pos > 1 and not our_row.empty:
+                a = ahead_row.iloc[0]
+                gap = _fmt_interval(our_row.iloc[0].get("IntervalToPositionAhead"), "+")
+                rivals["ahead"] = {
+                    "driver": str(a["Driver"]),
+                    "gap": gap or "N/A",
+                    "tyre": str(a.get("Compound", "N/A")).upper(),
+                }
+            if not behind_row.empty:
+                b = behind_row.iloc[0]
+                gap = _fmt_interval(b.get("IntervalToPositionAhead"), "-")
+                rivals["behind"] = {
+                    "driver": str(b["Driver"]),
+                    "gap": gap or "N/A",
+                }
+    except Exception:
+        pass
+    result["rivals"] = rivals
 
     _telemetry_cache[cache_key] = (now, result)
     return result
