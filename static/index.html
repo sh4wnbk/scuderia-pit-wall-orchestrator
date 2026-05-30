@@ -1366,10 +1366,13 @@ function updateTyreWidget(data) {
   }
 }
 
+let _lastTelem = null;
+
 function fetchTelemetry() {
   fetch('/telemetry')
     .then(r => r.json())
     .then(data => {
+      _lastTelem = data;
       updateTyreWidget(data);
       // Seed client-side fallback if /prompts hasn't populated queue yet
       if (_queue.length === 0) updateSpotter(data);
@@ -1378,7 +1381,9 @@ function fetchTelemetry() {
 }
 
 function fetchPrompts() {
-  fetch('/prompts')
+  const lap = _lastTelem?.lap_number || null;
+  const url = lap ? `/prompts?current_lap=${lap}` : '/prompts';
+  fetch(url)
     .then(r => r.json())
     .then(data => {
       if (!data.available || !data.prompts?.length) return;

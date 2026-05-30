@@ -24,7 +24,7 @@ COMPOUND_LIFE  = {"SOFT": 25, "MEDIUM": 35, "HARD": 50, "INTERMEDIATE": 40, "WET
 LAP_WINDOW = 10
 
 
-def generate_prompts(session, driver_code: str) -> list[dict]:
+def generate_prompts(session, driver_code: str, current_lap: Optional[int] = None) -> list[dict]:
     """
     Returns up to 6 {text, trigger} dicts ordered by priority.
     Falls back to regulation prompts when no session data is available.
@@ -41,6 +41,10 @@ def generate_prompts(session, driver_code: str) -> list[dict]:
         return _fallback()
 
     driver_laps = driver_laps.sort_values("LapNumber")
+    if current_lap is not None:
+        driver_laps = driver_laps[driver_laps["LapNumber"] <= current_lap]
+        if driver_laps.empty:
+            return _fallback()
     latest  = driver_laps.iloc[-1]
     window  = driver_laps.tail(LAP_WINDOW)
 

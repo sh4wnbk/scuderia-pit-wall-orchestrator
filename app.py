@@ -277,11 +277,12 @@ _PROMPTS_TTL_SECONDS = 30
 
 
 @app.get("/prompts")
-def get_prompts() -> dict:
+def get_prompts(current_lap: Optional[int] = None) -> dict:
     """
     Generate contextual race intel prompts from multi-lap analysis.
     Analyzes pace trends, tyre age, race control events, and nearby pit stops
     over a 10-lap window. Cached for 30 seconds.
+    Pass current_lap to anchor the window for replay (e.g. ?current_lap=6).
     """
     import fastf1
     from tools.prompt_engine import generate_prompts
@@ -289,7 +290,7 @@ def get_prompts() -> dict:
     strat = orchestrator._strat_agent
     year, race, driver = strat._race_year, strat._race_name, strat._driver
 
-    cache_key = f"{year}:{race}:{driver}:prompts"
+    cache_key = f"{year}:{race}:{driver}:{current_lap or 'latest'}:prompts"
     now = datetime.utcnow()
 
     if cache_key in _prompts_cache:
@@ -313,7 +314,7 @@ def get_prompts() -> dict:
     if session is None:
         return {"available": False, "prompts": [], "source": "none", "driver": driver}
 
-    prompts = generate_prompts(session, driver)
+    prompts = generate_prompts(session, driver, current_lap=current_lap)
 
     result = {
         "available": True,
