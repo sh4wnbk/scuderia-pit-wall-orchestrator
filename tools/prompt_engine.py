@@ -97,12 +97,32 @@ def generate_prompts(session, driver_code: str, current_lap: Optional[int] = Non
             "trigger": f"{L}NO STOP YET",
         })
 
-    # 7. Position fallback
-    if not prompts:
-        prompts.append({
+    # 7. Fill to 3 with distinct strategy prompts so cards never duplicate
+    existing = {p["text"] for p in prompts}
+    _fills = [
+        {
             "text":    f"P{position} — what moves are available over the next 5 laps?",
             "trigger": f"{L}P{position}" if position else None,
-        })
+        } if position else None,
+        {
+            "text":    f"{first} on stint {stint} — any surprise strategy still on the table?",
+            "trigger": f"{L}STINT {stint}",
+        } if stint else None,
+        {
+            "text":    f"{compound} management — can {first} hold position without a late stop?",
+            "trigger": f"{L}TYRE MGMT",
+        } if compound else None,
+        {
+            "text":    f"What does the pitwall tell {first} at this stage of the race?",
+            "trigger": f"{L}PIT WALL",
+        },
+    ]
+    for fill in _fills:
+        if len(prompts) >= 3:
+            break
+        if fill and fill["text"] not in existing:
+            prompts.append(fill)
+            existing.add(fill["text"])
 
     return prompts[:6]
 
