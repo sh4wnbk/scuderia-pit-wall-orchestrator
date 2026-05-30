@@ -376,7 +376,7 @@ tailwind.config = {
     </section>
 
     <!-- Spotter zone — source indicator + event chips + input -->
-    <div class="flex flex-col gap-2 flex-1 justify-end">
+    <div class="flex flex-col gap-2">
 
       <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] flex items-center gap-2">
         <span id="prompt-source-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-on-surface-variant opacity-60"></span>
@@ -1331,10 +1331,14 @@ function updateTyreWidget(data) {
       pace.style.color = '';
     } else {
       const d = data.pace_delta_seconds;
-      const sign = d > 0 ? '▲' : '▼';
-      const abs = Math.abs(d).toFixed(2);
-      pace.textContent = `${sign} ${abs}s`;
-      pace.style.color = d > 0.3 ? '#dc0000' : d < -0.1 ? '#22c55e' : '#f1c100';
+      if (Math.abs(d) > 10) {
+        pace.textContent = '--';
+        pace.style.color = '';
+      } else {
+        const sign = d > 0 ? '▲' : '▼';
+        pace.textContent = `${sign} ${Math.abs(d).toFixed(2)}s`;
+        pace.style.color = d > 0.3 ? '#dc0000' : d < -0.1 ? '#22c55e' : '#f1c100';
+      }
     }
   }
 }
