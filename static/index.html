@@ -155,6 +155,22 @@
   .screen > main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; scrollbar-width: none; -ms-overflow-style: none; }
   .screen > main::-webkit-scrollbar { display: none; }
   .scroll-pip { position: absolute; right: 0; width: 1px; height: 24px; background: rgba(220,0,0,0.55); border-radius: 1px; opacity: 0; transition: opacity 0.6s ease; pointer-events: none; z-index: 20; }
+
+  .diagnostic-card { position: relative; }
+  .github-chip-wrapper { display: inline-block; margin-top: 10px; cursor: pointer; opacity: 0.65; transition: opacity 0.2s ease-in-out; text-decoration: none; }
+  .github-chip-wrapper:hover { opacity: 1; }
+  .github-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid rgba(220,0,0,0.5); padding: 4px 10px;
+    background: rgba(220,0,0,0.07);
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 0.12em; color: #dc0000; text-transform: uppercase;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+  .github-chip-wrapper:hover .github-chip {
+    border-color: #dc0000; background: rgba(220,0,0,0.14);
+    box-shadow: 0 0 10px rgba(220,0,0,0.25);
+  }
   .screen > nav  { flex-shrink: 0; }
 
   /* Governance panel (position:absolute inside screen-response) */
@@ -465,42 +481,51 @@ tailwind.config = {
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>
-    <div class="space-y-margin-md">
+    <div class="flex flex-col gap-margin-md">
+
       <section class="bg-surface-container border border-outline-variant p-margin-md relative">
         <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
         <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-        <div class="flex justify-between items-center mb-margin-sm border-b border-outline-variant pb-margin-sm">
-          <span class="text-label-caps font-label-caps text-on-surface">ibm/granite-4-h-small</span>
-          <span class="text-label-caps font-label-caps text-tertiary">ACTIVE</span>
-        </div>
-        <div class="grid grid-cols-2 gap-margin-md">
-          <div>
-            <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">INFERENCE LATENCY</p>
-            <p id="latency-ready" class="text-data-mono font-data-mono text-on-surface">--ms</p>
-          </div>
-          <div>
-            <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">RAG INDEX</p>
-            <p class="text-data-mono font-data-mono text-on-surface">777 chunks · FIA 2026</p>
-          </div>
-        </div>
+        <p class="text-body-sm font-body-sm text-on-surface-variant leading-snug text-xs">Every answer is grounded in the official FIA 2026 rulebook — 777 regulation passages, structured and indexed from the source PDF. IBM Docling handles the extraction so the AI reads regulations the way engineers do, not just as raw text.</p>
       </section>
+
       <section class="bg-surface-container border border-outline-variant p-margin-md relative">
         <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
         <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
-        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-margin-sm">OVERSEER PIPELINE</p>
-        <div class="space-y-1 text-label-caps font-label-caps text-[10px]">
-          <div class="flex items-center gap-2"><span class="text-tertiary">01</span><span class="text-on-surface-variant">TRANSCRIPT AUDIT</span></div>
-          <div class="flex items-center gap-2"><span class="text-tertiary">02</span><span class="text-on-surface-variant">RETRIEVAL AUDIT</span></div>
-          <div class="flex items-center gap-2"><span class="text-tertiary">03</span><span class="text-on-surface-variant">PRE-DELIVERY VALIDATION</span></div>
-        </div>
+        <p class="text-body-sm font-body-sm text-on-surface-variant leading-snug text-xs">Before you hear anything, three safety checks review the response for accuracy, sourcing, and completeness. The full review is always visible in the AI Review panel.</p>
+        <p id="latency-ready" class="text-data-mono font-data-mono text-on-surface-variant text-[10px] mt-2 opacity-0">--</p>
       </section>
-      <section class="bg-surface-container border border-outline-variant p-margin-md">
-        <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-margin-sm">STT / TTS</p>
-        <div class="text-data-mono font-data-mono text-[10px] text-on-surface space-y-1">
-          <p id="diag-stt">Watson STT · EN-US</p>
-          <p id="diag-tts">Watson TTS · Allison</p>
-        </div>
+
+      <section class="bg-surface-container border border-outline-variant p-margin-md relative">
+        <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+        <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+        <p class="text-body-sm font-body-sm text-on-surface-variant leading-snug text-xs">IBM Granite 4 processes your question with a built-in safety net. If a response can't be verified, the system tells you honestly rather than giving you a confident wrong answer.</p>
       </section>
+
+      <section class="bg-surface-container border border-outline-variant p-margin-md relative">
+        <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+        <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+        <p class="text-body-sm font-body-sm text-on-surface-variant leading-snug text-xs">Available in English and Italian. Whether you're watching from Miami or Milan, you get the same race intelligence — <span id="diag-stt">in your language</span>, at the same speed.</p>
+      </section>
+
+      <section class="bg-surface-container border border-outline-variant p-margin-md relative">
+        <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+        <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+        <p class="text-body-sm font-body-sm text-on-surface-variant leading-snug text-xs">Every component is visible — IBM Granite 4 inference, Watson STT/TTS, Docling RAG retrieval, watsonx.governance audit hooks, FastF1 telemetry, and ambient sound via <a href="https://elevenlabs.io" target="_blank" class="text-primary-container hover:underline">ElevenLabs</a>. Response latency and governance decisions are shown in the AI Review panel. Nothing is hidden.</p>
+      </section>
+
+      <section class="bg-surface-container border border-outline-variant p-margin-md diagnostic-card">
+        <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+        <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+        <p class="text-body-sm font-body-sm text-on-surface-variant leading-snug text-xs">Built in the open. Every architectural decision, agent definition, and governance hook is in the repository.</p>
+        <a href="https://github.com/sh4wnbk/scuderia-pit-wall-orchestrator" target="_blank" class="github-chip-wrapper">
+          <div class="github-chip">
+            <span class="material-symbols-outlined" style="font-size:11px;line-height:1;">code</span>
+            INSPECT SOURCE
+          </div>
+        </a>
+      </section>
+
     </div>
   </div>
 
@@ -949,6 +974,7 @@ const DRIVERS_2026 = [
 let _scheduleCache = {};                      // always fetch from FastF1
 let _driversCache  = { 2026: DRIVERS_2026 }; // drivers curated; schedule is not
 
+
 async function _prefetchYear(year) {
   const needSched  = !_scheduleCache[year];
   const needDrivers = !_driversCache[year];
@@ -1155,7 +1181,9 @@ function showResponse(data, elapsedMs) {
     document.getElementById('narrative-text').textContent = data.text;
   }
   document.getElementById('latency-gov').textContent    = elapsedMs + 'ms';
-  document.getElementById('latency-ready').textContent  = elapsedMs + 'ms';
+  const latEl = document.getElementById('latency-ready');
+  latEl.textContent = elapsedMs + 'ms response time';
+  latEl.style.opacity = '1';
 
   // Dynamic session title from first words of response
   const words = (data.text || lastQuery).replace(/[^A-Za-z0-9\s]/g, '').trim().toUpperCase();
@@ -1770,7 +1798,7 @@ async function submitSync() {
       ['ctx-race','ready-race','response-race','response-session-race'].forEach(id => document.getElementById(id).textContent = raceGP);
       ['ctx-driver','response-driver'].forEach(id => document.getElementById(id).textContent = driverName);
       fetchTelemetry();
-      fetchPrompts();
+      fetchPrompts(true);
       const status = document.getElementById('sync-status');
       status.classList.remove('hidden');
       setTimeout(() => { status.classList.add('hidden'); closeSync(); }, 1200);
