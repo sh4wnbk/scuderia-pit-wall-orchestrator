@@ -8,7 +8,7 @@
 
 ![Ferrari says go beyond the pit lane](assets/pit_lane.png)
 
-> Powered by the same IBM watsonx stack — we brought the Tifosi inside it.
+"Ferrari says go beyond the pit lane." > Powered by the same IBM watsonx stack — we brought the Tifosi inside it.
 
 ---
 
