@@ -155,6 +155,92 @@ def audit_log() -> list[dict]:
     return orchestrator.get_audit_log()
 
 
+class AmbientRequest(BaseModel):
+    driver: str
+    lap: int
+    tyre: str
+    position: int
+    race: str
+    duration: float = 30.0
+
+
+@app.post("/ambient")
+def generate_ambient(payload: AmbientRequest) -> dict:
+    import httpx, json as _json
+
+    elevenlabs_key = os.getenv("ELEVENLABS_API_KEY")
+    orchestrate_key = os.getenv("ORCHESTRATE_API_KEY")
+    if not elevenlabs_key:
+        raise HTTPException(status_code=503, detail="ELEVENLABS_API_KEY not configured")
+
+    # Step 1 — Watson Orchestrate crafts a rich contextual sound prompt
+    prompt = (
+        f"Formula 1 car on track, {payload.race} Grand Prix, "
+        f"lap {payload.lap}, {payload.tyre.lower()} tyres, position {payload.position}, "
+        f"engine at racing speed, crowd atmosphere, tyre noise on asphalt"
+    )
+    duration = payload.duration
+
+    if orchestrate_key:
+        try:
+            iam = httpx.post(
+                "https://iam.cloud.ibm.com/identity/token",
+                data={"grant_type": "urn:ibm:params:oauth:grant-type:apikey", "apikey": orchestrate_key},
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=10.0,
+            )
+            token = iam.json().get("access_token")
+            if token:
+                instance_id = "7f11450c-a2ea-49a8-951c-70680bead8e1"
+                agent_id = "161faaf0-a6ca-440f-9c69-bf30831ad32d"
+                base_url = f"https://api.us-south.watson-orchestrate.cloud.ibm.com/instances/{instance_id}"
+                msg = (
+                    f"{payload.driver}, lap {payload.lap}, {payload.tyre} tyres, "
+                    f"P{payload.position}, {payload.race}, {int(payload.duration)} seconds"
+                )
+                orch = httpx.post(
+                    f"{base_url}/v1/orchestrate/runs?stream=true&stream_timeout=20000",
+                    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json"},
+                    json={"message": {"role": "user", "content": msg}, "agent_id": agent_id},
+                    timeout=25.0,
+                )
+                if orch.status_code == 200:
+                    text = ""
+                    for line in orch.text.splitlines():
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            evt = _json.loads(line)
+                            for chunk in evt.get("data", {}).get("delta", {}).get("content", []):
+                                text += chunk.get("text", "")
+                        except Exception:
+                            pass
+                    text = text.strip()
+                    parsed = _json.loads(text) if text.startswith("{") else {}
+                    if parsed.get("prompt"):
+                        prompt = parsed["prompt"]
+                        duration = float(parsed.get("duration_seconds", payload.duration))
+        except Exception:
+            pass  # fall through to ElevenLabs with simple prompt
+
+    # Step 2 — ElevenLabs generates audio from the prompt
+    resp = httpx.post(
+        "https://api.elevenlabs.io/v1/sound-generation",
+        headers={"xi-api-key": elevenlabs_key, "Content-Type": "application/json"},
+        json={"text": prompt, "duration_seconds": duration, "prompt_influence": 0.3},
+        timeout=30.0,
+    )
+    if resp.status_code != 200:
+        raise HTTPException(status_code=502, detail=f"ElevenLabs error: {resp.status_code}")
+
+    return {
+        "audio_b64": base64.b64encode(resp.content).decode("utf-8"),
+        "prompt": prompt,
+        "duration": duration,
+    }
+
+
 @app.get("/timing/status")
 def timing_status() -> dict:
     """

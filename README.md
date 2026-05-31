@@ -2,7 +2,13 @@
 
 ![Scuderia Pit-Wall Fan Orchestrator — Tifosi asking about battery state](assets/Pit-Wall_Fan_Orchestrator.png)
 
-**IBM Build Challenge — Track 3: Fan-Centric Sports & Entertainment**  
+**IBM SkillsBuild AI Builders Challenge: Fan Experience – AI commentary, race explainers, interactive tools**  
+
+---
+
+![Ferrari says go beyond the pit lane](assets/pit_lane.png)
+
+> Powered by the same IBM watsonx stack — we brought the Tifosi inside it.
 
 ---
 
@@ -242,7 +248,7 @@ For IBM Cloud Code Engine deployment details:
 | Speech transcription | IBM Watson Speech-to-Text |
 | Audio delivery | IBM Watson Text-to-Speech |
 | Governance & audit | IBM watsonx.governance |
-| Agent orchestration | IBM watsonx Orchestrate (target deployment) |
+| Coding & implementation | IBM Bob IDE |
 
 ---
 
