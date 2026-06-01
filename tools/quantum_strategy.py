@@ -57,7 +57,7 @@ _PIT_STOP_LOSS = 22.0   # seconds lost in the pit lane (stationary + in/out lap)
 @dataclass
 class QuantumStrategyResult:
     recommended_lap: int
-    confidence: float          # probability of recommended_lap in measurement
+    confidence: float          # energy gap clarity score (0–1); not a quantum probability
     candidate_laps: list[int]
     energy_landscape: dict[int, float]   # lap → QUBO cost (lower = better)
     strategy_type: str         # "one-stop" | "two-stop"
@@ -121,15 +121,20 @@ def solve_pit_window(
             compound, remaining - (lap - current_lap)
         )
 
-    # Quadratic terms — teammate interaction penalty (double-stack cost)
+    # Linear penalty — double-stack cost on laps where teammate is expected to pit.
+    # Estimate teammate's cliff lap from their compound and current tyre age, then
+    # penalise any candidate lap within ±1 of that estimate. This is a linear term
+    # on our own decision, not a quadratic cross-term between two of our candidates.
     quadratic = {}
     if teammate_telem and teammate_telem.lap_number:
-        team_lap = teammate_telem.lap_number
+        team_compound = (teammate_telem.tyre_compound or "HARD").upper()
+        team_age      = teammate_telem.tyre_age_laps or 0
+        team_cliff    = _CLIFF_LAP.get(team_compound, 30)
+        laps_to_cliff = max(0, team_cliff - team_age)
+        expected_team_pit = teammate_telem.lap_number + laps_to_cliff
         for i, lap in enumerate(candidate_laps):
-            for j, lap2 in enumerate(candidate_laps):
-                if i < j and abs(lap - team_lap) <= 2 and abs(lap2 - team_lap) <= 2:
-                    # Both laps near teammate's recent stop → stack penalty
-                    quadratic[(f"pit_{i}", f"pit_{j}")] = 8.0
+            if abs(lap - expected_team_pit) <= 1:
+                linear[f"pit_{i}"] = linear.get(f"pit_{i}", 0.0) + 8.0
 
     # Penalty: exactly one pit stop in window (λ * (Σpit_i - 1)²)
     # Expanded: λ * (Σpit_i² + 2Σ_{i<j} pit_i*pit_j - 2Σpit_i + 1)
@@ -169,8 +174,8 @@ def solve_pit_window(
         vec[i] = 1.0
         energy_landscape[lap] = float(qp.objective.evaluate(vec))
 
-    # Confidence — probability mass on the recommended solution
-    # Approximated from energy gap: lower energy relative to next best = higher confidence
+    # Strategy clarity — QUBO energy gap between best and next-best lap.
+    # Larger gap means the recommended lap is more clearly dominant. Not a quantum probability.
     sorted_energies = sorted(energy_landscape.values())
     if len(sorted_energies) >= 2 and sorted_energies[1] != sorted_energies[0]:
         gap = abs(sorted_energies[1] - sorted_energies[0])
@@ -239,7 +244,7 @@ def _build_context(
     return (
         f"QAOA quantum optimizer evaluated {len(candidates)} candidate laps "
         f"({candidates[0]}–{candidates[-1]}) for a pit stop. "
-        f"Recommended lap: {lap} (confidence {confidence:.0%}). "
+        f"Recommended lap: {lap} (strategy clarity {confidence:.0%}). "
         f"Current compound: {compound}, age {tyre_age} laps, lap {current_lap}/{total_laps}. "
         f"Best alternative: lap {best_alt} (QUBO cost {landscape.get(best_alt, 0):.2f} vs {landscape.get(lap, 0):.2f})."
         f"{teammate_note} "
