@@ -54,7 +54,7 @@ jobs:
             --min-instances 1 \
             --max-instances 3 \
             --port 8080 \
-            --set-env-vars "WATSONX_API_KEY=${{ secrets.WATSONX_API_KEY }},WATSONX_URL=${{ secrets.WATSONX_URL }},WATSONX_PROJECT_ID=${{ secrets.WATSONX_PROJECT_ID }},WATSON_STT_API_KEY=${{ secrets.WATSON_STT_API_KEY }},WATSON_STT_URL=${{ secrets.WATSON_STT_URL }},WATSON_TTS_API_KEY=${{ secrets.WATSON_TTS_API_KEY }},WATSON_TTS_URL=${{ secrets.WATSON_TTS_URL }},RACE_YEAR=2026,RACE_NAME=Miami,RACE_DRIVER=LEC"
+            --set-env-vars "WATSONX_API_KEY=${{ secrets.WATSONX_API_KEY }},WATSONX_URL=${{ secrets.WATSONX_URL }},WATSONX_PROJECT_ID=${{ secrets.WATSONX_PROJECT_ID }},WATSON_STT_API_KEY=${{ secrets.WATSON_STT_API_KEY }},WATSON_STT_URL=${{ secrets.WATSON_STT_URL }},WATSON_TTS_API_KEY=${{ secrets.WATSON_TTS_API_KEY }},WATSON_TTS_URL=${{ secrets.WATSON_TTS_URL }},ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }},ORCHESTRATE_API_KEY=${{ secrets.ORCHESTRATE_API_KEY }},DROPBOX_TOKEN=${{ secrets.DROPBOX_TOKEN }},RACE_YEAR=2026,RACE_NAME=Miami,RACE_DRIVER=LEC"
 
       - name: Print URLs
         run: |
