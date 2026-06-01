@@ -1,229 +1,174 @@
-# Scuderia Pit-Wall Fan Orchestrator
+# Scuderia Pit-Wall
 
-![Scuderia Pit-Wall Fan Orchestrator — Tifosi asking about battery state](assets/Pit-Wall_Fan_Orchestrator.png)
+![Scuderia Pit-Wall Fan Orchestrator](assets/Pit-Wall_Fan_Orchestrator.png)
 
-**IBM SkillsBuild AI Builders Challenge: Fan Experience – AI commentary, race explainers, interactive tools**  
+A voice-first AI companion for Formula 1 fans. Ask a question mid-race, get a cited, governed response in plain English — spoken back in your language while you keep your eyes on the screen.
 
----
-
-![Ferrari says go beyond the pit lane](assets/pit_lane.png)
-
-> "Ferrari says go beyond the pit lane."  Powered by the same IBM watsonx stack — we brought the Tifosi inside it.
+**Live:** [tifosi-muretto.web.app](https://tifosi-muretto.web.app)
 
 ---
 
 ## The Problem
 
-![The Synthesis Gap Visualization](assets/synthesis_gap.png)
+![The Synthesis Gap](assets/synthesis_gap.png)
 
-Formula 1's 2026 regulations introduce the most technically complex power unit and aerodynamic rules in the sport's history. F1 cars generate **1.1 million telemetry data points per second**. Pit-wall radio is high-noise, jargon-heavy, and opaque to anyone without an engineering background.
+When Leclerc's engineer says *"Charles, X-Mode hold. Override zero. Harvest phase active. Two laps to window"* — 396 million Ferrari fans hear words they cannot decode.
 
-When Leclerc's engineer says *"Charles, X-Mode hold. Override zero. Harvest phase active. Two laps to window"* — 396 million Ferrari fans hear words they cannot translate into strategic meaning.
-
-The current digital ecosystem offers three fragmented channels: a TV broadcast with no technical context, a live timing app with raw data and no explanation, and social media with delayed, unverified commentary. Fans are forced to act as their own data engineers, abandoning the live broadcast to hunt for answers — and missing the race while doing it.
+Three information channels exist: TV broadcast (visuals, no context), live timing app (raw data, no explanation), social media (delayed, unverified). Fans are forced to abandon the broadcast and act as their own data engineers. They miss the race while looking for answers.
 
 This is the **Synthesis Gap**.
 
 ---
 
-## The Solution
+## What It Does
 
-The Scuderia Pit-Wall Fan Orchestrator is a multi-agent AI companion powered by **IBM watsonx** that:
-
-- Ingests lap-summary telemetry via **FastF1** — position, lap time, sector splits, tyre compound and age, gap to leader
-- Transcribes and translates unstructured pit-wall radio in real time via **IBM Watson Speech-to-Text**
-- Cross-references both against the **FIA 2026 Technical Regulations** using RAG (Retrieval-Augmented Generation)
-- Delivers plain-English tactical narratives via text and **IBM Watson Text-to-Speech** audio overlay
-- Allows fans to query the system in natural language without looking away from the TV broadcast
-- Enforces proactive governance via **IBM watsonx.governance** to guarantee no confident-wrong output ever reaches the fan
-
-![The Trust Output Matrix — why confident-wrong is an existential threat](assets/trust_output_matrix.png)
-
-> *"Leclerc is harvesting battery on this straight. Ferrari is building toward a push lap. Expect a pit call within two laps."*
+- **Voice input** — speak a question, Watson STT transcribes it in English or Italian
+- **RAG reasoning** — IBM Granite 4 cross-references your query against 777 chunks of FIA 2026 regulations and strategy history
+- **Proactive governance** — every response is validated against its citation before delivery; confident-wrong answers are suppressed, not delivered
+- **Voice output** — Watson TTS speaks the response while you watch the race
+- **Contextual prompt cards** — three telemetry-driven questions update every 30 seconds based on the current lap situation
+- **Quantum strategy layer** — QAOA optimizer (Qiskit Aer) formulates pit stop timing as a QUBO problem and recommends the optimal box lap with confidence
 
 ---
 
 ## Architecture
 
-![Agentic Pipeline Architecture — corrected with governance layer](assets/architecture_diagram.png)
-
-The system is built across six layers, each mapping to a named component:
-
 ```
-① Perception          NLP Synthesizer + Watson Speech-to-Text
-② Memory & Knowledge  RAG Vector DB (FIA 2026 regs + strategy history)
-③ Reasoning           Planning Engine → Regulation Agent | Agentic Strategist
-④ Tools               FastF1 API (live telemetry)
-⑤ Governance          Proactive Overseer Agent (watsonx.governance)
-⑥ Action & Execution  Execution Module → Tactical Narrative + Audio Overlay
+① Perception      NLP Synthesizer · Watson STT (EN + IT)
+② Knowledge       RAG — 777 chunks · FIA 2026 Regs + Strategy History
+③ Reasoning       Planning Engine → Regulation Agent | Agentic Strategist
+④ Telemetry       FastF1 lap-summary data · LiveTimingCollector (USE_LIVE_TIMING)
+⑤ Quantum         QAOA pit window optimizer · Qiskit Aer · HAMILTONIAN
+⑥ Governance      Proactive Overseer · 3-hook audit · retry loop
+⑦ Execution       Execution Module · Watson TTS · three-output delivery
 ```
 
-### The Governance Layer — Why It Exists
+### Governance — Why It Exists
 
-![The Proactive Governance Loop — three trustworthy outcomes guaranteed](assets/governance_loop.png)
+![Governance Loop](assets/governance_loop.png)
 
+A confident wrong answer is more damaging than acknowledged uncertainty. A fan who receives *"I cannot confirm this right now"* stays engaged. A fan who gets a wrong answer, feels something about it, shares it, and later discovers the truth — loses trust permanently.
 
-A confident-wrong answer is categorically more damaging than acknowledged uncertainty.
+The Overseer intercepts every output at three points before delivery:
 
-A fan who receives *"I cannot confirm this right now"* stays engaged. A fan who receives a confident wrong narrative, feels an emotion about it during a live race, shares it, and later discovers the truth on social media has been actively misled. Trust is gone permanently.
-
-The **Proactive Overseer Agent** intercepts every output at three monitoring hooks before delivery:
-
-- **Hook 1** — Transcript audit (NLP Synthesizer output)
-- **Hook 2** — Retrieval audit (RAG Vector DB output)
-- **Hook 3** — Pre-delivery cross-validation (citation verified against source)
-
-If cross-validation fails, the Overseer triggers a retry with an amended context and specific failure reason — not a blind retry. If the retry budget is exhausted, the system delivers an honest uncertainty response rather than a confident wrong answer.
+| Hook | Trigger | Checks |
+|---|---|---|
+| 1 | After transcription | Confidence threshold, anomaly flag |
+| 2 | After RAG retrieval | Similarity scores, citation chain |
+| 3 | Pre-delivery | Narrative vs cited source (Granite cross-validation) |
 
 **Three possible outputs. No others.**
 
-| Output | Condition | Trust outcome |
-|---|---|---|
-| Tactical narrative + audio overlay | Citation validated, confidence ≥ 0.7 | Trust built |
-| Narrative + audit flag | Retry passed | Trust maintained |
-| Uncertainty response | Retry budget exhausted | Trust preserved |
-
-### Latency Budget
-
-| Component | Time |
+| Output | Condition |
 |---|---|
-| First pass (inference + RAG) | ~1,000ms |
-| Overseer check | ~150ms |
-| Retry with amended context | ~950ms |
-| Re-check | ~150ms |
-| **Total worst case** | **~2,250ms** |
+| `confirmed` | Citation validated, Overseer approved |
+| `retry_corrected` | First pass failed, retry with amended context passed |
+| `uncertainty` | Retry budget exhausted — honest partial answer |
 
-The 250ms overrun against the 2-second target is an explicit design decision. A 2.25-second validated response is preferable to a 1.8-second confident-wrong one.
+### HAMILTONIAN — Quantum Strategy Layer
+
+The pit stop timing problem is a QUBO (Quadratic Unconstrained Binary Optimization):
+
+- **Variables** — `pit[i] ∈ {0,1}` for each candidate lap in the window
+- **Objective** — minimize projected race time accounting for tyre degradation and pit stop time loss
+- **Quadratic terms** — teammate interaction penalties (double-stack cost), traffic coupling
+- **Penalty constraint** — exactly one pit stop in the evaluation window
+
+QAOA (Quantum Approximate Optimization Algorithm) solves this on the Qiskit Aer statevector simulator (p=2 layers, COBYLA optimizer). The ground state — minimum energy — is the optimal pit lap. Granite explains the result in plain English.
+
+```
+FastF1 telemetry → QUBO formulation → QAOA → recommended lap + energy landscape → Granite explanation
+```
+
+Access via the `⚗` center button in the app (HAMILTONIAN screen).
 
 ---
 
-## Project Structure
+## Technology Stack
 
-```
-scuderia-pit-wall-orchestrator/
-├── main.py                        # Entry point + MVP demo
-├── config.py                      # All credentials and tunable constants
-├── models.py                      # Typed data contracts between components
-├── perception/
-│   └── nlp_synthesizer.py         # Watson STT + Hook 1 audit
-├── memory/
-│   └── rag_store.py               # RAG Vector DB + Hook 2 audit
-├── tools/
-│   └── fastf1_client.py           # FastF1 telemetry + Orchestrate skill wrapper
-├── reasoning/
-│   ├── planning_engine.py         # Intent classification + agent routing
-│   ├── regulation_agent.py        # FIA 2026 regulation specialist
-│   └── agentic_strategist.py      # Race strategy + live data agent
-├── governance/
-│   └── overseer.py                # Proactive Overseer + audit log
-├── execution/
-│   └── execution_module.py        # Watson TTS + three-output delivery + retry loop
-└── docs/
-    ├── 01_project_overview.md
-    ├── 02_architecture_diagram_analysis.md
-    ├── 03_sequence_diagram_analysis.md
-    ├── 04_governance_guardrails.md
-    ├── 05_diagram_explanations_plain_english.md
-    ├── 06_final_mermaid_code.md
-    └── 07_week4_blueprint_design_decisions.md
-```
+| Layer | Technology |
+|---|---|
+| LLM / Reasoning | IBM Granite 4 (`ibm/granite-4-h-small`) via watsonx.ai |
+| Speech-to-Text | IBM Watson STT — EN-US + IT-IT Broadband models |
+| Text-to-Speech | IBM Watson TTS — Allison / Michael / George / Emma (EN), Francesca (IT) |
+| Ambient audio | ElevenLabs Sound Generation + Watson Orchestrate |
+| Vector store | ChromaDB — 777 chunks, FIA 2026 Regs + Strategy History (Docling-indexed) |
+| Telemetry | FastF1 3.8 — lap-summary data; live timing via SignalR WebSocket (flag-gated) |
+| Quantum | Qiskit 2.4 + Qiskit Aer + QAOA optimizer |
+| Asset storage | Dropbox API — chroma_db + fastf1_cache pulled at container startup |
+| API | FastAPI — Cloud Run `us-central1` |
+| Frontend | Vanilla JS PWA — Firebase Hosting |
+| CI/CD | GitHub Actions → GCP Artifact Registry → Cloud Run (Workload Identity Federation) |
+| Coding | IBM Bob IDE |
 
 ---
 
-## Prerequisites
+## Endpoints
 
-- Python 3.12+
-- [uv](https://astral.sh/uv) (recommended) or pip
-- IBM Cloud account with:
-  - watsonx.ai project (Granite model access)
-  - Watson Speech-to-Text instance
-  - Watson Text-to-Speech instance
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/` | PWA shell |
+| `POST` | `/process` | Main pipeline — text, audio, or telemetry event input |
+| `GET` | `/telemetry` | FastF1 lap data for current race context (60s cache) |
+| `GET` | `/prompts` | Contextual prompt cards (30s cache, bilingual) |
+| `GET` | `/quantum/strategy` | QAOA pit window optimization |
+| `GET` | `/timing/status` | Live vs historical timing mode |
+| `POST` | `/race-context` | Set year / race / driver |
+| `GET` | `/schedule` | Race calendar by year |
+| `GET` | `/drivers` | Driver roster by year |
+| `POST` | `/ambient` | ElevenLabs ambient race audio via Watson Orchestrate |
+| `GET` | `/audit` | Full watsonx.governance audit log |
+| `GET` | `/health` | Liveness check |
 
 ---
 
 ## Setup
 
-**1. Clone the repository**
+**Requirements:** Python 3.12+, [uv](https://astral.sh/uv)
 
 ```bash
 git clone https://github.com/sh4wnbk/scuderia-pit-wall-orchestrator.git
 cd scuderia-pit-wall-orchestrator
-```
-
-**2. Create and activate the virtual environment**
-
-```bash
 uv venv .ibm_scuderia
 source .ibm_scuderia/bin/activate
-```
-
-**3. Install dependencies**
-
-```bash
 uv pip install -r requirements.txt
-```
-
-**4. Configure credentials**
-
-```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your IBM Cloud credentials:
+Edit `.env`:
 
 ```
-WATSONX_API_KEY=your_key_here
+WATSONX_API_KEY=
 WATSONX_URL=https://us-south.ml.cloud.ibm.com
-WATSONX_PROJECT_ID=your_project_id
-WATSON_STT_API_KEY=your_key_here
-WATSON_STT_URL=your_url_here
-WATSON_TTS_API_KEY=your_key_here
-WATSON_TTS_URL=your_url_here
+WATSONX_PROJECT_ID=
+WATSON_STT_API_KEY=
+WATSON_STT_URL=
+WATSON_TTS_API_KEY=
+WATSON_TTS_URL=
+ELEVENLABS_API_KEY=
+ORCHESTRATE_API_KEY=
+DROPBOX_TOKEN=
 ```
 
-**5. Run the MVP demo**
-
-```bash
-python main.py
-```
-
-## Deployment
-
-The service is containerised and deployed via GitHub Actions to **Google Cloud Run** on every push to `main` (~5 min build):
-
-- **Backend:** Cloud Run — `us-central1`, 2 GiB, 1 CPU, 1–3 auto-scaled instances
-- **Frontend:** Firebase Hosting — `https://tifosi-muretto.web.app`
-- **CI/CD:** `.github/workflows/deploy-cloudrun.yml` (GCP Workload Identity Federation)
-
-Run the API locally:
+Run locally:
 
 ```bash
 uvicorn app:app --host 0.0.0.0 --port 8080
 ```
 
-Then validate:
+---
 
-```bash
-curl http://localhost:8080/health
-curl -X POST http://localhost:8080/process \
-  -H "Content-Type: application/json" \
-  -d '{"text_query":"Why did Leclerc lift on the straight?","language":"en","voice":"allison"}'
-curl http://localhost:8080/telemetry
+## Deployment
+
+Push to `main` → GitHub Actions builds and deploys to Cloud Run (~5 min).
+
+```
+push → GCP Artifact Registry → Cloud Run (us-central1) → tifosi-muretto.web.app
 ```
 
-### FastF1 session cache
+`chroma_db/` and `fastf1_cache/` are stored in Dropbox and pulled at container startup by `scripts/download_assets.py`. The Docker image contains no bundled data — assets are always fresh from the source of truth.
 
-Telemetry and prompt cards require FastF1 race session data. The Docker image ships with pre-bundled sessions — these races load immediately on cold start with no API calls:
-
-| Race | Year | Notes |
-|---|---|---|
-| Miami GP | 2026 | Default — pinned in Cloud Run env |
-| Canadian GP | 2026 | Current season, LEC + HAM Ferrari |
-| Italian GP (Monza) | 2024 | Race control messages included |
-| Azerbaijan GP | 2024 | Late-race position chaos |
-| Bahrain GP | 2022, 2024 | SYNC coverage |
-
-**Switching to any other race** via the SYNC panel triggers a live download from the FastF1 API at request time (~20–60 seconds). This is unreliable in the Cloud Run environment — the first request may return empty data. To pre-bundle an additional race, fetch it locally and commit the session pkl files (~1–2 MB per race):
+To pre-bundle a new race for instant cold-start response:
 
 ```python
 import fastf1
@@ -231,39 +176,23 @@ fastf1.Cache.enable_cache('./fastf1_cache')
 fastf1.get_session(2024, 'Monaco', 'R').load(telemetry=False, weather=False, messages=True)
 ```
 
-Then `git add fastf1_cache/... && git commit && git push`.
+Then commit the pkl files, run `python scripts/upload_assets.py` to push to Dropbox, and push to `main`.
 
-For IBM Cloud Code Engine deployment details:
-
-- [`docs/08_ibm_cloud_migration.md`](./docs/08_ibm_cloud_migration.md)
-- [`docs/09_code_engine_cicd_and_secrets.md`](./docs/09_code_engine_cicd_and_secrets.md)
+**Pre-bundled races (immediate response):** Miami 2026 · Canada 2026 · Australian 2026 · Monza 2024 · Azerbaijan 2024 · Bahrain 2022/2024
 
 ---
 
-## IBM Technology Stack
+## What's Next
 
-| Component | IBM Product |
-|---|---|
-| Core LLM | IBM watsonx.ai — Granite 4 (granite-4-h-small) |
-| Speech transcription | IBM Watson Speech-to-Text |
-| Audio delivery | IBM Watson Text-to-Speech |
-| Governance & audit | IBM watsonx.governance |
-| Coding & implementation | IBM Bob IDE |
-
----
-
-## Related Projects
-
-This project's FastF1 telemetry layer is architecturally compatible with [f1-race-replay](https://github.com/IAmTomShaw/f1-race-replay) by Tom Shaw — an interactive F1 race visualisation tool that exposes a real-time telemetry stream designed for developers building custom tools on top of the replay data. The Pit-Wall Fan Orchestrator's AI synthesis layer can sit directly on top of that telemetry stream.
-
----
-
-## Documentation
-
-Full architectural reasoning, plain-English component explanations, Mermaid diagram code, and design decision rationale are in the [`docs/`](./docs) folder.
+- **Landscape visualization** — energy landscape bar chart in landscape mode (Chart.js)
+- **Push notifications** — pit stop alerts, safety car, position changes via Web Push
+- **Silence detection** — auto-submit voice query after 1.5s of silence
+- **Live timing** — `USE_LIVE_TIMING=true` during race weekends activates the SignalR collector
+- **Multi-team** — extend beyond Ferrari to any driver on the grid
+- **Hamiltonian** — deeper quantum layer post-Qiskit Global Summer School 2026
 
 ---
 
 ## License
 
-MIT License. Formula 1 and related trademarks are the property of their respective owners. All telemetry data is sourced from publicly available APIs via FastF1 for educational and non-commercial purposes.
+MIT. Formula 1 and related trademarks are the property of their respective owners. Telemetry data sourced from FastF1 for educational and non-commercial purposes.
