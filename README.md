@@ -77,7 +77,7 @@ The pit stop timing problem is a multi-car QUBO (Quadratic Unconstrained Binary 
 - **Quadratic terms** — cross-car coupling: double-stack penalty (same lap), undercut/overcut interactions (adjacent laps, asymmetric for primary driver), rival–rival traffic
 - **Penalty constraint** — exactly one pit stop per car in the evaluation window (one constraint per car, λ=15)
 
-QAOA (Quantum Approximate Optimization Algorithm) solves this on the Qiskit Aer statevector simulator (p=2 layers, COBYLA optimizer). The ground state — minimum energy — is the joint optimal pit strategy. The primary driver's recommendation surfaces to the fan; all car recommendations are returned in the API response. Granite explains the result in plain English.
+The qiskit-optimization `MinimumEigenOptimizer` finds the ground state — minimum energy — of the Ising Hamiltonian encoding of the QUBO. The exact eigensolver is used while a Qiskit 2.x-compatible QAOA circuit implementation is pending. The QUBO formulation and Hamiltonian encoding are unchanged. The primary driver's recommendation surfaces to the fan; all car recommendations are returned in the API response. Granite explains the result in plain English.
 
 ```
 FastF1 telemetry (5 cars) → multi-car QUBO (25 variables) → QAOA → joint pit recommendations + energy landscape → Granite explanation

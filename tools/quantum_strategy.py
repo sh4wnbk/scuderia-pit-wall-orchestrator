@@ -1,10 +1,9 @@
 """
-Quantum Strategy Layer — QAOA Pit Window Optimizer
+Quantum Strategy Layer — Multi-Car QUBO Pit Window Optimizer
 
 Multi-car formulation: models the joint pit decision for up to 5 cars
 simultaneously. Variables: pit[car][lap] ∈ {0,1} for each car and each
-candidate lap in the window. 5 cars × 5 laps = 25 binary variables —
-at the Qiskit Aer statevector simulator limit on a 2GiB container.
+candidate lap in the window. Up to 4 cars × 5 laps = 20 binary variables.
 
 QUBO structure:
   Linear terms    — per-car tyre degradation cost vs fresh-tyre benefit
@@ -15,9 +14,11 @@ QUBO structure:
                     • Rival–rival adjacent laps:          +2.0 traffic interaction
   Penalty terms   — per-car exactly-one-stop constraint (λ=15 per car)
 
-The QAOA ansatz (p=2 layers, COBYLA optimizer) minimises the joint energy.
-The ground state gives each car's optimal pit lap simultaneously.
-Primary driver's recommendation is what surfaces to the fan.
+Solver: numpy vectorised brute-force enumeration over all 2^n bitstrings.
+Exact for n ≤ 20 (2^20 = 1M evaluations, < 1s). No Qiskit runtime dependency
+for the optimisation step — the QUBO is formulated and solved in pure numpy.
+QAOA circuit execution is a future path when a Qiskit 2.x-compatible
+qiskit-algorithms release is available; the QUBO formulation is unchanged.
 
 Output feeds directly into Granite for plain-English explanation.
 """
@@ -43,6 +44,7 @@ _CLIFF_LAP = {
     "SOFT": 18, "MEDIUM": 28, "HARD": 42, "INTERMEDIATE": 22, "WET": 18,
 }
 _PIT_STOP_LOSS = 22.0   # seconds lost in the pit lane (stationary + in/out lap)
+_MAX_VARS      = 20     # brute-force ceiling: 2^20 = 1M evaluations, < 1s
 
 
 @dataclass
@@ -51,7 +53,7 @@ class QuantumStrategyResult:
     confidence: float               # energy gap clarity score (0–1); not a quantum probability
     candidate_laps: list[int]
     energy_landscape: dict[int, float]   # primary driver: lap → QUBO cost (lower = better)
-    strategy_type: str              # "one-stop" | "multi-car-one-stop"
+    strategy_type: str              # "multi-car-one-stop" | "one-stop"
     explanation_context: str        # pre-built context string for Granite
     car_recommendations: list[dict] = field(default_factory=list)   # per-car results
 
@@ -67,24 +69,14 @@ def solve_pit_window(
     """
     Main entry point. Optimises pit stop timing for up to 5 cars jointly.
 
-    telemetry:     primary driver (always car 0 — the recommendation we surface)
-    rival_telems:  up to 4 rivals ordered by proximity in race position.
-                   teammate_telem is folded in as first rival when rival_telems
-                   is None, preserving backward compatibility.
-    window_size:   candidate laps per car. 5 cars × 5 laps = 25 variables
-                   (Aer statevector ceiling on 2GiB container).
-    p:             QAOA depth. p=2 balances quality and NISQ noise tolerance.
+    telemetry:     primary driver (car 0 — the recommendation surfaced to the fan)
+    rival_telems:  up to 4 rivals by position proximity.
+                   teammate_telem folded in as first rival when rival_telems is None.
+    window_size:   candidate laps per car. Total variables = n_cars × n_laps ≤ 20.
+    p:             reserved for future QAOA circuit depth parameter.
     """
-    try:
-        from qiskit_optimization import QuadraticProgram
-        from qiskit_optimization.algorithms import MinimumEigenOptimizer
-        from qiskit_algorithms import QAOA
-        from qiskit_algorithms.optimizers import COBYLA
-        from qiskit_aer import AerSimulator
-        from qiskit.primitives import StatevectorSampler
-    except ImportError as e:
-        print(f"[Quantum] Qiskit not available: {e}")
-        return None
+    current_lap = telemetry.lap_number
+    remaining   = max(1, total_laps - current_lap)
 
     # ── Build car list (primary first, then rivals) ───────────────────────────
     all_cars: list[LiveTelemetry] = [telemetry]
@@ -92,10 +84,6 @@ def solve_pit_window(
         all_cars.extend(rival_telems[:4])
     elif teammate_telem:
         all_cars.append(teammate_telem)
-
-    n_cars     = len(all_cars)
-    current_lap = telemetry.lap_number
-    remaining   = max(1, total_laps - current_lap)
 
     # Candidate laps: next window_size laps, capped at race end
     candidate_laps = list(range(
@@ -106,15 +94,19 @@ def solve_pit_window(
         return None
 
     n_laps = len(candidate_laps)
-    n      = n_cars * n_laps    # total binary variables (up to 25)
 
-    # ── Build QUBO ────────────────────────────────────────────────────────────
-    qp = QuadraticProgram(name="pit_window")
-    for c in range(n_cars):
-        for l in range(n_laps):
-            qp.binary_var(name=f"pit_c{c}_l{l}")
+    # Trim n_cars so total variables stay within brute-force ceiling
+    max_cars = _MAX_VARS // n_laps
+    all_cars = all_cars[:max(1, max_cars)]
+    n_cars   = len(all_cars)
+    n        = n_cars * n_laps
 
-    linear:    dict[str, float]            = {}
+    # ── Build QUBO coefficient dicts ──────────────────────────────────────────
+    var_names: list[str] = [
+        f"pit_c{c}_l{l}" for c in range(n_cars) for l in range(n_laps)
+    ]
+
+    linear:    dict[str, float]             = {}
     quadratic: dict[tuple[str, str], float] = {}
 
     # Linear terms — per-car projected tyre cost vs fresh-tyre benefit
@@ -136,44 +128,31 @@ def solve_pit_window(
                 for lb, lap_b in enumerate(candidate_laps):
                     key = (f"pit_c{ca}_l{la}", f"pit_c{cb}_l{lb}")
                     if lap_a == lap_b:
-                        # Both cars pit same lap — double-stack time loss
                         quadratic[key] = quadratic.get(key, 0.0) + 8.0
                     elif ca == 0 and lap_b == lap_a - 1:
-                        # Rival (cb) pits 1 lap before primary (ca): primary undercut
                         quadratic[key] = quadratic.get(key, 0.0) + 4.0
                     elif ca == 0 and lap_a == lap_b - 1:
-                        # Primary pits 1 lap before rival: primary undercuts rival
                         quadratic[key] = quadratic.get(key, 0.0) - 2.0
                     elif abs(lap_a - lap_b) == 1:
-                        # Rival–rival adjacent: traffic interaction
                         quadratic[key] = quadratic.get(key, 0.0) + 2.0
 
     # Per-car one-hot penalty: λ * (Σ_l pit_c_l − 1)² for each car
-    # Expanded: linear gets -2λ + λ = -λ per variable; quadratic gets +2λ per pair
     lam = 15.0
     for c in range(n_cars):
         for l in range(n_laps):
             key = f"pit_c{c}_l{l}"
-            linear[key] = linear.get(key, 0.0) + lam * (1 - 2)   # -λ per variable
+            linear[key] = linear.get(key, 0.0) + lam * (1 - 2)
         for l in range(n_laps):
             for l2 in range(l + 1, n_laps):
                 key = (f"pit_c{c}_l{l}", f"pit_c{c}_l{l2}")
                 quadratic[key] = quadratic.get(key, 0.0) + 2 * lam
 
-    qp.minimize(linear=linear, quadratic=quadratic)
-
-    # ── QAOA solve ────────────────────────────────────────────────────────────
+    # ── Solve via numpy brute-force enumeration ───────────────────────────────
     try:
-        sampler   = StatevectorSampler()
-        optimizer = COBYLA(maxiter=150)
-        qaoa      = QAOA(sampler=sampler, optimizer=optimizer, reps=p)
-        solver    = MinimumEigenOptimizer(qaoa)
-        result    = solver.solve(qp)
+        x = _solve_qubo(linear, quadratic, var_names)
     except Exception as e:
-        print(f"[Quantum] QAOA failed: {e}")
+        print(f"[Quantum] Solver failed: {e}")
         return _classical_fallback(all_cars, candidate_laps, current_lap, remaining)
-
-    x = result.x   # flat array, index = c * n_laps + l
 
     # ── Parse per-car results ─────────────────────────────────────────────────
     car_recommendations: list[dict] = []
@@ -190,15 +169,23 @@ def solve_pit_window(
 
     recommended_lap = car_recommendations[0]["recommended_lap"]
 
-    # Primary driver energy landscape — single-car cost (c=0 only, no cross-car terms)
+    # Primary driver energy landscape — single-car cost (c=0, no cross-car terms)
     energy_landscape: dict[int, float] = {}
-    for l, lap in enumerate(candidate_laps):
-        vec    = np.zeros(n)
-        vec[l] = 1.0   # pit_c0_l{l}
-        energy_landscape[lap] = float(qp.objective.evaluate(vec))
+    idx = {name: i for i, name in enumerate(var_names)}
+    lin = np.array([linear.get(v, 0.0) for v in var_names])
+    Q   = np.zeros((n, n))
+    for (a, b), coeff in quadratic.items():
+        i, j = idx[a], idx[b]
+        if i <= j:
+            Q[i, j] += coeff
+        else:
+            Q[j, i] += coeff
+    for l in range(n_laps):
+        vec       = np.zeros(n)
+        vec[l]    = 1.0   # pit_c0_l{l}
+        energy_landscape[candidate_laps[l]] = float(vec @ lin + vec @ Q @ vec)
 
     # Strategy clarity — QUBO energy gap between best and next-best lap.
-    # Larger gap means the recommended lap is more clearly dominant. Not a quantum probability.
     sorted_energies = sorted(energy_landscape.values())
     if len(sorted_energies) >= 2 and sorted_energies[1] != sorted_energies[0]:
         gap        = abs(sorted_energies[1] - sorted_energies[0])
@@ -225,6 +212,38 @@ def solve_pit_window(
     )
 
 
+# ── QUBO solver ───────────────────────────────────────────────────────────────
+
+def _solve_qubo(
+    linear: dict[str, float],
+    quadratic: dict[tuple[str, str], float],
+    var_names: list[str],
+) -> np.ndarray:
+    """
+    Numpy vectorised brute-force QUBO solver. Exact for n ≤ 20.
+    Enumerates all 2^n bitstrings, evaluates x·L + x·Q·x for each,
+    returns the binary vector minimising the objective.
+    """
+    n   = len(var_names)
+    idx = {name: i for i, name in enumerate(var_names)}
+
+    lin = np.array([linear.get(v, 0.0) for v in var_names])
+    Q   = np.zeros((n, n))
+    for (a, b), coeff in quadratic.items():
+        i, j = idx[a], idx[b]
+        if i <= j:
+            Q[i, j] += coeff
+        else:
+            Q[j, i] += coeff
+
+    # Enumerate all 2^n bitstrings as rows of X
+    all_bits = np.arange(1 << n, dtype=np.int64)
+    X = ((all_bits[:, None] >> np.arange(n, dtype=np.int64)) & 1).astype(np.float64)
+
+    costs = X @ lin + np.einsum('bi,ij,bj->b', X, Q, X)
+    return X[int(np.argmin(costs))]
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _tyre_cost(compound: str, age_at_pit: int, laps_remaining: int) -> float:
@@ -238,7 +257,7 @@ def _tyre_cost(compound: str, age_at_pit: int, laps_remaining: int) -> float:
 def _fresh_tyre_benefit(compound: str, laps_on_fresh: int) -> float:
     """Time gained by running fresh tyres for laps_on_fresh laps."""
     rate = _DEGRADATION_RATE.get(compound, 0.07)
-    return laps_on_fresh * rate * 0.4   # ~40% of degradation saved on fresh rubber
+    return laps_on_fresh * rate * 0.4
 
 
 def _classical_fallback(
@@ -247,7 +266,7 @@ def _classical_fallback(
     current_lap: int,
     remaining: int,
 ) -> QuantumStrategyResult:
-    """Greedy fallback when QAOA fails — picks lap minimising primary driver's degradation cost."""
+    """Greedy fallback when solver fails — picks lap minimising primary driver's degradation cost."""
     primary  = all_cars[0]
     compound = (primary.tyre_compound or "HARD").upper()
     tyre_age = primary.tyre_age_laps or 0
@@ -277,19 +296,19 @@ def _build_context(
     lap, confidence, candidates, compound, tyre_age,
     current_lap, total_laps, landscape, car_recommendations,
 ) -> str:
-    best_alt   = min((l for l in landscape if l != lap), key=lambda l: landscape[l], default=None)
-    n_cars     = len(car_recommendations)
+    best_alt    = min((l for l in landscape if l != lap), key=lambda l: landscape[l], default=None)
+    n_cars      = len(car_recommendations)
+    n_vars      = n_cars * len(candidates)
     car_summary = " | ".join(
         f"{r['driver']} lap {r['recommended_lap']}" for r in car_recommendations
     )
     return (
-        f"QAOA quantum optimizer evaluated {len(candidates)} candidate laps "
+        f"QUBO optimizer evaluated {len(candidates)} candidate laps "
         f"({candidates[0]}–{candidates[-1]}) across {n_cars} car{'s' if n_cars > 1 else ''}. "
         f"Primary recommendation: lap {lap} (strategy clarity {confidence:.0%}). "
         f"Current compound: {compound}, age {tyre_age} laps, lap {current_lap}/{total_laps}. "
         f"Best alternative: lap {best_alt} "
         f"(QUBO cost {landscape.get(best_alt, 0):.2f} vs {landscape.get(lap, 0):.2f}). "
         f"Joint recommendations: {car_summary}. "
-        f"QUBO: {n_cars * len(candidates)} binary variables solved via QAOA p=2 "
-        f"on Qiskit Aer statevector simulator."
+        f"QUBO: {n_vars} binary variables, exact numpy enumeration of all 2^{n_vars} states."
     )

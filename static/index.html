@@ -961,7 +961,7 @@ tailwind.config = {
     <!-- QUBO info strip -->
     <div class="flex items-center gap-2 border border-outline-variant px-margin-md py-2">
       <span class="material-symbols-outlined text-on-surface-variant" style="font-size:14px;">info</span>
-      <span id="q-qubo-strip" class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">QAOA p=2 · Qiskit Aer statevector · 5-lap window</span>
+      <span id="q-qubo-strip" class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">QUBO · qiskit-optimization exact solver · 5-lap window</span>
     </div>
 
     <!-- Ask Granite -->
@@ -2042,7 +2042,7 @@ function renderQuantumResult(data) {
   const tableSection = el('q-car-table-section');
   const tableBody    = el('q-car-table');
   if (el('q-n-vars') && data.n_variables) el('q-n-vars').textContent = data.n_variables;
-  if (el('q-qubo-strip') && data.n_cars)  el('q-qubo-strip').textContent = `QAOA p=2 · Qiskit Aer statevector · ${data.n_cars} cars · ${data.n_variables || '--'} variables`;
+  if (el('q-qubo-strip') && data.n_cars)  el('q-qubo-strip').textContent = `QUBO · exact solver · ${data.n_cars} cars · ${data.n_variables || '--'} variables`;
   if (tableSection && tableBody && data.car_recommendations && data.car_recommendations.length > 1) {
     const TYRE_COLOR = { SOFT:'#dc0000', MEDIUM:'#f5c842', HARD:'#e8e8e8', INTERMEDIATE:'#39b54a', WET:'#0067ff' };
     tableBody.innerHTML = data.car_recommendations.map((car, i) => {
