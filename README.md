@@ -68,6 +68,8 @@ The Overseer intercepts every output at three points before delivery:
 | `retry_corrected` | First pass failed, retry with amended context passed |
 | `uncertainty` | Retry budget exhausted — honest partial answer |
 
+![HAMILTONIAN — QAOA pit window optimizer](assets/quantum_gates1.png)
+
 ### HAMILTONIAN — Quantum Strategy Layer
 
 The pit stop timing problem is a QUBO (Quadratic Unconstrained Binary Optimization):
