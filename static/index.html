@@ -1634,15 +1634,20 @@ function selectCard(i) {
 
 function refreshPrompts() {
   showScreen('ready');
-  // Brief spin on the center nav button to confirm tap
-  document.querySelectorAll('[onclick="refreshPrompts()"] .material-symbols-outlined').forEach(el => {
-    el.style.transition = 'transform 0.4s ease';
-    el.style.transform = 'rotate(360deg)';
-    setTimeout(() => { el.style.transform = ''; el.style.transition = ''; }, 420);
+  // Brief green flash on the button to confirm tap
+  document.querySelectorAll('[onclick="refreshPrompts()"] > div').forEach(el => {
+    el.style.transition = 'background-color 0.15s ease';
+    el.style.backgroundColor = '#16a34a';
+    setTimeout(() => { el.style.backgroundColor = ''; el.style.transition = ''; }, 350);
   });
-  fetch('/telemetry').then(r => r.json()).then(data => {
-    updateTyreWidget(data);
-  }).catch(() => {});
+  // Rotate the pool immediately for visible card change
+  if (_spotterPool.length > 0) {
+    _queue = []; _poolCursor = 0;
+    for (let i = 0; i < 3; i++) _queue.push(_nextEvent() || { text: '', trigger: null });
+    _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
+  }
+  // Then fetch fresh data in background
+  fetch('/telemetry').then(r => r.json()).then(data => { updateTyreWidget(data); }).catch(() => {});
   fetchPrompts(true);
 }
 
