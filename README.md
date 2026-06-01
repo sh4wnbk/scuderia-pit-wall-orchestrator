@@ -70,17 +70,17 @@ The Overseer intercepts every output at three points before delivery:
 
 ### HAMILTONIAN — Quantum Strategy Layer
 
-The pit stop timing problem is a QUBO (Quadratic Unconstrained Binary Optimization):
+The pit stop timing problem is a multi-car QUBO (Quadratic Unconstrained Binary Optimization):
 
-- **Variables** — `pit[i] ∈ {0,1}` for each candidate lap in the window
-- **Objective** — minimize projected race time accounting for tyre degradation and pit stop time loss
-- **Quadratic terms** — teammate interaction penalties (double-stack cost), traffic coupling
-- **Penalty constraint** — exactly one pit stop in the evaluation window
+- **Variables** — `pit[car][i] ∈ {0,1}` for each of up to 5 cars and each candidate lap — 5 cars × 5 laps = 25 binary variables (Qiskit Aer statevector limit on 2 GiB)
+- **Objective** — minimise joint projected race time across all cars, accounting for per-car tyre degradation and pit stop time loss
+- **Quadratic terms** — cross-car coupling: double-stack penalty (same lap), undercut/overcut interactions (adjacent laps, asymmetric for primary driver), rival–rival traffic
+- **Penalty constraint** — exactly one pit stop per car in the evaluation window (one constraint per car, λ=15)
 
-QAOA (Quantum Approximate Optimization Algorithm) solves this on the Qiskit Aer statevector simulator (p=2 layers, COBYLA optimizer). The ground state — minimum energy — is the optimal pit lap. Granite explains the result in plain English.
+QAOA (Quantum Approximate Optimization Algorithm) solves this on the Qiskit Aer statevector simulator (p=2 layers, COBYLA optimizer). The ground state — minimum energy — is the joint optimal pit strategy. The primary driver's recommendation surfaces to the fan; all car recommendations are returned in the API response. Granite explains the result in plain English.
 
 ```
-FastF1 telemetry → QUBO formulation → QAOA → recommended lap + energy landscape → Granite explanation
+FastF1 telemetry (5 cars) → multi-car QUBO (25 variables) → QAOA → joint pit recommendations + energy landscape → Granite explanation
 ```
 
 Access via the `|ψ⟩` center button in the app (HAMILTONIAN screen).

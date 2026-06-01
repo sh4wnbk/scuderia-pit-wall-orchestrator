@@ -158,11 +158,12 @@ def audit_log() -> list[dict]:
 @app.get("/quantum/strategy")
 def quantum_strategy() -> dict:
     """
-    QAOA pit window optimizer.
-    Formulates the current race situation as a QUBO and solves via
-    Qiskit Aer statevector simulation. Returns recommended pit lap,
-    confidence, and energy landscape across candidate laps.
+    QAOA pit window optimizer — multi-car formulation.
+    Models joint pit decisions for up to 5 cars (primary + 4 rivals by position).
+    5 cars × 5 laps = 25 binary variables (Aer statevector limit on 2GiB).
+    Returns per-car recommendations, energy landscape, and strategy clarity score.
     """
+    import fastf1 as _ff1
     from tools.quantum_strategy import solve_pit_window
 
     strat = orchestrator._strat_agent
@@ -171,33 +172,62 @@ def quantum_strategy() -> dict:
 
     # Fetch primary driver telemetry
     telemetry = None
+    session_type_used = None
     for st in _SESSION_PRIORITY:
         t = orchestrator._f1.get_driver_telemetry(year, f1_race, st, driver)
         if t is not None:
             telemetry = t
+            session_type_used = st
             break
 
     if telemetry is None:
         return {"available": False, "message": "No telemetry available for quantum optimization"}
 
-    # Fetch teammate for interaction terms
-    teammates = [d for d in strat._ferrari_drivers if d != driver]
-    teammate_telem = None
-    if teammates:
-        for st in _SESSION_PRIORITY:
-            t = orchestrator._f1.get_driver_telemetry(year, f1_race, st, teammates[0])
-            if t is not None:
-                teammate_telem = t
-                break
+    # Find up to 4 rivals by position proximity — load session once, reuse lap data
+    rival_telems: list = []
+    try:
+        rv_session = _ff1.get_session(year, f1_race, session_type_used)
+        rv_session.load(telemetry=False, weather=False, messages=False)
+        all_laps   = rv_session.laps
+        latest_per = (
+            all_laps.sort_values("LapNumber")
+            .groupby("Driver", sort=False)
+            .last()
+            .reset_index()
+        )
+        our_pos = telemetry.position or 0
+        if our_pos > 0:
+            our_row   = latest_per[latest_per["Driver"] == driver]
+            our_lap_n = our_row.iloc[0]["LapNumber"] if not our_row.empty else None
+            same_lap  = (
+                latest_per[latest_per["LapNumber"] == our_lap_n]
+                if our_lap_n is not None else latest_per
+            )
+            for offset in [-2, -1, 1, 2]:
+                target_pos = our_pos + offset
+                if target_pos < 1:
+                    continue
+                row = same_lap[same_lap["Position"] == target_pos]
+                if row.empty:
+                    continue
+                rival_code = str(row.iloc[0]["Driver"])
+                if rival_code == driver:
+                    continue
+                t = orchestrator._f1.get_driver_telemetry(
+                    year, f1_race, session_type_used, rival_code
+                )
+                if t is not None:
+                    rival_telems.append(t)
+    except Exception as e:
+        print(f"[Quantum] Rival fetch failed: {e}")
 
-    # Infer total laps from session (approximate from lap number + remaining)
     total_laps = max(telemetry.lap_number + 15, 57)   # fallback: Miami ~57 laps
 
     result = solve_pit_window(
         telemetry=telemetry,
         total_laps=total_laps,
-        window_size=6,
-        teammate_telem=teammate_telem,
+        window_size=5,
+        rival_telems=rival_telems or None,
         p=2,
     )
 
@@ -205,17 +235,20 @@ def quantum_strategy() -> dict:
         return {"available": False, "message": "Quantum solver returned no result"}
 
     return {
-        "available": True,
-        "recommended_lap": result.recommended_lap,
-        "confidence": result.confidence,
-        "candidate_laps": result.candidate_laps,
-        "energy_landscape": result.energy_landscape,
-        "strategy_type": result.strategy_type,
+        "available":          True,
+        "recommended_lap":    result.recommended_lap,
+        "confidence":         result.confidence,
+        "candidate_laps":     result.candidate_laps,
+        "energy_landscape":   result.energy_landscape,
+        "strategy_type":      result.strategy_type,
         "explanation_context": result.explanation_context,
-        "driver": driver,
-        "current_lap": telemetry.lap_number,
-        "compound": telemetry.tyre_compound,
-        "tyre_age": telemetry.tyre_age_laps,
+        "car_recommendations": result.car_recommendations,
+        "n_cars":             len(result.car_recommendations),
+        "n_variables":        len(result.car_recommendations) * len(result.candidate_laps),
+        "driver":             driver,
+        "current_lap":        telemetry.lap_number,
+        "compound":           telemetry.tyre_compound,
+        "tyre_age":           telemetry.tyre_age_laps,
     }
 
 
