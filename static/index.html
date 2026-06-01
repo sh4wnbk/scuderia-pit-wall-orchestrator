@@ -31,8 +31,8 @@
   }
 
   @keyframes mic-scroll {
-    0%   { transform: translateX(110%); }
-    100% { transform: translateX(-110%); }
+    0%   { transform: translateX(105%); }
+    100% { transform: translateX(-105%); }
   }
 
   @keyframes pulse-red {
@@ -400,6 +400,12 @@ tailwind.config = {
         <span id="prompt-source-dot" class="inline-block w-1.5 h-1.5 rounded-full bg-on-surface-variant opacity-60"></span>
         <span id="prompt-source-label">RACE INTEL · WATSONX ACTIVE</span>
       </p>
+
+      <!-- Refresh notice — shown for 30s after center button tap -->
+      <div id="refresh-notice" class="hidden w-full border border-tertiary px-margin-md py-1.5 flex items-center gap-2">
+        <span class="material-symbols-outlined text-tertiary" style="font-size:14px;">schedule</span>
+        <span class="text-label-caps font-label-caps text-tertiary text-[11px] tracking-widest">NEW SUGGESTIONS IN ~30s</span>
+      </div>
 
       <!-- Spotter cards — cards 0+1 stable, card 2 rotates through event pool -->
       <div class="flex flex-col gap-2 flex-1 justify-center">
@@ -1134,11 +1140,11 @@ function showMicError(msg) {
   ticker.style.cssText = 'position:absolute;inset:0;background:#200f0c;border:1px solid #dc0000;overflow:hidden;display:flex;align-items:center;z-index:10;pointer-events:none;';
   const span = document.createElement('span');
   span.textContent = msg;
-  span.style.cssText = 'white-space:nowrap;font-size:11px;font-family:"JetBrains Mono",monospace;color:#dc0000;padding:0 12px;animation:mic-scroll 4.5s linear forwards;';
+  span.style.cssText = 'white-space:nowrap;font-size:13px;font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#dc0000;padding:0 16px;animation:mic-scroll 7s linear forwards;';
   ticker.appendChild(span);
   if (getComputedStyle(wrapper).position === 'static') wrapper.style.position = 'relative';
   wrapper.appendChild(ticker);
-  setTimeout(() => ticker.remove(), 4600);
+  setTimeout(() => ticker.remove(), 7100);
 }
 
 function cancelRecording() {
@@ -1657,13 +1663,12 @@ function refreshPrompts() {
     for (let i = 0; i < 3; i++) _queue.push(_nextEvent() || { text: '', trigger: null });
     _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
   }
-  // Inform user that AI-fresh suggestions arrive after cache window
-  const label = document.getElementById('prompt-source-label');
-  if (label) {
-    const prev = label.textContent;
-    label.textContent = 'NEW SUGGESTIONS IN ~30s';
-    label.style.color = '#f1c100';
-    setTimeout(() => { label.textContent = prev; label.style.color = ''; }, 30000);
+  // Show refresh notice banner for 30s
+  const notice = document.getElementById('refresh-notice');
+  if (notice) {
+    notice.classList.remove('hidden');
+    notice.classList.add('flex');
+    setTimeout(() => { notice.classList.add('hidden'); notice.classList.remove('flex'); }, 30000);
   }
   fetch('/telemetry').then(r => r.json()).then(data => { updateTyreWidget(data); }).catch(() => {});
   fetchPrompts(true);
