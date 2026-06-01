@@ -155,6 +155,70 @@ def audit_log() -> list[dict]:
     return orchestrator.get_audit_log()
 
 
+@app.get("/quantum/strategy")
+def quantum_strategy() -> dict:
+    """
+    QAOA pit window optimizer.
+    Formulates the current race situation as a QUBO and solves via
+    Qiskit Aer statevector simulation. Returns recommended pit lap,
+    confidence, and energy landscape across candidate laps.
+    """
+    from tools.quantum_strategy import solve_pit_window
+
+    strat = orchestrator._strat_agent
+    year, race, driver = strat._race_year, strat._race_name, strat._driver
+    f1_race = _FASTF1_RACE_NAME_MAP.get(race, race)
+
+    # Fetch primary driver telemetry
+    telemetry = None
+    for st in _SESSION_PRIORITY:
+        t = orchestrator._f1.get_driver_telemetry(year, f1_race, st, driver)
+        if t is not None:
+            telemetry = t
+            break
+
+    if telemetry is None:
+        return {"available": False, "message": "No telemetry available for quantum optimization"}
+
+    # Fetch teammate for interaction terms
+    teammates = [d for d in strat._ferrari_drivers if d != driver]
+    teammate_telem = None
+    if teammates:
+        for st in _SESSION_PRIORITY:
+            t = orchestrator._f1.get_driver_telemetry(year, f1_race, st, teammates[0])
+            if t is not None:
+                teammate_telem = t
+                break
+
+    # Infer total laps from session (approximate from lap number + remaining)
+    total_laps = max(telemetry.lap_number + 15, 57)   # fallback: Miami ~57 laps
+
+    result = solve_pit_window(
+        telemetry=telemetry,
+        total_laps=total_laps,
+        window_size=6,
+        teammate_telem=teammate_telem,
+        p=2,
+    )
+
+    if result is None:
+        return {"available": False, "message": "Quantum solver returned no result"}
+
+    return {
+        "available": True,
+        "recommended_lap": result.recommended_lap,
+        "confidence": result.confidence,
+        "candidate_laps": result.candidate_laps,
+        "energy_landscape": result.energy_landscape,
+        "strategy_type": result.strategy_type,
+        "explanation_context": result.explanation_context,
+        "driver": driver,
+        "current_lap": telemetry.lap_number,
+        "compound": telemetry.tyre_compound,
+        "tyre_age": telemetry.tyre_age_laps,
+    }
+
+
 class AmbientRequest(BaseModel):
     driver: str
     lap: int
