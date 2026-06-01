@@ -152,11 +152,18 @@
     }
   }
 
-  /* ── Screen state machine ─────────────────────────────────────────── */
-  /* Each screen fills the frame; main scrolls; header+nav stay fixed in flow */
-  .screen { display: none; height: 100%; flex-direction: column; overflow: hidden; }
-  .screen.active { display: flex; }
-  .screen { position: relative; }
+  /* ── Screen state machine — iOS-style transitions ─────────────────── */
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateX(100%); opacity: 0; pointer-events: none;
+    transition: transform 0.34s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity   0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+  .screen.active {
+    transform: translateX(0); opacity: 1; pointer-events: auto;
+  }
   .screen > main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; scrollbar-width: none; -ms-overflow-style: none; }
   .screen > main::-webkit-scrollbar { display: none; }
   .scroll-pip { position: absolute; right: 0; width: 1px; height: 24px; background: rgba(220,0,0,0.55); border-radius: 1px; opacity: 0; transition: opacity 0.6s ease; pointer-events: none; z-index: 20; }
@@ -469,9 +476,9 @@ tailwind.config = {
       <span class="material-symbols-outlined">bar_chart_4_bars</span>
       <span class="text-label-caps font-label-caps text-[10px]">AUDIT</span>
     </button>
-    <button onclick="refreshPrompts()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Refresh suggestions">
+    <button onclick="showQuantum()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Quantum strategy">
       <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center animate-glow active:scale-95 transition-transform" style="box-shadow:0 0 20px rgba(220,0,0,0.4);">
-        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">auto_awesome</span>
+        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">science</span>
       </div>
     </button>
     <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
@@ -550,7 +557,7 @@ tailwind.config = {
 
   <header class="bg-surface flex-shrink-0 flex justify-between items-center w-full px-margin-md h-grid_unit border-b border-primary-container">
     <div class="flex items-center gap-2">
-      <button onclick="cancelRecording()" class="text-on-surface-variant hover:text-on-surface mr-1">
+      <button onclick="cancelRecording()" class="text-on-surface-variant hover:text-on-surface mr-1" aria-label="Cancel">
         <span class="material-symbols-outlined">arrow_back</span>
       </button>
       <span class="text-headline-md font-headline-md font-extrabold text-primary-container uppercase tracking-tighter">SCUDERIA PIT-WALL</span>
@@ -634,7 +641,7 @@ tailwind.config = {
   <header class="bg-surface flex-shrink-0 w-full border-b border-outline-variant">
     <div class="flex justify-between items-center w-full px-margin-md h-grid_unit">
       <div class="flex items-center gap-2">
-        <button onclick="showScreen('ready')" class="text-on-surface-variant hover:text-on-surface mr-1">
+        <button onclick="showScreen('ready', true)" class="text-on-surface-variant hover:text-on-surface mr-1">
           <span class="material-symbols-outlined">arrow_back</span>
         </button>
         <span class="text-headline-md font-headline-md font-extrabold text-primary-container uppercase tracking-tighter">SCUDERIA PIT-WALL</span>
@@ -734,9 +741,9 @@ tailwind.config = {
       <span class="material-symbols-outlined">bar_chart_4_bars</span>
       <span class="text-label-caps font-label-caps text-[10px]">AUDIT</span>
     </button>
-    <button onclick="refreshPrompts()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Refresh suggestions">
+    <button onclick="showQuantum()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Quantum strategy">
       <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center animate-glow active:scale-95 transition-transform" style="box-shadow:0 0 20px rgba(220,0,0,0.4);">
-        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">auto_awesome</span>
+        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">science</span>
       </div>
     </button>
     <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
@@ -863,9 +870,9 @@ tailwind.config = {
       <span class="material-symbols-outlined">bar_chart_4_bars</span>
       <span class="text-label-caps font-label-caps text-[10px]">AUDIT</span>
     </button>
-    <button onclick="refreshPrompts()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Refresh suggestions">
+    <button onclick="showQuantum()" class="nav-item-press flex-1 flex items-center justify-center text-white" title="Quantum strategy">
       <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center animate-glow active:scale-95 transition-transform" style="box-shadow:0 0 20px rgba(220,0,0,0.4);">
-        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">auto_awesome</span>
+        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">science</span>
       </div>
     </button>
     <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
@@ -879,6 +886,113 @@ tailwind.config = {
   </nav>
 
 </div><!-- /screen-data -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 5 — QUANTUM STRATEGY
+═══════════════════════════════════════════════════════════ -->
+<div id="screen-quantum" class="screen">
+
+  <header class="bg-surface flex-shrink-0 flex justify-between items-center w-full px-margin-md h-grid_unit border-b border-outline-variant">
+    <div class="flex items-center gap-2">
+      <button onclick="showScreen('ready', true)" class="text-on-surface-variant hover:text-on-surface mr-1">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <span class="text-headline-md font-headline-md font-extrabold text-primary-container uppercase tracking-tighter">HAMILTONIAN</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-on-surface-variant msym-fill" style="font-size:18px;">science</span>
+      <span class="text-label-caps font-label-caps text-on-surface-variant opacity-70">QAOA · QISKIT</span>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col p-margin-md gap-margin-md pb-4">
+
+    <!-- Context row -->
+    <div class="grid border border-outline-variant bg-outline-variant" style="grid-template-columns:1fr 2fr 1fr;column-gap:1px;">
+      <div class="bg-surface-container px-margin-sm py-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">YEAR</span>
+        <span id="q-ctx-year" class="text-data-mono font-data-mono text-on-surface">2026</span>
+      </div>
+      <div class="bg-surface-container px-margin-sm py-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">RACE</span>
+        <span id="q-ctx-race" class="text-data-mono font-data-mono text-on-surface">MIAMI GP</span>
+      </div>
+      <div class="bg-surface-container px-margin-sm py-margin-sm flex flex-col items-center justify-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">DRIVER</span>
+        <span id="q-ctx-driver" class="text-data-mono font-data-mono text-primary-container">LECLERC</span>
+      </div>
+    </div>
+
+    <!-- Recommendation -->
+    <section class="grid bg-outline-variant border border-outline-variant" style="grid-template-columns:1fr 1fr;gap:1px;">
+      <div class="bg-surface-container p-margin-md flex flex-col gap-1">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">BOX LAP</span>
+        <span id="q-recommended-lap" class="text-data-mono font-data-mono text-primary-container" style="font-size:2.5rem;line-height:1;">--</span>
+        <span id="q-strategy-type" class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">--</span>
+      </div>
+      <div class="bg-surface-container p-margin-md flex flex-col gap-2">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">CONFIDENCE</span>
+        <span id="q-confidence" class="text-data-mono font-data-mono text-on-surface" style="font-size:2rem;line-height:1;">--%</span>
+        <div class="w-full bg-surface-variant h-1">
+          <div id="q-confidence-bar" class="h-full bg-primary-container transition-all duration-700" style="width:0%;"></div>
+        </div>
+        <span id="q-tyre-info" class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">-- · -- LAPS</span>
+      </div>
+    </section>
+
+    <!-- Energy landscape -->
+    <section class="bg-surface-container border border-outline-variant p-margin-md relative">
+      <div class="scuderia-bracket-tl"></div><div class="scuderia-bracket-tr"></div>
+      <div class="scuderia-bracket-bl"></div><div class="scuderia-bracket-br"></div>
+      <p class="text-label-caps font-label-caps text-on-surface-variant text-[10px] mb-margin-sm tracking-widest">ENERGY LANDSCAPE · QUBO COST</p>
+      <div id="q-landscape" class="flex flex-col gap-1"></div>
+    </section>
+
+    <!-- QUBO info strip -->
+    <div class="flex items-center gap-2 border border-outline-variant px-margin-md py-2">
+      <span class="material-symbols-outlined text-on-surface-variant" style="font-size:14px;">info</span>
+      <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">QAOA p=2 · Qiskit Aer statevector · 6-lap window</span>
+    </div>
+
+    <!-- Ask Granite -->
+    <button onclick="askGraniteQuantum()"
+      class="w-full border border-primary-container text-primary-container text-label-caps font-label-caps tracking-widest py-3 hover:bg-primary-container hover:text-white transition-colors duration-200">
+      ASK GRANITE TO EXPLAIN
+    </button>
+
+    <!-- Landscape hint -->
+    <p id="q-status" class="text-label-caps font-label-caps text-on-surface-variant text-[10px] text-center">
+      LOADING QUANTUM ANALYSIS...
+    </p>
+
+  </main>
+
+  <nav class="flex justify-around items-stretch bg-surface-container-high border-t-2 border-primary-container h-20">
+    <button onclick="showScreen('ready', true)" data-nav="dash" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">grid_view</span>
+      <span class="text-label-caps font-label-caps text-[10px]">DASH</span>
+    </button>
+    <button onclick="showDataScreen()" data-nav="audit" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">bar_chart_4_bars</span>
+      <span class="text-label-caps font-label-caps text-[10px]">AUDIT</span>
+    </button>
+    <button onclick="showQuantum()" class="nav-item-press flex-1 flex items-center justify-center text-white">
+      <div class="w-14 h-14 bg-primary-container rounded-full flex items-center justify-center animate-glow active:scale-95 transition-transform" style="box-shadow:0 0 20px rgba(220,0,0,0.4);">
+        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">science</span>
+      </div>
+    </button>
+    <button onclick="openSync()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">sync</span>
+      <span class="text-label-caps font-label-caps text-[10px]">SYNC</span>
+    </button>
+    <button onclick="toggleMic()" class="nav-item-press flex-1 flex flex-col items-center justify-center gap-1 text-on-surface-variant hover:text-primary">
+      <span class="material-symbols-outlined">graphic_eq</span>
+      <span class="text-label-caps font-label-caps text-[10px]">VOICE</span>
+    </button>
+  </nav>
+
+</div><!-- /screen-quantum -->
 
 
 <!-- ── SYNC PANEL ─────────────────────────────────────────── -->
@@ -1018,12 +1132,39 @@ function formatSource(raw) {
 }
 
 
-// ── Screens ───────────────────────────────────────────────────────────────
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + name).classList.add('active');
+// ── Screens — iOS-style directional transitions ───────────────────────────
+function showScreen(name, back = false) {
+  const next = document.getElementById('screen-' + name);
+  if (!next) return;
+  const current = document.querySelector('.screen.active');
+
+  if (current && current !== next) {
+    current.classList.remove('active');
+    if (back) {
+      // Outgoing screen slides out to the right
+      current.style.transform = 'translateX(40%)';
+      current.style.opacity   = '0';
+      setTimeout(() => { current.style.transform = ''; current.style.opacity = ''; }, 360);
+    }
+    // Forward: CSS handles it — active removed → transitions back to translateX(100%)
+  }
+
+  if (back) {
+    // Incoming screen arrives from the left
+    next.style.transition = 'none';
+    next.style.transform  = 'translateX(-40%)';
+    next.style.opacity    = '0';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      next.style.transition = '';
+      next.classList.add('active');
+      next.style.transform  = '';
+      next.style.opacity    = '';
+    }));
+  } else {
+    next.classList.add('active');
+  }
+
   if (name !== 'response' && govOpen) toggleGovernance();
-  // Sync nav active state: 'ready'→'dash', 'data'→'audit'
   const navKey = name === 'ready' ? 'dash' : name === 'data' ? 'audit' : name;
   document.querySelectorAll('[data-nav]').forEach(btn => {
     const isActive = btn.dataset.nav === navKey;
@@ -1159,7 +1300,7 @@ function cancelRecording() {
     activeStream.getTracks().forEach(t => t.stop());
   }
   activeStream = null;
-  showScreen('ready');
+  showScreen('ready', true);
 }
 
 function stopRecording() {
@@ -1845,6 +1986,81 @@ async function loadAudit() {
   } catch(e) {
     list.innerHTML = '<p class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">ERROR REACHING /audit</p>';
   }
+}
+
+// ── Quantum Strategy ──────────────────────────────────────────────────────
+let _quantumResult = null;
+
+function showQuantum() {
+  showScreen('quantum');
+  // Sync context labels
+  const year   = document.getElementById('ctx-year')?.textContent   || '2026';
+  const race   = document.getElementById('ctx-race')?.textContent   || 'MIAMI GP';
+  const driver = document.getElementById('ctx-driver')?.textContent || 'LECLERC';
+  if (document.getElementById('q-ctx-year'))   document.getElementById('q-ctx-year').textContent   = year;
+  if (document.getElementById('q-ctx-race'))   document.getElementById('q-ctx-race').textContent   = race;
+  if (document.getElementById('q-ctx-driver')) document.getElementById('q-ctx-driver').textContent = driver;
+  loadQuantumStrategy();
+}
+
+async function loadQuantumStrategy() {
+  const status = document.getElementById('q-status');
+  if (status) status.textContent = 'RUNNING QAOA OPTIMIZER...';
+  try {
+    const res  = await fetch('/quantum/strategy');
+    const data = await res.json();
+    if (!data.available) {
+      if (status) status.textContent = data.message || 'No telemetry available.';
+      return;
+    }
+    _quantumResult = data;
+    renderQuantumResult(data);
+    if (status) status.textContent = 'ψ Rotate device for full visualization';
+  } catch (e) {
+    if (status) status.textContent = 'ERROR REACHING QUANTUM ENDPOINT';
+  }
+}
+
+function renderQuantumResult(data) {
+  const el = id => document.getElementById(id);
+  if (el('q-recommended-lap')) el('q-recommended-lap').textContent = data.recommended_lap ?? '--';
+  if (el('q-confidence'))      el('q-confidence').textContent      = data.confidence ? Math.round(data.confidence * 100) + '%' : '--%';
+  if (el('q-confidence-bar'))  el('q-confidence-bar').style.width  = (data.confidence ? Math.round(data.confidence * 100) : 0) + '%';
+  if (el('q-strategy-type'))   el('q-strategy-type').textContent   = (data.strategy_type || 'one-stop').toUpperCase();
+  if (el('q-tyre-info'))       el('q-tyre-info').textContent       = `${data.compound || '--'} · ${data.tyre_age || '--'} LAPS · LAP ${data.current_lap || '--'}`;
+
+  // Energy landscape bars
+  const container = el('q-landscape');
+  if (container && data.energy_landscape) {
+    const entries  = Object.entries(data.energy_landscape).sort((a, b) => Number(a[0]) - Number(b[0]));
+    const costs    = entries.map(([, v]) => v);
+    const minCost  = Math.min(...costs);
+    const maxCost  = Math.max(...costs);
+    const range    = maxCost - minCost || 1;
+    container.innerHTML = entries.map(([lap, cost]) => {
+      const pct       = Math.round((1 - (cost - minCost) / range) * 100);
+      const isOptimal = Number(lap) === data.recommended_lap;
+      return `<div class="flex items-center gap-2 mb-1">
+        <span class="text-label-caps font-label-caps text-[10px] ${isOptimal ? 'text-primary-container' : 'text-on-surface-variant'} w-10 shrink-0">LAP ${lap}</span>
+        <div class="flex-1 bg-surface-variant h-3 overflow-hidden">
+          <div class="h-full transition-all duration-700 ${isOptimal ? 'bg-primary-container' : 'bg-surface-bright'}" style="width:${pct}%"></div>
+        </div>
+        <span class="text-data-mono font-data-mono text-[10px] ${isOptimal ? 'text-primary-container' : 'text-on-surface-variant'} w-20 text-right shrink-0">
+          ${cost.toFixed(3)}${isOptimal ? ' ψ' : ''}
+        </span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function askGraniteQuantum() {
+  if (!_quantumResult) return;
+  const q = `Quantum QAOA analysis recommends pitting on lap ${_quantumResult.recommended_lap} ` +
+            `with ${Math.round((_quantumResult.confidence || 0) * 100)}% confidence. ` +
+            `${_quantumResult.explanation_context} Explain this recommendation in plain English for a Ferrari fan.`;
+  document.getElementById('text-input').value = q;
+  showScreen('ready', true);
+  setTimeout(() => submitText(), 300);
 }
 </script>
 </body>
