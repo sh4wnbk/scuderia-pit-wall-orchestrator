@@ -6,9 +6,6 @@ A voice-first AI companion for Formula 1 fans. Ask a question mid-race, get a ci
 
 **Live:** [tifosi-muretto.web.app](https://tifosi-muretto.web.app)
 
-> **Quantum strategy layer — QAOA optimizer (Qiskit Aer) formulates pit stop timing as a QUBO problem and recommends the optimal box lap with confidence** *(post-submission)*
-> The quantum layer (HAMILTONIAN) reflects the project's continued evolution beyond the original submission.
-
 ---
 
 ## The Problem
@@ -30,6 +27,7 @@ This is the **Synthesis Gap**.
 - **Proactive governance** — every response is validated against its citation before delivery; confident-wrong answers are suppressed, not delivered
 - **Voice output** — Watson TTS speaks the response while you watch the race
 - **Contextual prompt cards** — three telemetry-driven questions update every 30 seconds based on the current lap situation
+- **Ambient audio** — Watson Orchestrate crafts a contextual F1 soundscape prompt; ElevenLabs Sound Generation renders it as race atmosphere audio
 - **Quantum strategy layer** — QAOA optimizer (Qiskit Aer) formulates pit stop timing as a QUBO problem and recommends the optimal box lap with confidence
 
 ---
@@ -85,7 +83,9 @@ QAOA (Quantum Approximate Optimization Algorithm) solves this on the Qiskit Aer 
 FastF1 telemetry → QUBO formulation → QAOA → recommended lap + energy landscape → Granite explanation
 ```
 
-Access via the `⚗` center button in the app (HAMILTONIAN screen).
+Access via the `|ψ⟩` center button in the app (HAMILTONIAN screen).
+
+*The HAMILTONIAN screen reflects the project's continued evolution beyond the original hackathon submission.*
 
 ---
 
