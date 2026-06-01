@@ -932,13 +932,22 @@ tailwind.config = {
         <span id="q-strategy-type" class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">--</span>
       </div>
       <div class="bg-surface-container p-margin-md flex flex-col gap-2">
-        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">CONFIDENCE</span>
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">CLARITY</span>
         <span id="q-confidence" class="text-data-mono font-data-mono text-on-surface" style="font-size:2rem;line-height:1;">--%</span>
         <div class="w-full bg-surface-variant h-1">
           <div id="q-confidence-bar" class="h-full bg-primary-container transition-all duration-700" style="width:0%;"></div>
         </div>
         <span id="q-tyre-info" class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">-- · -- LAPS</span>
       </div>
+    </section>
+
+    <!-- Multi-car joint strategy table -->
+    <section id="q-car-table-section" class="border border-outline-variant" style="display:none;">
+      <div class="bg-surface-container px-margin-md py-2 border-b border-outline-variant flex justify-between items-center">
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px] tracking-widest">JOINT STRATEGY</span>
+        <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]"><span id="q-n-vars">--</span> VARIABLES</span>
+      </div>
+      <div id="q-car-table" class="flex flex-col divide-y divide-outline-variant"></div>
     </section>
 
     <!-- Energy landscape -->
@@ -952,7 +961,7 @@ tailwind.config = {
     <!-- QUBO info strip -->
     <div class="flex items-center gap-2 border border-outline-variant px-margin-md py-2">
       <span class="material-symbols-outlined text-on-surface-variant" style="font-size:14px;">info</span>
-      <span class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">QAOA p=2 · Qiskit Aer statevector · 6-lap window</span>
+      <span id="q-qubo-strip" class="text-label-caps font-label-caps text-on-surface-variant text-[10px]">QAOA p=2 · Qiskit Aer statevector · 5-lap window</span>
     </div>
 
     <!-- Ask Granite -->
@@ -2029,6 +2038,26 @@ function renderQuantumResult(data) {
   if (el('q-strategy-type'))   el('q-strategy-type').textContent   = (data.strategy_type || 'one-stop').toUpperCase();
   if (el('q-tyre-info'))       el('q-tyre-info').textContent       = `${data.compound || '--'} · ${data.tyre_age || '--'} LAPS · LAP ${data.current_lap || '--'}`;
 
+  // Multi-car joint strategy table
+  const tableSection = el('q-car-table-section');
+  const tableBody    = el('q-car-table');
+  if (el('q-n-vars') && data.n_variables) el('q-n-vars').textContent = data.n_variables;
+  if (el('q-qubo-strip') && data.n_cars)  el('q-qubo-strip').textContent = `QAOA p=2 · Qiskit Aer statevector · ${data.n_cars} cars · ${data.n_variables || '--'} variables`;
+  if (tableSection && tableBody && data.car_recommendations && data.car_recommendations.length > 1) {
+    const TYRE_COLOR = { SOFT:'#dc0000', MEDIUM:'#f5c842', HARD:'#e8e8e8', INTERMEDIATE:'#39b54a', WET:'#0067ff' };
+    tableBody.innerHTML = data.car_recommendations.map((car, i) => {
+      const isPrimary = i === 0;
+      const dot = `<span style="color:${TYRE_COLOR[car.compound] || '#888'};font-size:9px;line-height:1;">●</span>`;
+      return `<div class="flex items-center px-margin-md py-2 gap-3 ${isPrimary ? 'bg-surface-bright' : 'bg-surface-container'}">
+        <span class="text-data-mono font-data-mono text-[11px] w-10 shrink-0 ${isPrimary ? 'text-primary-container' : 'text-on-surface-variant'}">${car.driver}</span>
+        <span class="text-data-mono font-data-mono text-[13px] w-20 shrink-0 ${isPrimary ? 'text-primary-container' : 'text-on-surface'}">LAP ${car.recommended_lap}${isPrimary ? ' ψ' : ''}</span>
+        <span class="flex items-center gap-1 flex-1 text-label-caps font-label-caps text-[10px] text-on-surface-variant">${dot} ${car.compound}</span>
+        <span class="text-label-caps font-label-caps text-[10px] text-on-surface-variant shrink-0">${car.tyre_age}L</span>
+      </div>`;
+    }).join('');
+    tableSection.style.display = '';
+  }
+
   // Energy landscape bars
   const container = el('q-landscape');
   if (container && data.energy_landscape) {
@@ -2055,9 +2084,14 @@ function renderQuantumResult(data) {
 
 function askGraniteQuantum() {
   if (!_quantumResult) return;
+  let carContext = '';
+  if (_quantumResult.car_recommendations && _quantumResult.car_recommendations.length > 1) {
+    carContext = ' Joint recommendations: ' + _quantumResult.car_recommendations
+      .map(c => `${c.driver} lap ${c.recommended_lap}`).join(', ') + '.';
+  }
   const q = `Quantum QAOA analysis recommends pitting on lap ${_quantumResult.recommended_lap} ` +
-            `with ${Math.round((_quantumResult.confidence || 0) * 100)}% confidence. ` +
-            `${_quantumResult.explanation_context} Explain this recommendation in plain English for a Ferrari fan.`;
+            `with ${Math.round((_quantumResult.confidence || 0) * 100)}% strategy clarity. ` +
+            `${_quantumResult.explanation_context}${carContext} Explain this recommendation in plain English for a Ferrari fan.`;
   document.getElementById('text-input').value = q;
   showScreen('ready', true);
   setTimeout(() => submitText(), 300);
