@@ -30,6 +30,11 @@
     background-size: 40px 40px;
   }
 
+  @keyframes mic-scroll {
+    0%   { transform: translateX(110%); }
+    100% { transform: translateX(-110%); }
+  }
+
   @keyframes pulse-red {
     0%   { box-shadow: 0 0 0 0 rgba(220,0,0,0.4); }
     70%  { box-shadow: 0 0 0 20px rgba(220,0,0,0); }
@@ -1120,14 +1125,20 @@ async function startRecording() {
 
 function showMicError(msg) {
   const input = document.getElementById('text-input');
-  if (input) {
-    input.placeholder = msg;
-    input.classList.add('border-error');
-    setTimeout(() => {
-      input.placeholder = 'Or type your question...';
-      input.classList.remove('border-error');
-    }, 4000);
-  }
+  if (!input) return;
+  const wrapper = input.parentElement;
+  // Remove any existing ticker
+  wrapper.querySelector('.mic-error-ticker')?.remove();
+  const ticker = document.createElement('div');
+  ticker.className = 'mic-error-ticker';
+  ticker.style.cssText = 'position:absolute;inset:0;background:#200f0c;border:1px solid #dc0000;overflow:hidden;display:flex;align-items:center;z-index:10;pointer-events:none;';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  span.style.cssText = 'white-space:nowrap;font-size:11px;font-family:"JetBrains Mono",monospace;color:#dc0000;padding:0 12px;animation:mic-scroll 4.5s linear forwards;';
+  ticker.appendChild(span);
+  if (getComputedStyle(wrapper).position === 'static') wrapper.style.position = 'relative';
+  wrapper.appendChild(ticker);
+  setTimeout(() => ticker.remove(), 4600);
 }
 
 function cancelRecording() {
@@ -1634,19 +1645,26 @@ function selectCard(i) {
 
 function refreshPrompts() {
   showScreen('ready');
-  // Brief green flash on the button to confirm tap
+  // Brief green flash confirms tap
   document.querySelectorAll('[onclick="refreshPrompts()"] > div').forEach(el => {
     el.style.transition = 'background-color 0.15s ease';
     el.style.backgroundColor = '#16a34a';
     setTimeout(() => { el.style.backgroundColor = ''; el.style.transition = ''; }, 350);
   });
-  // Rotate the pool immediately for visible card change
+  // Rotate pool immediately so cards visibly change now
   if (_spotterPool.length > 0) {
     _queue = []; _poolCursor = 0;
     for (let i = 0; i < 3; i++) _queue.push(_nextEvent() || { text: '', trigger: null });
     _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
   }
-  // Then fetch fresh data in background
+  // Inform user that AI-fresh suggestions arrive after cache window
+  const label = document.getElementById('prompt-source-label');
+  if (label) {
+    const prev = label.textContent;
+    label.textContent = 'NEW SUGGESTIONS IN ~30s';
+    label.style.color = '#f1c100';
+    setTimeout(() => { label.textContent = prev; label.style.color = ''; }, 30000);
+  }
   fetch('/telemetry').then(r => r.json()).then(data => { updateTyreWidget(data); }).catch(() => {});
   fetchPrompts(true);
 }
