@@ -1083,6 +1083,10 @@ function toggleMic() {
 }
 
 async function startRecording() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    showMicError('Voice input requires a browser with microphone support.');
+    return;
+  }
   try {
     activeStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = [];
@@ -1103,7 +1107,26 @@ async function startRecording() {
       });
     }, 120);
   } catch (err) {
-    console.warn('[Pit-Wall] Mic denied:', err);
+    console.warn('[Pit-Wall] Mic error:', err);
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      showMicError('Microphone access was denied. Check your browser permissions and try again.');
+    } else if (err.name === 'NotFoundError') {
+      showMicError('No microphone found. Connect a microphone and try again.');
+    } else {
+      showMicError('Could not access microphone. ' + err.message);
+    }
+  }
+}
+
+function showMicError(msg) {
+  const input = document.getElementById('text-input');
+  if (input) {
+    input.placeholder = msg;
+    input.classList.add('border-error');
+    setTimeout(() => {
+      input.placeholder = 'Or type your question...';
+      input.classList.remove('border-error');
+    }, 4000);
   }
 }
 
@@ -1611,6 +1634,12 @@ function selectCard(i) {
 
 function refreshPrompts() {
   showScreen('ready');
+  // Brief spin on the center nav button to confirm tap
+  document.querySelectorAll('[onclick="refreshPrompts()"] .material-symbols-outlined').forEach(el => {
+    el.style.transition = 'transform 0.4s ease';
+    el.style.transform = 'rotate(360deg)';
+    setTimeout(() => { el.style.transform = ''; el.style.transition = ''; }, 420);
+  });
   fetch('/telemetry').then(r => r.json()).then(data => {
     updateTyreWidget(data);
   }).catch(() => {});
