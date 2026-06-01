@@ -1439,8 +1439,6 @@ function fetchTelemetry() {
     .then(data => {
       _lastTelem = data;
       updateTyreWidget(data);
-      // Seed client-side fallback if /prompts hasn't populated queue yet
-      if (_queue.length === 0) updateSpotter(data);
     })
     .catch(err => console.warn('[Pit-Wall] telemetry:', err));
 }
@@ -1471,74 +1469,7 @@ function fetchPrompts(force = false) {
 }
 
 // ── Spotter Agent — event-driven chips ───────────────────────────────────────
-let _spotterEvents = [];
 let _spotterSource = 'none';
-
-const _TYRE_LIFE = { SOFT:25, MEDIUM:35, HARD:50, INTERMEDIATE:40, WET:40 };
-
-function _detectEvents(telem) {
-  if (!telem || !telem.available) {
-    return [
-      { key:'reg-mgu',  trigger: null, text:"Ferrari on 2026 regs — what's the MGU-K advantage on straights?" },
-      { key:'reg-aero', trigger: null, text:'Z-Mode vs X-Mode — when does Ferrari switch during the race?' },
-      { key:'reg-tyre', trigger: null, text:'2026 tyre rules — how many compounds must Ferrari use?' },
-    ];
-  }
-
-  const events  = [];
-  const name     = telem.driver_name || 'Leclerc';
-  const first    = name.split(' ').pop();
-  const compound = (telem.tyre_compound || 'HARD').toUpperCase();
-  const age      = telem.tyre_age_laps  || 0;
-  const life     = _TYRE_LIFE[compound] || 40;
-  const agePct   = Math.round((age / life) * 100);
-  const lap      = telem.lap_number     || 0;
-  const pits     = telem.pit_stops      || 0;
-  const pace     = telem.pace_delta_seconds;
-  const interval = telem.interval_to_ahead || '';
-  const intNum   = parseFloat((interval || '').replace('+','').replace('s',''));
-  const pos      = telem.position || 0;
-  const L        = lap ? `LAP ${lap} · ` : '';
-
-  // Tyre event
-  if (agePct >= 80)
-    events.push({ key:'tyre-cliff', trigger:`${L}TYRE AGE`,
-      text:`${first}'s ${compound}s are ${age} laps in — is the cliff starting?` });
-  else if (agePct >= 65)
-    events.push({ key:'tyre-window', trigger:`${L}TYRE AGE`,
-      text:`${compound}s at ${agePct}% — what's the box window from here?` });
-  else if (pits === 0 && lap > 20)
-    events.push({ key:'one-stop', trigger:`${L}NO STOP YET`,
-      text:`Still no stop at lap ${lap} — going for the one-stop?` });
-
-  // Gap / attack event
-  if (!isNaN(intNum) && intNum < 1.0)
-    events.push({ key:'drs', trigger:`${L}GAP TO AHEAD`,
-      text:`DRS range — attack now or hold for the pit window?` });
-  else if (!isNaN(intNum) && intNum < 2.5)
-    events.push({ key:'undercut', trigger:`${L}GAP ${interval}`,
-      text:`+${interval} behind — does an undercut work here?` });
-  else if (pos > 0)
-    events.push({ key:'position', trigger:`${L}P${pos}`,
-      text:`P${pos} — what moves are available over the next 5 laps?` });
-
-  // Pace event
-  if (pace != null && Math.abs(pace) <= 10) {
-    if (pace > 0.5)
-      events.push({ key:'pace-drop', trigger:`${L}SECTOR PACE`,
-        text:`${first} dropped ${Math.abs(pace).toFixed(1)}s — tyre drop or traffic?` });
-    else if (pace < -0.4)
-      events.push({ key:'pace-gain', trigger:`${L}SECTOR PACE`,
-        text:`${first} found ${Math.abs(pace).toFixed(1)}s — what triggered the improvement?` });
-  }
-
-  // Stubs — wired post-submission when data is available
-  // _detectCompetitorPit(telem)  → needs multi-driver pit_stops delta  → trigger: `LAP ${lap} · HAM PIT`
-  // _detectVSC(telem)            → needs track_status from SignalR     → trigger: `LAP ${lap} · VSC DEPLOYED`
-  // _detectWeather(telem)        → needs weather=True in FastF1 load   → trigger: `LAP ${lap} · TRACK TEMP`
-
-  return events;
-}
 
 let _queue       = [];   // [{text, trigger}] — 3 items when seeded
 let _spotterPool = [];   // events from latest telemetry
@@ -1616,19 +1547,9 @@ function _shiftQueue() {
 }
 
 function updateSpotter(telem) {
-  _spotterSource = telem && telem.available ? 'live' : 'historical';
-  _spotterPool   = _detectEvents(telem);
-  _updateSourceDot();
-
-  if (_queue.length === 0) {
-    // First call — use _nextEvent so all three cards are distinct
-    _queue = []; _poolCursor = 0;
-    for (let i = 0; i < 3; i++) _queue.push(_nextEvent() || { text: '', trigger: null });
-    _renderCardContent(0); _renderCardContent(1); _renderCardContent(2);
-  }
-  // Pool refreshed — timer picks up new events on next shift
-  if (_shiftTimer) clearInterval(_shiftTimer);
-  _shiftTimer = setInterval(_shiftQueue, 30000);
+  // Deprecated: Now handled by fetchPrompts() which uses backend /prompts endpoint.
+  // Kept for backward compatibility but does nothing.
+  // All prompt generation is now powered by tools/prompt_engine.py (IBM Granite).
 }
 
 function _updateSourceDot() {
@@ -1667,16 +1588,12 @@ function refreshPrompts() {
   showScreen('ready');
   fetch('/telemetry').then(r => r.json()).then(data => {
     updateTyreWidget(data);
-    if (_queue.length === 0) updateSpotter(data);
   }).catch(() => {});
-  fetchPrompts();
+  fetchPrompts(true);
 }
 
 // ── Startup ───────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
-  // Seed default chips immediately while telemetry loads
-  updateSpotter(null);
-
   fetch('/race-context', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
