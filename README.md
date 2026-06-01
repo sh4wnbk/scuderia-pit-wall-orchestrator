@@ -6,6 +6,9 @@ A voice-first AI companion for Formula 1 fans. Ask a question mid-race, get a ci
 
 **Live:** [tifosi-muretto.web.app](https://tifosi-muretto.web.app)
 
+> **Quantum strategy layer — QAOA optimizer (Qiskit Aer) formulates pit stop timing as a QUBO problem and recommends the optimal box lap with confidence** *(post-submission)*
+> The quantum layer (HAMILTONIAN) reflects the project's continued evolution beyond the original submission.
+
 ---
 
 ## The Problem
