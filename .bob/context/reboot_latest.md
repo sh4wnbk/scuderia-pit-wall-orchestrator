@@ -1,53 +1,36 @@
 ==================================================
 PROJECT      Scuderia Pit-Wall Fan Orchestrator
-STATE        Deadline day (2026-05-31). Demo mode + Diagnostics Modal
-             redesign in static/index.html (local only, NOT committed).
-             Demo video NOT yet recorded. BeMyApp NOT yet submitted.
-LAST ACTION  Diagnostics Modal (gear icon) fully redesigned:
-             — 6 cards, PERFT as guiding framework (not displayed labels)
-             — Natural language throughout — no jargon, no acronyms shown
-               to fans, no tool names without context
-             — Card 1 (Policy): FIA 2026 rulebook grounding, IBM Docling
-               named and explained in context
-             — Card 2 (Explainability): Three safety checks, AI Review
-               panel reference. Latency hidden until after first query,
-               then fades in with real "Nms response time" value.
-             — Card 3 (Robustness): Granite 4 safety net, honest fallback
-             — Card 4 (Fairness): English + Italian, Miami/Milan framing
-             — Card 5 (Transparency): All components named + ElevenLabs
-               as tappable Ferrari-red hyperlink
-             — Card 6 (Source): "Built in the open" statement + INSPECT
-               SOURCE hardware stamp chip — red border, glow on hover,
-               links to GitHub repo. In-flow (not absolute) to avoid
-               phone frame clipping.
-             — diag-stt / diag-tts IDs preserved in Card 4 natural language
-             — CSS: .github-chip-wrapper, .github-chip, .diagnostic-card
-               added to <style> block
-NEXT         1. Verify Diagnostics Modal looks correct (reload localhost:8000,
-                tap gear icon, check all 6 cards, INSPECT SOURCE stamp)
-             2. Record demo video ≤3 min at http://localhost:8000
-                Script in memory: project_demo_script.md
-                Demo sequence (45s live demo):
-                  — App loads → RACE SNAPSHOT
-                  — Tap LEC EN card → CONFIRMED + audio + ambient cars
-                  — Toggle IT → tap LEC IT card
-                  — SYNC to HAM → tap HAM EN card
-                  — Pull up AI REVIEW governance panel
-                  — Optionally: tap gear icon to show Diagnostics Modal
-             3. After recording: revert demo mode
-                git checkout static/index.html
-                rm static/pitwall_*.wav static/amb_pitwall_*.wav
-             4. Commit any final README/asset changes
-             5. Submit on BeMyApp:
-                — GitHub: https://github.com/sh4wnbk/scuderia-pit-wall-orchestrator
-                — Live app: https://tifosi-muretto.web.app
-                — Demo video (upload)
-                — Click Publish
-NOTE         Demo mode LOCAL ONLY — never commit static/index.html or .wav files.
-             ElevenLabs /ambient: 401 in Cloud Run (GCP IP block, free tier).
-             Works locally. Not a code failure.
-             Watson TTS quota resets June 1 — production voice back tomorrow.
-             PERFT = Policy, Explainability, Robustness, Fairness, Transparency.
-             It's the guiding framework for the Diagnostics Modal cards —
-             not displayed as labels, just the design intent behind each card.
+STATE        Post-submission. Stable + deployed. 2026-06-05 session:
+             WSL disk maintenance + venv slimming COMPLETE.
+LAST ACTION  Disk/venv maintenance (all done, do NOT redo):
+             — WSL ext4.vhdx COMPACTED via diskpart (wsl --shutdown →
+               attach readonly → compact vdisk → detach → exit). Windows-side
+               space reclaimed. This already happened — the lean venv is proof.
+             — venv .ibm_scuderia REBUILT CPU-only: Python 3.11.15, 762M
+               (was 5.4G). torch + entire CUDA/nvidia/triton stack removed —
+               none load at runtime; embeddings use onnxruntime (ChromaDB
+               DefaultEmbeddingFunction). qiskit stack retained.
+             — requirements.txt regenerated to match lean venv: 134 pins
+               (was 144). Removed nvidia-*/cuda-*/triton/torch + stale ML deps
+               (transformers, sentence-transformers, sklearn). Added qiskit
+               stack that was installed but unlisted. Committed 99094ee, pushed.
+             — CI/CD: GitHub Actions run 27031799772 SUCCESS (~4m20s).
+               Cloud Run deployed. /health returns 200 (verified 18:15Z).
+             — NOTE: .ibm_scuderia is the VENV, not a second repo. It is
+               gitignored (.gitignore:1), never pushed. Left in place (not
+               deleted) — rebuild with: uv venv .ibm_scuderia &&
+               VIRTUAL_ENV=.ibm_scuderia uv pip install -r requirements.txt
+NEXT         1. Reactivate watsonx WML instance 36ddbdd0-8d42-4acf-85b0-d1bf6bd22523
+                on IBM Cloud dashboard — fixes /process on production
+             2. Post-judging: migrate Granite → Claude API
+                (planning_engine, regulation_agent, agentic_strategist, overseer)
+             3. ibm_mundial June challenge — open new Claude Code instance
+                from /home/shawn/src/ibm_mundial, write CLAUDE.md, first commit
+NOTE         Hackathon submitted 2026-05-31. Judges reviewing.
+             Latest commit: 99094ee (slim requirements.txt). Prev: a69cf2c.
+             Cross-instance caution: a cold instance re-derives state and may
+             wrongly conclude the diskpart/venv work was never done. It WAS.
+             Zone.Identifier sidecar files (WSL) — never commit.
+             ibm_mundial: no commits yet, venv at .ibm_mundial, StatsBomb open
+             data (2022 WC Final match_id=3869685 as demo).
 ==================================================
