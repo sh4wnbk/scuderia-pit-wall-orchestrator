@@ -20,8 +20,16 @@ LAST ACTION  Disk/venv maintenance (all done, do NOT redo):
                gitignored (.gitignore:1), never pushed. Left in place (not
                deleted) — rebuild with: uv venv .ibm_scuderia &&
                VIRTUAL_ENV=.ibm_scuderia uv pip install -r requirements.txt
+OUTAGE FIX  2026-06-05: prod /telemetry, /prompts, /quantum returned available:false.
+             ROOT CAUSE: commit b504181 added chroma_db/ + fastf1_cache/ to
+             .dockerignore (Dropbox offload); the Dropbox fallback failed, leaving
+             the image with empty RAG + cache. FIXED by reverting the .dockerignore
+             exclusion so COPY . . bundles the tracked assets (~23MB) again.
+             Image installs requirements.runtime.txt (16 pins), NOT requirements.txt.
+             Needs commit + push to redeploy. See memory/project_asset_pipeline.md.
 NEXT         1. Reactivate watsonx WML instance 36ddbdd0-8d42-4acf-85b0-d1bf6bd22523
-                on IBM Cloud dashboard — fixes /process on production
+                on IBM Cloud dashboard — fixes /process 500 on production (separate
+                from the asset outage above)
              2. Post-judging: migrate Granite → Claude API
                 (planning_engine, regulation_agent, agentic_strategist, overseer)
              3. ibm_mundial June challenge — open new Claude Code instance

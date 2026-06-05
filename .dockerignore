@@ -9,5 +9,8 @@ __pycache__
 .env
 .env.*
 .ibm_scuderia
-chroma_db/
-fastf1_cache/
+# chroma_db/ and fastf1_cache/ are bundled into the image via `COPY . .`
+# (git-tracked, ~23 MB). Do NOT exclude them — doing so leaves the container
+# with empty RAG + telemetry and breaks /telemetry, /prompts, /quantum, RAG.
+# Only the large gitignored HTTP cache is excluded (not needed at runtime).
+fastf1_cache/fastf1_http_cache.sqlite
